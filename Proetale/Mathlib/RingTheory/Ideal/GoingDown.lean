@@ -15,11 +15,11 @@ theorem Algebra.HasGoingDown.specComap_surjective_of_closedPoints_subset_preimag
   obtain ⟨q, _, hq, hpq⟩ := Ideal.exists_ideal_le_liesOver_of_le n hle
   use ⟨q, hq⟩, PrimeSpectrum.ext hpq.over.symm
 
-theorem Algebra.HasGoingDown.factor_bijective_of_subsingleton {R S : Type*}
+theorem Algebra.HasGoingDown.localization_bijective_of_subsingleton {R S : Type*}
     [CommRing R] [CommRing S] [Algebra R S]
     [Algebra.HasGoingDown R S] (p : Ideal R) (q : Ideal S) [p.IsPrime] [q.IsPrime]
     [q.LiesOver p]
     (h : ∀ (p : Ideal R) [p.IsPrime], Subsingleton {q : Ideal S // q.IsPrime ∧ q.LiesOver p}) :
-    Function.Bijective (Ideal.Quotient.factor (S := p.map (algebraMap R S)) (T := q)
-      (Ideal.LiesOver.over (P := q) (p := p) ▸ Ideal.map_comap_le)) := by
+    IsLocalization (Algebra.algebraMapSubmonoid S p.primeCompl) (Localization.AtPrime q) :=
+  -- Blueprint: thm:localization-isom-of-going-down (Stacks 00EA). B_{pB} → B_q is iso when going-down + unique primes above.
   sorry

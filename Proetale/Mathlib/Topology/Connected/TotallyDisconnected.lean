@@ -104,8 +104,42 @@ theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
     IsHomeomorph (Continuous.connectedComponentsLift
     (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) where
   continuous := Continuous.connectedComponentsLift_continuous (by continuity)
-  isOpenMap := sorry
-  bijective := sorry
+  isOpenMap := by
+    -- ⊇ direction: uses that π₀(X × Y) ≅ π₀(X) × π₀(Y) as topological spaces (blueprint: thm:pi0-prod)
+    sorry
+  bijective := by
+    constructor
+    · -- Injective: two elements with same image must be equal.
+      intro a b hab
+      -- Work with representatives
+      revert hab
+      refine Quotient.inductionOn₂ a b (fun p₁ p₂ h => ?_)
+      -- h says: g(mk p₁) = g(mk p₂), i.e., (mk p₁.1, mk p₁.2) = (mk p₂.1, mk p₂.2)
+      have key := fun p : S × T => Continuous.connectedComponentsLift_apply_coe
+        (by continuity : Continuous (fun x : S × T ↦ ((x.1 : ConnectedComponents S),
+          (x.2 : ConnectedComponents T)))) p
+      have h' : ((p₁.1 : ConnectedComponents S), (p₁.2 : ConnectedComponents T)) =
+          ((p₂.1 : ConnectedComponents S), (p₂.2 : ConnectedComponents T)) :=
+        (key p₁).symm.trans (h.trans (key p₂))
+      -- Extract component equalities
+      have hs : (p₁.1 : ConnectedComponents S) = p₂.1 := (Prod.mk.inj h').1
+      have ht : (p₁.2 : ConnectedComponents T) = p₂.2 := (Prod.mk.inj h').2
+      -- These mean p₁ and p₂ are in the same connected component
+      -- ⟦p₁⟧ = ⟦p₂⟧ iff p₁ and p₂ are in the same connected component
+      show (p₁ : ConnectedComponents (S × T)) = (p₂ : ConnectedComponents (S × T))
+      rw [ConnectedComponents.coe_eq_coe]
+      rw [connectedComponent.prod, connectedComponent.prod]
+      have hs' : connectedComponent p₁.1 = connectedComponent p₂.1 :=
+        connectedComponent_eq (ConnectedComponents.coe_eq_coe'.mp hs.symm)
+      have ht' : connectedComponent p₁.2 = connectedComponent p₂.2 :=
+        connectedComponent_eq (ConnectedComponents.coe_eq_coe'.mp ht.symm)
+      rw [hs', ht']
+    · -- Surjective
+      intro ⟨c₁, c₂⟩
+      obtain ⟨s, rfl⟩ := Quot.exists_rep c₁
+      obtain ⟨t, rfl⟩ := Quot.exists_rep c₂
+      exact ⟨ConnectedComponents.mk (s, t),
+        Continuous.connectedComponentsLift_apply_coe (by continuity) (s, t)⟩
 
 variable {S T} in
 noncomputable def ConnectedComponents.prodMap :
@@ -117,7 +151,10 @@ noncomputable def ConnectedComponents.prodMap :
 def ConnectedComponents.mkHomeomorph [TotallyDisconnectedSpace S] : S ≃ₜ ConnectedComponents S where
   toFun := mk
   invFun := continuous_id.connectedComponentsLift
-  left_inv := sorry
-  right_inv := sorry
+  left_inv := fun s => continuous_id.connectedComponentsLift_apply_coe s
+  right_inv := by
+    intro c
+    obtain ⟨s, rfl⟩ := Quot.exists_rep c
+    exact congrArg mk (continuous_id.connectedComponentsLift_apply_coe s)
   continuous_toFun := continuous_coe
   continuous_invFun := continuous_id.connectedComponentsLift_continuous

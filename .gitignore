@@ -1,4 +1,7 @@
 /.lake
+/.claude/
+*.bak
+.mcp.json
 blueprint/print
 blueprint/web
 blueprint/lean_decls
