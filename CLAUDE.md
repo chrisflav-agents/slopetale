@@ -80,9 +80,13 @@ Do NOT stop prematurely. If you encounter obstacles:
 - Prefer `rw [← isIso_iff_of_reflects_iso f F]` over a pattern like `haveI : IsIso (F.map f) := ...; exact isIso_of_reflects_iso f F`. More generally, prefer rewriting with iff lemmas over constructing intermediate instances.
 - Avoid intermediate `have` statements when you can massage the goal into the correct shape directly. For example, instead of `have := h i; rw [...] at this; exact this X`, prefer using `refine` to transform the goal: `refine (SomeLemma _).mp ?_ X` followed by tactics closing the new goal.
 - Never use `change`. Instead, use the correct `rw` lemma to transform the goal. If the needed rewrite lemma is missing from Mathlib, add it as a helper. If the terms are definitionally equal, the proof should go through without `change`.
-- Never chain multiple tactics with `;`. Instead, use `refine` to combine `apply` + `intro` into one step. For example, replace `apply F.2.hom_ext S; intro I` with `refine F.2.hom_ext S _ _ fun I => ?_`.
+- Never chain multiple tactics with `;`. Instead, put each tactic on its own line. Use `refine` to combine `apply` + `intro` into one step. For example, replace `apply F.2.hom_ext S; intro I` with `refine F.2.hom_ext S _ _ fun I => ?_`.
 - Use `refine` instead of nested tactic mode proofs (e.g., `exact ⟨a, by ..., by ...⟩`). Prefer `refine ⟨a, ?_, ?_⟩` with focused `·` goals.
 - Prefer terminal `simp` over `simp only [...]` followed by more tactics. Use `rw` for non-simp lemmas (e.g., `amalgamate_map`), then close with `simp`.
+- Never `open Classical` — use the `classical` tactic at the beginning of a proof instead.
+- Never use `show` in tactic mode proofs when the goal is known.
+- Combine successive `rw` steps into a single `rw [...]` call.
+- Inline trivial `have`s that are only used once or twice.
 - When a `have` introduces a completely general statement (not specific to the current proof), extract it as a standalone lemma instead. Place it in the `Proetale/Mathlib/` subfolder, mirroring the Mathlib file where it would naturally belong (e.g., a lemma about `NatTrans` and `NatIso` goes in `Proetale/Mathlib/CategoryTheory/NatIso.lean`). Create new folders and files as needed, import the corresponding Mathlib module, and import the new file from your proof file.
 - In `have` statements, put binders to the left of the colon instead of using `∀` to the right. For example, write `have hiso (Z : C) (i : ι) (g : Z ⟶ X i) : IsIso ...` instead of `have hiso : ∀ (Z : C) (i : ι) (_ : Z ⟶ X i), IsIso ...`. This saves `intro` lines.
 
