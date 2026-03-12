@@ -89,6 +89,8 @@ Do NOT stop prematurely. If you encounter obstacles:
 - Inline trivial `have`s that are only used once or twice.
 - When a `have` introduces a completely general statement (not specific to the current proof), extract it as a standalone lemma instead. Place it in the `Proetale/Mathlib/` subfolder, mirroring the Mathlib file where it would naturally belong (e.g., a lemma about `NatTrans` and `NatIso` goes in `Proetale/Mathlib/CategoryTheory/NatIso.lean`). Create new folders and files as needed, import the corresponding Mathlib module, and import the new file from your proof file.
 - In `have` statements, put binders to the left of the colon instead of using `∀` to the right. For example, write `have hiso (Z : C) (i : ι) (g : Z ⟶ X i) : IsIso ...` instead of `have hiso : ∀ (Z : C) (i : ι) (_ : Z ⟶ X i), IsIso ...`. This saves `intro` lines.
+- Use `obtain rfl` instead of `have : a = b := ...; subst this`. For example, `obtain rfl := WLocalSpace.eq_of_specializes ...` instead of `have : c = c' := ...; subst this`.
+- For structure field definitions where the type is a `∀` (e.g., `s ⊆ t`), put the binders before `:=` instead of using `by intro`. For example, write `closedPoints_subset x hx := ...` instead of `closedPoints_subset := by intro x hx; ...`.
 
 ---
 
