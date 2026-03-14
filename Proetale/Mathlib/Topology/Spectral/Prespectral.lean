@@ -1,9 +1,9 @@
 import Mathlib.Topology.Spectral.Prespectral
 
+/-- A prespectral space structure transfers along homeomorphisms. -/
 -- after `PrespectralSpace.of_isTopologicalBasis'`
 theorem Homeomorph.prespectralSpace {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
     [PrespectralSpace X] (f : X ≃ₜ Y) : PrespectralSpace Y := by
-  -- Pull back the compact open basis of Y to X via f.symm
   have hbasis : TopologicalSpace.IsTopologicalBasis
       (Set.preimage f.symm '' { U : Set X | IsOpen U ∧ IsCompact U }) :=
     PrespectralSpace.isTopologicalBasis.isInducing f.symm.isInducing
@@ -11,10 +11,10 @@ theorem Homeomorph.prespectralSpace {X Y : Type*} [TopologicalSpace X] [Topologi
   intro U hU
   simp only [Set.mem_image, Set.mem_setOf_eq] at hU
   obtain ⟨V, ⟨_, hVc⟩, rfl⟩ := hU
-  -- f.symm ⁻¹' V = f '' V, which is compact as image of compact under continuous
-  rw [show f.symm ⁻¹' V = f '' V from (f.toEquiv.image_eq_preimage_symm V).symm]
+  rw [f.preimage_symm]
   exact hVc.image f.continuous
 
+/-- The product of two prespectral spaces is prespectral. -/
 -- after `PrespectralSpace.sigma`
 instance PrespectralSpace.prod {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
     [PrespectralSpace X] [PrespectralSpace Y] : PrespectralSpace (X × Y) :=
