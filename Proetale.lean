@@ -15,6 +15,7 @@ import Proetale.Algebra.WContractible
 import Proetale.Algebra.WLocal
 import Proetale.Algebra.WLocalization.Basic
 import Proetale.Algebra.WLocalization.Ideal
+import Proetale.Algebra.WLocalization.IndZariskiAux
 import Proetale.Algebra.WStrictLocalization
 import Proetale.Algebra.WeaklyEtale
 import Proetale.Basic
@@ -49,6 +50,7 @@ import Proetale.Mathlib.CategoryTheory.MorphismProperty.Composition
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.Ind
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.IndSpreads
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.Limits
+import Proetale.Mathlib.CategoryTheory.NatIso
 import Proetale.Mathlib.CategoryTheory.ObjectProperty.Ind
 import Proetale.Mathlib.CategoryTheory.Sites.Canonical
 import Proetale.Mathlib.CategoryTheory.Sites.Continuous
