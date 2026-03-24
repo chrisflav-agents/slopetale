@@ -1,5 +1,5 @@
 /.lake
-.claude/settings.local.json
+.claude/
 *.bak
 .mcp.json
 blueprint/print
