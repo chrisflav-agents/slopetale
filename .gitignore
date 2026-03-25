@@ -2,6 +2,7 @@
 .claude/
 *.bak
 .mcp.json
+/.docs
 blueprint/print
 blueprint/web
 blueprint/lean_decls
