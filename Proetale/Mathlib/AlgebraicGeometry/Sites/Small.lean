@@ -11,7 +11,7 @@ variable (S : Scheme.{u}) {P Q : MorphismProperty Scheme.{u}}
   [P.IsMultiplicative] [P.IsStableUnderBaseChange] [IsJointlySurjectivePreserving P]
   [Q.IsMultiplicative] [Q.IsStableUnderBaseChange] [IsJointlySurjectivePreserving Q]
 
-omit [IsJointlySurjectivePreserving Q] in
+omit [IsJointlySurjectivePreserving P] [IsJointlySurjectivePreserving Q] in
 private lemma changeProp_coverPreserving (hPQ : P ≤ Q) :
     CoverPreserving (S.smallGrothendieckTopology P) (S.smallGrothendieckTopology Q)
       (Over.changeProp S hPQ le_rfl) where

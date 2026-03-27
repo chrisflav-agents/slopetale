@@ -57,6 +57,7 @@ private lemma ConnectedComponents.hw_of_isPullback {f : C(Y, X)} {g : C(Y, T)}
   ConcreteCategory.congr_hom pb.w y
 
 -- Helper: In the pullback, g restricted to f⁻¹'(closedPoints X) is injective
+omit [CompactSpace T] [T2Space T] [TotallyDisconnectedSpace T] in
 private lemma ConnectedComponents.g_injective_on_preimage_closedPoints
     {f : C(Y, X)} {g : C(Y, T)} {i : C(T, ConnectedComponents X)}
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩))
@@ -75,6 +76,7 @@ private lemma ConnectedComponents.g_injective_on_preimage_closedPoints
   exact fg_injective_of_isPullback pb hf hg
 
 @[stacks 096C "second part"]
+omit [CompactSpace T] [TotallyDisconnectedSpace T] in
 theorem ConnectedComponents.preimage_closedPoints_eq_closedPoints_of_isPullback
     {f : C(Y, X)} {g : C(Y, T)} {i : C(T, ConnectedComponents X)}
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩)) :
