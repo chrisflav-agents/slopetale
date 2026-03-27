@@ -20,6 +20,7 @@ variable {X Y T : Type u} [TopologicalSpace X] [WLocalSpace X] [TopologicalSpace
     [TopologicalSpace T] [CompactSpace T] [T2Space T] [TotallyDisconnectedSpace T]
 
 -- Helper: In the pullback, the map (f, g) is injective (since Y is homeomorphic to a subspace of X × T).
+omit [WLocalSpace X] [CompactSpace T] [T2Space T] [TotallyDisconnectedSpace T] in
 private lemma ConnectedComponents.fg_injective_of_isPullback {f : C(Y, X)} {g : C(Y, T)}
     {i : C(T, ConnectedComponents X)}
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩))
@@ -48,6 +49,7 @@ private lemma ConnectedComponents.fg_injective_of_isPullback {f : C(Y, X)} {g : 
   · simp only [hE_f]; exact hf
 
 -- Helper: commutativity of the pullback square
+omit [WLocalSpace X] [CompactSpace T] [T2Space T] [TotallyDisconnectedSpace T] in
 private lemma ConnectedComponents.hw_of_isPullback {f : C(Y, X)} {g : C(Y, T)}
     {i : C(T, ConnectedComponents X)}
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩))

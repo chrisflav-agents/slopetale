@@ -697,6 +697,7 @@ lemma ProdStrata.bijOn_algebraMap_specComap_zeroLocus_ideal (E : Finset A) :
       rw [this]; exact hq_eq
 
 -- Helper: right in a Stratification.Index is determined by left as E \ left.
+omit [CommRing A] in
 private lemma Stratification.Index.right_eq_sdiff {E : Finset A}
     (i : Stratification.Index E) : i.right = E \ i.left := by
   classical
