@@ -60,7 +60,7 @@ private lemma isUnit_toMvPolynomial_derivative :
   refine ⟨Ideal.Quotient.mk (idealJ f) (X 1), ?_⟩
   rw [← map_mul, ← map_one (Ideal.Quotient.mk (idealJ f)), Ideal.Quotient.eq]
   apply Ideal.subset_span
-  simp only [idealJ, Set.mem_range]
+  simp only [Set.mem_range]
   exact ⟨1, by simp [Matrix.cons_val_one, Matrix.cons_val_fin_one]⟩
 
 private instance : IsStandardSmoothOfRelativeDimension 0 R (S f) := by

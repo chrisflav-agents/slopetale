@@ -122,7 +122,7 @@ lemma range_algebraMap_generalization (f : A) (I : Ideal A) :
     have hf_not_rad : f ∉ Ideal.radical (p.asIdeal ⊔ I) := by
       rw [Ideal.mem_radical_iff]
       push_neg
-      intro n
+      intro n hfn
       intro hfn
       -- f^n ∈ p.asIdeal ⊔ I means f^n = a + b with a ∈ p, b ∈ I
       rw [Submodule.mem_sup] at hfn
@@ -294,7 +294,7 @@ private lemma mem_submonoid_iff_not_mem_locClosedSubset (f : A) (I : Ideal A) (a
     rw [IsScalarTower.algebraMap_apply A (A ⧸ I)]
     have key : basicOpen (Ideal.Quotient.mk I f) ≤ basicOpen (Ideal.Quotient.mk I a) := by
       intro p_bar hp_bar
-      simp only [SetLike.mem_coe, PrimeSpectrum.mem_basicOpen] at hp_bar ⊢
+      simp only [PrimeSpectrum.mem_basicOpen] at hp_bar ⊢
       intro hmka
       set p := PrimeSpectrum.comap (Ideal.Quotient.mk I) p_bar
       have hpI : p ∈ zeroLocus (I : Set A) := by
@@ -823,7 +823,7 @@ private lemma Generalization.map_mem_ideal_of_strata {f f' : A} {I I' : Ideal A}
     (h_sub : locClosedSubset f' I' ⊆ locClosedSubset f I) (hI : I ≤ I')
     (hf : f ∣ f') (z : Generalization f I) (hz : z ∈ ideal f I) :
     (map h_sub) z ∈ ideal f' I' := by
-  simp only [ideal, SetLike.mem_coe, RingHom.mem_ker] at hz ⊢
+  simp only [ideal, RingHom.mem_ker] at hz ⊢
   -- Write z = mk' a s
   obtain ⟨a, s, rfl⟩ := IsLocalization.exists_mk'_eq (submonoid f I) z
   -- From hz: toLocQuotient(mk' a s) = 0

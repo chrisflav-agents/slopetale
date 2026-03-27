@@ -133,7 +133,7 @@ private lemma amitsur_exact_tensor {R S : Type u} [CommRing R] [CommRing S]
     induction z using TensorProduct.induction_on with
     | zero => simp [map_zero, sub_self]
     | add x y hx hy =>
-      simp only [map_add, map_neg]
+      simp only [map_add]
       -- (x + y) - (iL(m x) + iL(m y)) = -(σ(d' x) + σ(d' y))
       -- rewrite as (x - iL(m x)) + (y - iL(m y)) = -σ(d' x) + -σ(d' y)
       have : x + y - (Algebra.TensorProduct.includeLeft (S := R)
@@ -165,7 +165,7 @@ private lemma amitsur_exact_tensor {R S : Type u} [CommRing R] [CommRing S]
         TensorProduct.assoc_symm_tmul a (1 : S) b,
         LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply,
         Algebra.TensorProduct.lmul'_apply_tmul,
-        mul_one, one_mul]
+        mul_one]
       abel
   · -- range(lTensor S f) ⊆ ker(lTensor S d)
     rintro ⟨y, rfl⟩
@@ -173,7 +173,7 @@ private lemma amitsur_exact_tensor {R S : Type u} [CommRing R] [CommRing S]
     induction y using TensorProduct.induction_on with
     | zero => simp
     | tmul a r =>
-      simp only [LinearMap.lTensor_tmul, Algebra.linearMap_apply, d,
+      simp only [LinearMap.lTensor_tmul, d,
         LinearMap.sub_apply, AlgHom.toLinearMap_apply]
       -- Goal: a ⊗ (iL(algebraMap R S r) - iR(algebraMap R S r)) = 0
       -- iL(algebraMap R S r) = algebraMap R S r ⊗ 1 = algebraMap R (S ⊗ S) r
@@ -200,7 +200,7 @@ private lemma amitsur_range_eq_eqLocus {R S : CommRingCat.{u}} (f : R ⟶ S)
   have he_inj : Function.Injective e.hom.hom :=
     ((ConcreteCategory.isIso_iff_bijective e.hom).mp (Iso.isIso_hom e)).1
   ext s
-  simp only [Set.mem_range, RingHom.mem_eqLocus]
+  simp only [Set.mem_range]
   constructor
   · rintro ⟨r, rfl⟩
     show (pushout.inl f f).hom (f.hom r) = (pushout.inr f f).hom (f.hom r)
@@ -351,9 +351,9 @@ private lemma fiber_constant {R S : CommRingCat.{u}} {f : R ⟶ S} {Y : Scheme.{
   have key := hx (pullback.fst (Spec.map f) (Spec.map f))
     (pullback.snd (Spec.map f) (Spec.map f)) pullback.condition
   have ha : (pullback.fst (Spec.map f) (Spec.map f) ≫ x) c = x a := by
-    simp [Scheme.Hom.comp_apply, hc1]
+    simp [hc1]
   have hb : (pullback.snd (Spec.map f) (Spec.map f) ≫ x) c = x b := by
-    simp [Scheme.Hom.comp_apply, hc2]
+    simp [hc2]
   rw [key] at ha; exact ha.symm.trans hb
 
 -- For a faithfully flat ring map f : R → S, showing IsSheafFor (yoneda.obj Y) for
