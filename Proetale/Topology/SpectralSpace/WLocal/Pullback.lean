@@ -249,6 +249,7 @@ theorem ConnectedComponents.wlocalSpace_of_isPullback {f : C(Y, X)} {g : C(Y, T)
     exact (WLocalSpace.isClosed_closedPoints (X := X)).preimage f.2
 
 @[stacks 096C "second part"]
+omit [TotallyDisconnectedSpace T] in
 theorem ConnectedComponents.isWLocalMap_of_isPullback {f : C(Y, X)} {g : C(Y, T)}
     {i : C(T, ConnectedComponents X)}
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩)) :
