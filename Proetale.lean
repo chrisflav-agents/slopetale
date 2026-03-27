@@ -15,6 +15,7 @@ import Proetale.Algebra.WContractible
 import Proetale.Algebra.WLocal
 import Proetale.Algebra.WLocalization.Basic
 import Proetale.Algebra.WLocalization.Ideal
+import Proetale.Algebra.WLocalization.IndZariskiAux
 import Proetale.Algebra.WStrictLocalization
 import Proetale.Algebra.WeakDimension
 import Proetale.Algebra.WeaklyEtale
