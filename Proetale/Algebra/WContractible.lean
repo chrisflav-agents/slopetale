@@ -10,6 +10,7 @@ import Proetale.Algebra.IndZariski
 import Proetale.Mathlib.Topology.Connected.TotallyDisconnected
 import Proetale.Mathlib.RingTheory.Spectrum.Prime.Topology
 import Proetale.Mathlib.Topology.Constructions
+import Proetale.Topology.SpectralSpace.ConnectedComponent
 
 /-!
 # w-contractible rings
@@ -262,7 +263,7 @@ lemma range_algebraMap_specComap (h : IsClosed T) :
         rw [this]; exact hy
       · intro hx; exact ⟨x, hx, mem_connectedComponent⟩
     -- By the theorem, mk⁻¹'T = ⋂ of clopens containing it
-    obtain ⟨J, hJ⟩ := isClosed_and_iUnion_connectedComponent_eq_iff.mp ⟨hclosed, hunion⟩
+    obtain ⟨J, hJ⟩ := isClosed_and_iUnion_connectedComponent_eq_iff.1 ⟨hclosed, hunion⟩
     rw [← hJ]
     simp only [Set.iInter_coe_set, Set.mem_iInter, Subtype.forall]
     intro V hV hVJ
