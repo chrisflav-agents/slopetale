@@ -410,7 +410,7 @@ private lemma exists_costructuredArrow_localization
       algebraMap ↑((hensDiagram R (R ⧸ I)).obj j) (Localization.Away s) s from rfl) ▸ h1
 
 private lemma isUnit_algebraMap_mul_add_one_of_mem_jacobson
-    {R : Type u} [CommRing R] (I : Ideal R) (hI : I ≤ Ring.jacobson R)
+    {R : Type u} [CommRing R] (I : Ideal R) (_hI : I ≤ Ring.jacobson R)
     (r : R) (hr : r ∈ I) (y : Henselization R (R ⧸ I)) :
     IsUnit (algebraMap R (Henselization R (R ⧸ I)) r * y + 1) := by
   -- Step 1: Lift y to a stage of the colimit diagram

@@ -343,7 +343,7 @@ lemma range_algebraMap_specComap (h : IsClosed T) :
       exact hzl_eq ▸ hp_in_W
     exact SetLike.mem_coe.mp (hker_le ha_ker)
 
-lemma isClosedEmbedding_algebraMap_specComap (h : IsClosed T) :
+lemma isClosedEmbedding_algebraMap_specComap (_h : IsClosed T) :
     IsClosedEmbedding (PrimeSpectrum.comap <| algebraMap A (Restriction T)) :=
   PrimeSpectrum.isClosedEmbedding_comap_of_surjective (Restriction T)
     (algebraMap A (Restriction T)) (algebraMap_surjective T)

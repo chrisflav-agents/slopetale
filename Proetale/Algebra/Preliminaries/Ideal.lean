@@ -16,7 +16,7 @@ import Mathlib.RingTheory.Spectrum.Prime.RingHom
 open CategoryTheory Limits PrimeSpectrum
 
 theorem zeroLocus_eq_iInter_specComap_preimage {ι : Type*} [Category ι] [IsFiltered ι]
-    {F : Functor ι CommRingCat} {C : Cocone F} (hC : IsColimit C) {Iι : (i : ι) → Ideal (F.obj i)}
+    {F : Functor ι CommRingCat} {C : Cocone F} (_hC : IsColimit C) {Iι : (i : ι) → Ideal (F.obj i)}
     (I : Ideal C.pt) (h : I = ⨆ (i : ι), ((Iι i).map (C.ι.app i).hom : Ideal C.pt)) :
     (zeroLocus I : Set (PrimeSpectrum C.pt)) =
       ⋂ (i : ι), (PrimeSpectrum.comap (C.ι.app i).hom) ⁻¹' (zeroLocus (Iι i : Set (F.obj i))) := by

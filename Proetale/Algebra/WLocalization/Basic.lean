@@ -1451,8 +1451,8 @@ private lemma comap_eval_factor {E : Finset A}
 -- locClosedSubset, then f ∈ comap(alg) p ↔ f ∈ comap(alg) q.
 private lemma strata_singleton_iff {f : A}
     {p q : PrimeSpectrum (WLocalization A)}
-    (hp : p ∈ zeroLocus (ideal A))
-    (hq : q ∈ zeroLocus (ideal A))
+    (_hp : p ∈ zeroLocus (ideal A))
+    (_hq : q ∈ zeroLocus (ideal A))
     (i : Stratification.Index ({f} : Finset A))
     (q_p : PrimeSpectrum (Generalization i.function i.ideal))
     (q_q : PrimeSpectrum (Generalization i.function i.ideal))
@@ -1685,7 +1685,7 @@ noncomputable instance indZariski : Algebra.IndZariski A (WLocalization A) := by
 -- hence the localization at that submonoid preserves properness of m. By the projection from
 -- ProdStrata to a single factor, properness is inherited.
 private lemma map_algebraMap_prodStrata_ne_top (E : Finset A) (m : PrimeSpectrum A)
-    (hm : m.asIdeal.IsMaximal) :
+    (_hm : m.asIdeal.IsMaximal) :
     Ideal.map (algebraMap A (ProdStrata E)) m.asIdeal ≠ ⊤ := by
   -- Find an index i such that m is in stratum i.left i.right
   have huniv := Stratification.Index.iUnion_stratum E
