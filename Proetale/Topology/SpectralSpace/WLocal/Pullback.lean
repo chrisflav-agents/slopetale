@@ -75,7 +75,6 @@ private lemma ConnectedComponents.g_injective_on_preimage_closedPoints
     exact congrArg Subtype.val (this hmk)
   exact fg_injective_of_isPullback pb hf hg
 
-omit [CompactSpace T] [TotallyDisconnectedSpace T] in
 @[stacks 096C "second part"]
 theorem ConnectedComponents.preimage_closedPoints_eq_closedPoints_of_isPullback
     {f : C(Y, X)} {g : C(Y, T)} {i : C(T, ConnectedComponents X)}
@@ -248,7 +247,6 @@ theorem ConnectedComponents.wlocalSpace_of_isPullback {f : C(Y, X)} {g : C(Y, T)
     rw [← h]
     exact (WLocalSpace.isClosed_closedPoints (X := X)).preimage f.2
 
-omit [TotallyDisconnectedSpace T] in
 @[stacks 096C "second part"]
 theorem ConnectedComponents.isWLocalMap_of_isPullback {f : C(Y, X)} {g : C(Y, T)}
     {i : C(T, ConnectedComponents X)}
