@@ -123,7 +123,6 @@ lemma range_algebraMap_generalization (f : A) (I : Ideal A) :
       rw [Ideal.mem_radical_iff]
       push_neg
       intro n hfn
-      intro hfn
       -- f^n ∈ p.asIdeal ⊔ I means f^n = a + b with a ∈ p, b ∈ I
       rw [Submodule.mem_sup] at hfn
       obtain ⟨a, ha, b, hb, hab⟩ := hfn
