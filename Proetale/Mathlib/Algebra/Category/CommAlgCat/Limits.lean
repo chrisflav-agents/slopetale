@@ -185,7 +185,10 @@ instance preservesColimitsOfShape_tensorLeft
 
 instance preservesColimitsOfSize_forget_commRingCat :
   -- Blueprint: lemma:commalgcat-colimits. forget₂ CommAlgCat CommRingCat preserves colimits.
-    PreservesColimits (forget₂ (CommAlgCat R) CommRingCat) :=
+    PreservesColimits (forget₂ (CommAlgCat R) CommRingCat) := by
+  -- The equivalence functor creates colimits, and Under.forget preserves them
+  -- when they exist in CommRingCat
+  refine ⟨fun {J} {_} => ⟨fun {K} => ⟨fun {c} hc => ?_⟩⟩⟩
   sorry
 
 -- Helper: cocone compatibility at element level for AlgCat cocones over a CommAlgCat diagram

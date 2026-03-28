@@ -72,7 +72,8 @@ lemma of_equiv (e : S ≃ₐ[R] T) [IndZariski R S] : IndZariski R T := by
     ← iff_ind_isLocalIso]
 
 lemma trans [Algebra S T] [IsScalarTower R S T] [Algebra.IndZariski R S] [Algebra.IndZariski S T] :
-    Algebra.IndZariski R T :=
+    Algebra.IndZariski R T := by
+  rw [iff_ind_isLocalIso] at *
   sorry
 
 instance pi {ι : Type u} [_root_.Finite ι] (S : ι → Type u) [∀ i, CommRing (S i)]
@@ -118,7 +119,8 @@ instance (priority := 100) of_isLocalIso [Algebra.IsLocalIso R S] : Algebra.IndZ
 instance refl : Algebra.IndZariski R R :=
   Algebra.IndZariski.of_isLocalIso _
 
-lemma of_isLocalization (M : Submonoid R) [IsLocalization M S] : Algebra.IndZariski R S :=
+lemma of_isLocalization (M : Submonoid R) [IsLocalization M S] : Algebra.IndZariski R S := by
+  rw [iff_ind_isLocalIso]
   sorry
 
 instance localization (M : Submonoid R) : Algebra.IndZariski R (Localization M) :=
@@ -136,12 +138,17 @@ instance (priority := 100) _root_.Module.Flat.of_indZariski [Algebra.IndZariski 
 
 @[stacks 096T]
 theorem bijectiveOnStalks_algebraMap [Algebra.IndZariski R S] :
-    (algebraMap R S).BijectiveOnStalks :=
+    (algebraMap R S).BijectiveOnStalks := by
+  rw [iff_ind_isLocalIso] at *
   sorry
 
 theorem of_colimitPresentation {ι : Type u} [SmallCategory ι] [IsFiltered ι]
     (P : ColimitPresentation ι (CommAlgCat.of R S))
-    (h : ∀ (i : ι), Algebra.IndZariski R (P.diag.obj i)) : Algebra.IndZariski R S := sorry
+    (h : ∀ (i : ι), Algebra.IndZariski R (P.diag.obj i)) : Algebra.IndZariski R S := by
+  rw [iff_ind_isLocalIso]
+  -- This is ind-ind-Zariski: filtered colimit of ind-Zariski is ind-Zariski
+  -- Requires showing ind P is idempotent when P ≤ finitely presentable
+  sorry
 
 end Algebra.IndZariski
 
@@ -213,6 +220,8 @@ lemma iff_ind_indZariski (f : R →+* S) :
     f.IndZariski ↔ MorphismProperty.ind.{u}
       (RingHom.toMorphismProperty RingHom.IndZariski) (CommRingCat.ofHom f) := by
   algebraize [f]
+  rw [RingHom.IndZariski, ← f.algebraMap_toAlgebra]
+  -- Need to show ind-ind-Zariski = ind-Zariski
   sorry
 
 /-- A ring hom is ind-Zariski if it can be written as a filtered colimit of ind-Zariski maps. -/
@@ -225,6 +234,7 @@ lemma of_isColimit {R S : CommRingCat.{u}} (f : R ⟶ S) (J : Type u) [SmallCate
 theorem _root_.Algebra.IndZariski.iff_ind_indZariksi [Algebra R S] :
     Algebra.IndZariski R S ↔ ObjectProperty.ind.{u}
       (RingHom.toObjectProperty RingHom.IndZariski R) (.of R S) := by
+  rw [← RingHom.IndZariski.algebraMap_iff, RingHom.IndZariski.iff_ind_indZariski]
   sorry
 
 end RingHom.IndZariski

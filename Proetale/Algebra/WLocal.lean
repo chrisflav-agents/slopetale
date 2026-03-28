@@ -39,10 +39,28 @@ def RingHom.IsWLocal {R S : Type*} [CommSemiring R] [CommSemiring S] (f : R →+
 lemma RingHom.isWLocal_iff_isMaximal_of_isMaximal (f : R →+* S) :
     IsWLocal f ↔ ∀ (m : Ideal S) [m.IsMaximal], (m.comap f).IsMaximal := by
   rw [IsWLocal, isWLocalMap_iff]
-  -- Blueprint: def:w-local-ring-map. w-local iff maximal ideals pull back to maximal ideals.
-  refine ⟨fun ⟨_, h⟩ m hm ↦ ?_, ?_⟩
-  · sorry
-  · sorry
+  constructor
+  · intro ⟨_, h⟩ m hm
+    have : ⟨m, hm.isPrime⟩ ∈ closedPoints (PrimeSpectrum S) := by
+      rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal]
+      exact hm
+    have : PrimeSpectrum.comap f ⟨m, hm.isPrime⟩ ∈ closedPoints (PrimeSpectrum R) := h this
+    rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal] at this
+    exact this
+  · intro hmax
+    constructor
+    · constructor
+      · exact PrimeSpectrum.continuous_comap f
+      · intro s hs hc
+        obtain ⟨I, hI_fg, rfl⟩ := (PrimeSpectrum.isCompact_isOpen_iff_ideal.mp ⟨hc, hs⟩)
+        rw [Set.preimage_compl, PrimeSpectrum.preimage_comap_zeroLocus]
+        refine (PrimeSpectrum.isCompact_isOpen_iff_ideal.mpr ⟨_, hI_fg.map f, ?_⟩).1
+        rw [← PrimeSpectrum.zeroLocus_span, Ideal.span_eq, ← Ideal.span_eq I, Ideal.map_span,
+            PrimeSpectrum.zeroLocus_span, Ideal.span_eq]
+    · intro x hx
+      rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal] at hx
+      rw [Set.mem_preimage, mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal]
+      exact @hmax x.asIdeal hx
 
 namespace RingHom.IsWLocal
 
@@ -258,7 +276,21 @@ lemma bijective_of_bijective [IsWLocalRing R] [IsWLocalRing S] {f : R →+* S} (
       -- is bijective. This should yield comap f n₀ maximal via the w-local map
       -- condition (closed points map to closed points).
       -- Blueprint: thm:isom-of-identifies-local-rings-bijective (Stacks 097E).
-      sorry
+      have hcomap_max : (PrimeSpectrum.comap f n₀).asIdeal.IsMaximal := by
+        have : n₀ ∈ closedPoints (PrimeSpectrum S) := mem_closedPoints_iff.mpr hn₀_cl
+        have : PrimeSpectrum.comap f n₀ ∈ closedPoints (PrimeSpectrum R) := hw.2 this
+        rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal] at this
+        exact this
+      have hm'_max : m'.asIdeal.IsMaximal :=
+        (PrimeSpectrum.isClosed_singleton_iff_isMaximal m').mp hm'_cl
+      have hle : (PrimeSpectrum.comap f n₀).asIdeal ≤ m'.asIdeal :=
+        (PrimeSpectrum.le_iff_specializes _ _).mpr hn₀m'
+      have heq : (PrimeSpectrum.comap f n₀).asIdeal = m'.asIdeal := by
+        have hcoatom_comap : IsCoatom (PrimeSpectrum.comap f n₀).asIdeal := hcomap_max.out
+        have hne : m'.asIdeal ≠ ⊤ := hm'_max.ne_top
+        rw [eq_comm]
+        exact (hcoatom_comap.le_iff_eq hne).mp hle
+      exact ⟨n₀, PrimeSpectrum.ext heq⟩
     -- Step 3: Apply going-down surjectivity.
     exact Algebra.HasGoingDown.specComap_surjective_of_closedPoints_subset_preimage
       hclosed_in_image

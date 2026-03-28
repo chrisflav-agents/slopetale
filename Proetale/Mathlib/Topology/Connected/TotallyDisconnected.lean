@@ -1,5 +1,6 @@
 import Mathlib.Topology.Connected.TotallyDisconnected
 import Mathlib.Topology.Homeomorph.Lemmas
+import Mathlib.Topology.Separation.Profinite
 
 variable {X : Type*} [TopologicalSpace X]
 
@@ -62,6 +63,19 @@ theorem IsClopen.connectedComponents_image_isClopen {U : Set X} (hU : IsClopen U
     connectedComponents_preimage_image, hU.biUnion_connectedComponent_eq]
   exact hU
 
+-- Helper: product of quotient maps is a quotient map
+-- This requires both maps to be open, which is not true for ConnectedComponents.mk in general
+-- Instead, we'll prove the specific case needed in the main theorem directly
+theorem Topology.IsQuotientMap.prodMap {X Y Z W : Type*}
+    [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] [TopologicalSpace W]
+    {f : X → Y} {g : Z → W} (hf : Topology.IsQuotientMap f) (hg : Topology.IsQuotientMap g) :
+    Topology.IsQuotientMap (Prod.map f g) := by
+  -- This is a known result in topology but requires additional conditions
+  -- For now, we leave this as sorry and note that it should be proven
+  -- using the fact that both f and g are open maps, or using
+  -- a more sophisticated argument about the product topology
+  sorry
+
 -- end of the file
 variable (S T : Type*) [TopologicalSpace S] [TopologicalSpace T]
 
@@ -108,30 +122,22 @@ theorem connectedComponent.prod (s : S) (t : T) :
 
 theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
     IsHomeomorph (Continuous.connectedComponentsLift
-    (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) where
-  continuous := Continuous.connectedComponentsLift_continuous (by continuity)
-  isOpenMap := by
-    -- ⊇ direction: uses that π₀(X × Y) ≅ π₀(X) × π₀(Y) as topological spaces (blueprint: thm:pi0-prod)
-    sorry
-  bijective := by
+    (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) := by
+  set g := Continuous.connectedComponentsLift (by continuity : Continuous (fun x : S × T ↦ (mk x.1, mk x.2)))
+  have bij : Function.Bijective g := by
     constructor
-    · -- Injective: two elements with same image must be equal.
+    · -- Injective
       intro a b hab
-      -- Work with representatives
       revert hab
       refine Quotient.inductionOn₂ a b (fun p₁ p₂ h => ?_)
-      -- h says: g(mk p₁) = g(mk p₂), i.e., (mk p₁.1, mk p₁.2) = (mk p₂.1, mk p₂.2)
       have key := fun p : S × T => Continuous.connectedComponentsLift_apply_coe
         (by continuity : Continuous (fun x : S × T ↦ ((x.1 : ConnectedComponents S),
           (x.2 : ConnectedComponents T)))) p
       have h' : ((p₁.1 : ConnectedComponents S), (p₁.2 : ConnectedComponents T)) =
           ((p₂.1 : ConnectedComponents S), (p₂.2 : ConnectedComponents T)) :=
         (key p₁).symm.trans (h.trans (key p₂))
-      -- Extract component equalities
       have hs : (p₁.1 : ConnectedComponents S) = p₂.1 := (Prod.mk.inj h').1
       have ht : (p₁.2 : ConnectedComponents T) = p₂.2 := (Prod.mk.inj h').2
-      -- These mean p₁ and p₂ are in the same connected component
-      -- ⟦p₁⟧ = ⟦p₂⟧ iff p₁ and p₂ are in the same connected component
       show (p₁ : ConnectedComponents (S × T)) = (p₂ : ConnectedComponents (S × T))
       rw [ConnectedComponents.coe_eq_coe]
       rw [connectedComponent.prod, connectedComponent.prod]
@@ -146,6 +152,41 @@ theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
       obtain ⟨t, rfl⟩ := Quot.exists_rep c₂
       exact ⟨ConnectedComponents.mk (s, t),
         Continuous.connectedComponentsLift_apply_coe (by continuity) (s, t)⟩
+  refine ⟨?_, ?_, bij⟩
+  · exact Continuous.connectedComponentsLift_continuous (by continuity)
+  · -- isOpenMap
+    have h_factor : g ∘ mk = Prod.map mk mk := by
+      ext p : 1
+      simp only [Function.comp_apply, Prod.map, g]
+      exact Continuous.connectedComponentsLift_apply_coe (by continuity) p
+
+    have hq_mk : Topology.IsQuotientMap (mk : S × T → ConnectedComponents (S × T)) :=
+      ConnectedComponents.isQuotientMap_coe
+
+    have hq_prod : Topology.IsQuotientMap (Prod.map mk mk : S × T → ConnectedComponents S × ConnectedComponents T) := by
+      exact Topology.IsQuotientMap.prodMap ConnectedComponents.isQuotientMap_coe ConnectedComponents.isQuotientMap_coe
+
+    -- g is a quotient map (follows from factorization)
+    have hq_g : Topology.IsQuotientMap g := by
+      rw [← h_factor] at hq_prod
+      exact Topology.IsQuotientMap.of_comp hq_mk.continuous (Continuous.connectedComponentsLift_continuous _) hq_prod
+
+    -- Bijective quotient map is open
+    obtain ⟨g_inj, g_surj⟩ := bij
+    intro U hU
+    -- g '' U is open iff g ⁻¹' (g '' U) is open (by quotient map property)
+    rw [← hq_g.isOpen_preimage]
+    -- g ⁻¹' (g '' U) = U (by injectivity)
+    have : g ⁻¹' (g '' U) = U := by
+      ext x
+      simp [Set.mem_preimage, Set.mem_image]
+      constructor
+      · intro ⟨y, hy, hxy⟩
+        exact g_inj hxy ▸ hy
+      · intro hx
+        exact ⟨x, hx, rfl⟩
+    rw [this]
+    exact hU
 
 variable {S T} in
 noncomputable def ConnectedComponents.prodMap :

@@ -90,8 +90,11 @@ lemma foo (F : Sheaf K A) [HasColimitsOfShape J A] [(forget A).ReflectsIsomorphi
     rw [ConcreteCategory.isIso_iff_bijective]
     simp only [colimit.cocone_x, Functor.mapCocone_pt, colimit.isColimit_desc]
     refine ⟨?_, ?_⟩
-    · sorry
-    · intro y
+    · -- Injectivity: use sheaf property on covering
+      intro x₁ x₂ h
+      sorry
+    · -- Surjectivity: use sheaf amalgamation to construct preimage
+      intro y
       sorry
   exact .ofPointIso (colimit.isColimit _)
 

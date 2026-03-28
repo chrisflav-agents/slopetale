@@ -26,7 +26,24 @@ variable (R : Type*) [CommRing R]
 /-- If `R` is of weak dimension `≤ 1` if any submodule of a flat module is flat. -/
 lemma flat_submodule [Ring.WeakDimensionLEOne R] {M : Type*} [AddCommGroup M] [Module R M]
     (N : Submodule R M) [Module.Flat R M] :
-    Module.Flat R N :=
+    Module.Flat R N := by
+  -- Strategy: First prove all ideals are flat, then use this to prove submodules of flat modules are flat
+  have all_ideals_flat : ∀ (I : Ideal R), Module.Flat R I := by
+    intro I
+    classical
+    rw [Module.Flat.iff_rTensor_injectiveₛ]
+    intro P _ _ J
+    -- Strategy: I is the direct limit of its FG submodules (which are FG ideals since Ideal R = Submodule R R)
+    -- Use Submodule.FG.rTensor.directLimit: DirectLimit (K ⊗ P) ≃ I ⊗ P
+    -- Show rTensor I J.subtype is injective by factoring through this isomorphism
+    -- and applying Module.DirectLimit.lift_injective
+    sorry
+  -- Now use that all ideals are flat to prove submodules of flat modules are flat
+  rw [Module.Flat.iff_rTensor_injectiveₛ]
+  intro P _ _ J
+  -- Need: rTensor N J.subtype is injective
+  -- Strategy: Use the fact that all ideals are flat
+  -- For any x in ker(rTensor N J.subtype), we need to show x = 0
   sorry
 
 end Ring.WeakDimensionLEOne

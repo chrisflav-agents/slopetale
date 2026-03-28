@@ -10,6 +10,7 @@ import Proetale.Mathlib.Topology.Connected.TotallyDisconnected
 import Mathlib.CategoryTheory.Limits.Shapes.Pullback.IsPullback.Basic
 import Mathlib.Topology.Category.TopCat.Basic
 import Mathlib.Topology.Category.Profinite.Basic
+import Mathlib.CategoryTheory.Limits.Types.Pullbacks
 
 /-!
 # Connected Component in Spectral Space
@@ -294,7 +295,22 @@ theorem ConnectedComponents.lift_bijective_of_isPullback {Y T : Type u} [Topolog
     [TopologicalSpace T] [CompactSpace T] [T2Space T] [TotallyDisconnectedSpace T]
     {f : C(Y, X)} {g : C(Y, T)} {i : C(T, ConnectedComponents X)}
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩)) :
-    Function.Bijective (connectedComponentsLift g.2) := sorry
+    Function.Bijective (connectedComponentsLift g.2) := by
+  have comm : ∀ y, i (g y) = mk (f y) := fun y => congrFun (congrArg (·.hom) pb.w) y
+  constructor
+  · -- Injectivity: use that fibers of g are preconnected
+    apply connectedComponentsLift_injective g.2
+    intro t
+    show IsPreconnected ((g : Y → T) ⁻¹' {t})
+    -- The fiber g⁻¹{t} equals f⁻¹(mk⁻¹{i(t)}), which is a union of connected components
+    -- By the pullback property, two points in the same connected component of Y
+    -- that map to the same point in T must be equal
+    sorry
+  · -- Surjectivity: use pullback universal property
+    intro t
+    obtain ⟨x, hx⟩ := ConnectedComponents.surjective_coe (i t)
+    -- Given x with mk(x) = i(t), the pullback gives us y with f(y) = x and g(y) = t
+    sorry
 
 @[stacks 096C "first part"]
 theorem ConnectedComponents.isHomeomorph_lift_of_isPullback {Y T : Type u} [TopologicalSpace Y]

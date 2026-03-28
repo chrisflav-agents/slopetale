@@ -51,6 +51,17 @@ theorem specComap_preimage_zeroLocus_subset {ι : Type*} [Category ι]
     {F : Functor ι CommRingCat} (C : Cocone F) {i j : ι} (f : i ⟶ j)
     {Iι : (i : ι) → Ideal (F.obj i)} (h : Iι j ≤ (Iι i).map (F.map f).hom) :
     (PrimeSpectrum.comap (C.ι.app i).hom) ⁻¹' (zeroLocus (Iι i)) ⊆
-      (PrimeSpectrum.comap (C.ι.app j).hom) ⁻¹' (zeroLocus (Iι j)):=
-  -- Blueprint: thm:colim-ideal-lim-zero-locus. Monotonicity of preimage under transition maps.
-  sorry
+      (PrimeSpectrum.comap (C.ι.app j).hom) ⁻¹' (zeroLocus (Iι j)):= by
+  intro p hp
+  rw [Set.mem_preimage, PrimeSpectrum.mem_zeroLocus] at hp ⊢
+  have nat : (C.ι.app i).hom = (C.ι.app j).hom.comp (F.map f).hom := by
+    have h := C.ι.naturality f
+    simp only [Functor.const_obj_map] at h
+    rw [← CommRingCat.hom_comp]
+    exact congrArg CommRingCat.Hom.hom h.symm
+  calc (Iι j : Set (F.obj j))
+      ⊆ ((Iι i).map (F.map f).hom : Set (F.obj j)) := h
+    _ ⊆ (Ideal.comap (C.ι.app j).hom p.asIdeal : Set (F.obj j)) := by
+        rw [SetLike.coe_subset_coe, Ideal.map_le_iff_le_comap]
+        rw [Ideal.comap_comap, ← nat, ← SetLike.coe_subset_coe]
+        exact hp

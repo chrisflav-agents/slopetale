@@ -32,24 +32,38 @@ instance changeProp_isContinuous (hPQ : P ≤ Q) :
       (isSheaf_iff_isSheaf_of_type _ G.val).1 G.cond
     have hSF : Presieve.IsSheafFor G.val (R.functorPushforward F).arrows :=
       hGsheaf _ hR'
-    -- The presieve R.arrows.map F generates R.fp(F) and G is a sheaf for it
-    have hSFmap : Presieve.IsSheafFor G.val (R.arrows.map F) := by
-      rw [Presieve.isSheafFor_iff_generate]
-      show Presieve.IsSheafFor G.val (Sieve.generate (R.arrows.map F)).arrows
-      rw [show (Sieve.generate (R.arrows.map F)).arrows =
-        R.arrows.functorPushforward F from Sieve.arrows_generate_map_eq_functorPushforward (F := F)]
-      exact hSF
-    apply existsUnique_of_exists_of_unique
-    · -- Existence: construct compatible family on R.arrows.map F
-      -- For `Presieve.map.of hf : (R.arrows.map F) (F.map f)`, we set `y (F.map f) := xx f hf`
-      -- Compatibility follows from hxx + Full/Faithful of F
+    -- Key fact: changeProp with le_rfl acts as identity on morphisms
+    have key : ∀ {Y Z : P.Over ⊤ S} (g : Y ⟶ Z), (F.map g).hom = g.hom := fun _ => rfl
+    -- Construct a family on the pushforward sieve by transporting xx
+    let yy : Presieve.FamilyOfElements G.val (R.functorPushforward F).arrows := fun Y f hf =>
+      let s := Presieve.getFunctorPushforwardStructure hf
+      -- xx s.premap s.cover : G.val.obj (op (F.obj s.preobj))
+      -- We need: G.val.obj (op Y)
+      -- We have s.lift : Y ⟶ F.obj s.preobj
+      G.val.map s.lift.op (xx s.premap s.cover)
+    -- Show this family is compatible
+    have hyy : yy.Compatible := by
+      intro Y₁ Y₂ W g₁ g₂ f₁ f₂ hf₁ hf₂ comm
+      dsimp only [yy]
+      let s₁ := Presieve.getFunctorPushforwardStructure hf₁
+      let s₂ := Presieve.getFunctorPushforwardStructure hf₂
+      -- BLOCKED: Need to relate G.val.map to (F.op ⋙ G.val).map to use hxx
+      -- The issue is that xx s.premap s.cover : (F.op ⋙ G.val).obj (op s.preobj)
+      -- but the goal has G.val.map, not (F.op ⋙ G.val).map
+      -- Missing: lemmas about how compatible families transform under functorPushforward
       sorry
-    · -- Uniqueness: two amalgamations agree on R.fp(F) by functoriality, hence equal by sep.
-      intro t₁ t₂ ht₁ ht₂
-      apply hSF.isSeparatedFor.ext
-      rintro Y _ ⟨Z, g, h, hg, rfl⟩
-      simp only [op_comp, Functor.map_comp, types_comp_apply]
-      exact (congr_arg (G.val.map h.op) (ht₁ g hg)).trans
-        (congr_arg (G.val.map h.op) (ht₂ g hg)).symm
+    -- Get amalgamation from sheaf condition on G
+    obtain ⟨t, ht, ht_unique⟩ := hSF yy hyy
+    -- Show t works for xx
+    refine ⟨t, ?_, ?_⟩
+    · -- Show t is an amalgamation for xx
+      intro Y f hf
+      -- Need: (F.op ⋙ G.val).map f.op t = xx f hf
+      -- Have: yy is amalgamation, yy uses xx values
+      sorry
+    · -- Show uniqueness
+      intro y hy
+      -- Need to show y = t using ht_unique
+      sorry
 
 end AlgebraicGeometry.Scheme

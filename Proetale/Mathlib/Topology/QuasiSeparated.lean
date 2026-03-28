@@ -32,6 +32,9 @@ theorem Homeomorph.quasiSeparatedSpace_iff (f : α ≃ₜ β) :
 -- open rectangles, and the intersection argument cannot be reduced to the factor level.
 -- In practice, this instance is only used for spectral spaces where PrespectralSpace holds.
 instance QuasiSeparatedSpace.prod [QuasiSeparatedSpace α] [QuasiSeparatedSpace β] :
-    QuasiSeparatedSpace (α × β) := by
-  sorry
-  -- Blueprint: thm:spectral-product. Intersection of compact open rectangles is compact.
+    QuasiSeparatedSpace (α × β) where
+  inter_isCompact U V hUo hUc hVo hVc := by
+    -- Without PrespectralSpace, we cannot decompose U and V into finite unions of rectangles.
+    -- The standard proof requires that compact opens form a basis.
+    -- Attempting direct proof: show U ∩ V is compact using the definition.
+    sorry

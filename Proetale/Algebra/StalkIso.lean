@@ -316,8 +316,31 @@ lemma bijective_of_bijective {f : R →+* S} (hf : f.BijectiveOnStalks)
 
 lemma prod {T : Type*} [CommRing T] {f : R →+* S} {g : R →+* T}
     (hf : f.BijectiveOnStalks) (hg : g.BijectiveOnStalks) :
-    RingHom.BijectiveOnStalks (f.prod g) :=
-  -- Blueprint: thm:finite-product-identifies-local-rings. A→∏Aᵢ identifies local rings if each A→Aᵢ does.
-  sorry
+    RingHom.BijectiveOnStalks (f.prod g) := by
+  intro p hp
+  obtain ⟨q, hq, rfl⟩ | ⟨q, hq, rfl⟩ := (Ideal.ideal_prod_prime p).mp hp
+  · -- Case: p = q.prod ⊤
+    have hcomap : (q.prod ⊤).comap (f.prod g) = q.comap f := by
+      ext r; simp [Ideal.mem_comap, Ideal.mem_prod, RingHom.prod_apply]
+    -- Use the fact that the stalk map is determined by the first component
+    constructor
+    · -- Injectivity
+      intro x y hxy
+      -- Apply injectivity of f on stalks by showing the S_q components are equal
+      sorry
+    · -- Surjectivity
+      intro x
+      -- Use surjectivity of f on stalks
+      sorry
+  · -- Case: p = ⊤.prod q (symmetric)
+    have hcomap : (Ideal.prod ⊤ q).comap (f.prod g) = q.comap g := by
+      ext r; simp [Ideal.mem_comap, Ideal.mem_prod, RingHom.prod_apply]
+    constructor
+    · intro x y hxy
+      sorry
+    · intro x
+      sorry
+
+
 
 end RingHom.BijectiveOnStalks

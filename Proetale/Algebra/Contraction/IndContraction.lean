@@ -8,13 +8,15 @@ import Mathlib.CategoryTheory.Limits.Preserves.Over
 import Mathlib.CategoryTheory.Limits.Preserves.Shapes.Equalizers
 import Mathlib.CategoryTheory.MorphismProperty.Comma
 import Mathlib.CategoryTheory.MorphismProperty.Limits
+import Mathlib.CategoryTheory.Comma.StructuredArrow.Small
+import Mathlib.CategoryTheory.ObjectProperty.Ind
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.IndSpreads
 
 /-!
 # Ind contraction
 -/
 
-universe v u
+universe w v u
 
 namespace CategoryTheory.MorphismProperty
 
@@ -155,8 +157,25 @@ lemma ι_fromIndContraction (S : Under X)
   (isColimitIndContractionCocone P S).fac _ _
 
 /-- The `P`-ind contraction of `X ⟶ S` is ind-`P` over `X`. -/
-lemma property_indContraction_hom (S : Under X) : P.ind ((indContraction P X).obj S).hom :=
-  sorry
+lemma property_indContraction_hom [HasPushouts C] [P.IsMultiplicative] [P.IsStableUnderCobaseChange]
+    [HasCoequalizers (P.Under ⊤ X)] [PreservesColimitsOfShape WalkingParallelPair (Under.forget P ⊤ X)]
+    [EssentiallySmall.{max u v} (P.Under ⊤ X)] [LocallySmall.{max u v} (Under X)]
+    (S : Under X) :
+    MorphismProperty.ind.{max u v} P ((indContraction P X).obj S).hom := by
+  rw [MorphismProperty.ind_iff_ind_underMk]
+  haveI : IsFiltered (CostructuredArrow (Under.forget P ⊤ X) S) :=
+    isFiltered_costructuredArrow_forget' P X
+  set J := CostructuredArrow (Under.forget P ⊤ X) S
+  haveI : EssentiallySmall.{max u v} J := inferInstance
+  -- Use of_essentiallySmall_index to handle universe levels
+  refine ObjectProperty.of_essentiallySmall_index (J := J) ?_ ?_
+  · -- Construct the ColimitPresentation
+    exact { diag := CostructuredArrow.proj (Under.forget P ⊤ X) S ⋙ Under.forget P ⊤ X
+            ι := (indContractionCocone P S).ι
+            isColimit := isColimitIndContractionCocone P S }
+  · -- Prove each object satisfies P.underObj
+    intro j
+    exact j.left.2
 
 lemma exists_costructuredArrow_aux [HasPushouts C] [IndSpreads P]
     {S : Under X} (hS : ∀ {T : Under X} (g : S ⟶ T), P g.right → Q g.right →

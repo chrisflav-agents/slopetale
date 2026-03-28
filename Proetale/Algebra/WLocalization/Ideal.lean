@@ -266,25 +266,18 @@ private lemma ideal_one_eq_map (J : Ideal (WLocalization A)) :
       (Submonoid.powers (Ideal.Quotient.mk J 1))
       (Localization.Away (Ideal.Quotient.mk J 1))
       (Ideal.Quotient.mk J b)).mp key
-    -- c ∈ powers(mk J 1), so c = (mk J 1)^n = 1^n = 1
-    rw [Submonoid.mem_powers_iff] at hc_mem
-    obtain ⟨n, rfl⟩ := hc_mem
-    -- hcb : c * (mk J b) = 0 where c = (mk J 1)^n = 1^n = 1
-    have hb : b ∈ J := by
-      rw [← Ideal.Quotient.eq_zero_iff_mem]
-      -- The coercion ↑⟨(mk J 1)^n, _⟩ = (mk J 1)^n = 1
-      have h1 : (⟨(Ideal.Quotient.mk J 1) ^ n, hc_mem⟩ :
-          Submonoid.powers (Ideal.Quotient.mk J 1)).val = (1 : B ⧸ J) := by
-        show (Ideal.Quotient.mk J 1) ^ n = 1
-        have : Ideal.Quotient.mk J 1 = (1 : B ⧸ J) := map_one _
-        rw [this]; exact one_pow n
-      calc Ideal.Quotient.mk J b
-          = (1 : B ⧸ J) * Ideal.Quotient.mk J b := (one_mul _).symm
-        _ = (⟨(Ideal.Quotient.mk J 1) ^ n, hc_mem⟩ :
-              Submonoid.powers (Ideal.Quotient.mk J 1)).val * Ideal.Quotient.mk J b := by
-            congr 1; exact h1.symm
-        _ = 0 := hcb
-    exact ⟨1, S.one_mem, by simpa using hb⟩
+    -- c ∈ powers(mk J 1) = powers(1), so c = 1
+    have hc_eq : c = 1 := by
+      rw [map_one, Submonoid.mem_powers_iff] at hc_mem
+      obtain ⟨n, hn⟩ := hc_mem
+      calc c = 1 ^ n := hn.symm
+        _ = 1 := one_pow n
+    subst hc_eq
+    refine ⟨1, Submonoid.one_mem S, ?_⟩
+    show 1 * b ∈ J
+    rw [one_mul]
+    have : (Ideal.Quotient.mk J) b = 0 := by rw [← one_mul ((Ideal.Quotient.mk J) b)]; exact hcb
+    exact Ideal.Quotient.eq_zero_iff_mem.mp this
   · -- J.map ≤ ideal 1 J: if b ∈ J, then algebraMap(b) ∈ ker(toLocQuotient)
     rw [Ideal.map_le_iff_le_comap]
     intro b hb
@@ -376,6 +369,11 @@ theorem quotientMap_algebraMap_bijective :
     exact Ideal.mem_comap.mpr ha_J
   · -- Surjectivity
     -- Blueprint: lemma:closed-closed-points-tilde-w-local (item 2). A/I → A_{w,I}/IA_{w,I} is bijective.
+    -- Strategy: Use that algebraMap induces bijection on Spec, combined with BijectiveOnStalks
+    intro x
+    obtain ⟨c, rfl⟩ := Ideal.Quotient.mk_surjective x
+    -- Key: We'll show c is in the image of algebraMap modulo I.map
+    -- Use BijectiveOnStalks to work at the level of localizations
     sorry
 
 variable (I) in
