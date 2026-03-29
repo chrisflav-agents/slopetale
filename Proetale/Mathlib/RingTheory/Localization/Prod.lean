@@ -16,24 +16,24 @@ variable {S T : Type*} [CommRing S] [CommRing T]
 
 namespace Localization.AtPrime
 
+lemma primeCompl_prod_top (q : Ideal S) [q.IsPrime] :
+    letI : (q.prod ⊤ : Ideal (S × T)).IsPrime := Ideal.isPrime_ideal_prod_top
+    (q.prod ⊤ : Ideal (S × T)).primeCompl = (q.primeCompl.prod ⊤ : Submonoid (S × T)) := by
+  letI : (q.prod ⊤ : Ideal (S × T)).IsPrime := Ideal.isPrime_ideal_prod_top
+  ext ⟨s, t⟩
+  simp only [Ideal.primeCompl, Submonoid.mem_prod, Submonoid.mem_top, and_true]
+  show (s, t) ∉ q.prod ⊤ ↔ s ∉ q
+  simp [Ideal.mem_prod]
+
 /-- The localization of `S × T` at `q.prod ⊤` is isomorphic to `S_q × T`. -/
-def prodTopEquiv (q : Ideal S) [q.IsPrime] :
+noncomputable def prodTopEquiv (q : Ideal S) [q.IsPrime] :
     letI : (q.prod ⊤ : Ideal (S × T)).IsPrime := Ideal.isPrime_ideal_prod_top
     Localization.AtPrime (q.prod ⊤ : Ideal (S × T)) ≃+* Localization.AtPrime q × T := by
   letI : (q.prod ⊤ : Ideal (S × T)).IsPrime := Ideal.isPrime_ideal_prod_top
-  -- Forward: (s,t)/(u,v) ↦ (s/u, t)
-  have fwd_units : ∀ x : (q.prod ⊤ : Ideal (S × T)).primeCompl,
-      IsUnit ((algebraMap S (Localization.AtPrime q) x.val.1, x.val.2) :
-        Localization.AtPrime q × T) := by
-    intro ⟨⟨s, t⟩, h⟩
-    simp [Ideal.primeCompl, Ideal.mem_prod] at h
-    refine ⟨⟨(algebraMap S (Localization.AtPrime q) s, t),
-      (IsLocalization.map_units _ ⟨s, h⟩).unit⁻¹.1, ?_, ?_⟩, rfl⟩
-    · sorry
-    · sorry
-  set fwd := IsLocalization.lift fwd_units
-  refine RingEquiv.ofBijective fwd ⟨?_, ?_⟩
-  · sorry -- injectivity
-  · sorry -- surjectivity
+  -- MATHEMATICAL ISSUE: The naive approach fails because we need to show that
+  -- (algebraMap S (Localization.AtPrime q) s, t) is a unit in Localization.AtPrime q × T
+  -- whenever s ∉ q. While the first component is a unit, t is not necessarily a unit in T.
+  -- This suggests the statement may need revision or a different construction approach.
+  sorry
 
 end Localization.AtPrime

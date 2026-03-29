@@ -56,11 +56,19 @@ filtered colimit of étale R-algebras. -/
 private lemma of_indEtale_etale (A : Type u) [CommRing A] [Algebra R A] [Algebra S A]
     [IsScalarTower R S A] [Algebra.IndEtale R S] [Algebra.Etale S A] :
     Algebra.IndEtale R A := by
-  -- Uses PreIndSpreads to descend S → A to a finite level S_j → A',
-  -- then forms pushouts along the filtered colimit diagram for S to recover A as a
-  -- filtered colimit of étale R-algebras.
-  -- The full proof has type coercion issues in CommRingCat; left as sorry.
-  sorry
+  rw [iff_ind_etale, CommAlgCat.etale_eq,
+    ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty]
+  have hRS : MorphismProperty.ind.{u} CommRingCat.etale
+      (CommRingCat.ofHom (algebraMap R S)) := by
+    rwa [iff_ind_etale, CommAlgCat.etale_eq,
+      ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty] at *
+  have hSA : CommRingCat.etale (CommRingCat.ofHom (algebraMap S A)) :=
+    RingHom.etale_algebraMap.mpr inferInstance
+  convert (inferInstance : (MorphismProperty.ind CommRingCat.etale).IsStableUnderComposition).comp_mem
+    (CommRingCat.ofHom (algebraMap R S)) (CommRingCat.ofHom (algebraMap S A))
+    hRS (MorphismProperty.le_ind _ _ hSA) using 1
+  ext x
+  exact IsScalarTower.algebraMap_apply R S A x
 
 lemma trans (T : Type u) [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
     [Algebra.IndEtale R S] [Algebra.IndEtale S T] :
@@ -388,7 +396,8 @@ private lemma isSeparable_image_of_indEtale [Algebra.IndEtale R S]
   -- Φ(1 ⊗ a) = φ(a) = algebraMap S κ(q) ((P.ι.app i).hom a)
   have hΦ : Φ (1 ⊗ₜ[R] a) = algebraMap S (Ideal.ResidueField q) ((P.ι.app i).hom a) := by
     show (Algebra.ofId (Ideal.ResidueField p) (Ideal.ResidueField q)) 1 * φ a = _
-    simp [Algebra.ofId_apply, φ, AlgHom.comp_apply, IsScalarTower.toAlgHom_apply]
+    simp only [Algebra.ofId_apply, map_one, one_mul]
+    rfl
   rw [← hΦ]
   -- κ(p) ⊗[R] Aᵢ is étale over κ(p) (base change of étale along R → κ(p) is étale)
   -- All instances (rightAlgebra, scalar towers, IsPushout) are built inside the by block

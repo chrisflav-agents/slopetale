@@ -223,6 +223,10 @@ instance : Preregular (P.CostructuredArrow ⊤ Scheme.Spec S) := by
   -- This requires: EffectiveEpi g in P.CostructuredArrow → Surjective (F.map g).left
   -- which is non-trivial in general.
   haveI hsur_g : Surjective (F.map g).left := by
+    -- For general P, this requires showing EffectiveEpi in CostructuredArrow implies
+    -- Surjective on the underlying scheme morphism, which is non-trivial.
+    -- For P = @Etale specifically, this follows from the fact that effective epis
+    -- in the étale site are precisely the surjective morphisms.
     sorry
   -- Show the underlying scheme morphism of pullback.fst in the Over category is surjective.
   haveI : Surjective (pullback.fst (F.map f) (F.map g)).left := by

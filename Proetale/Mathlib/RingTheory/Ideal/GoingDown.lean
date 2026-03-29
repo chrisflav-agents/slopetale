@@ -21,7 +21,24 @@ theorem Algebra.HasGoingDown.localization_bijective_of_subsingleton {R S : Type*
     [q.LiesOver p]
     (h : ∀ (p : Ideal R) [p.IsPrime], Subsingleton {q : Ideal S // q.IsPrime ∧ q.LiesOver p}) :
     IsLocalization (Algebra.algebraMapSubmonoid S p.primeCompl) (Localization.AtPrime q) := by
-  -- Blueprint: thm:localization-isom-of-going-down (Stacks 00EA). B_{pB} → B_q is iso when going-down + unique primes above.
-  -- BLOCKED: Standard IsLocalization lemmas require q.primeCompl ≤ algebraMapSubmonoid S p.primeCompl,
-  -- but we have the opposite inclusion. The statement may need revision or a fundamentally different approach.
+  -- Stacks 00EA: Under going-down and uniqueness, S_q = S_{pS}
+  -- BLOCKER: This requires showing that the two submonoids generate the same localization.
+  -- We have: algebraMapSubmonoid S p.primeCompl ≤ q.primeCompl (proved below)
+  -- We need: IsLocalization.iff_of_le_of_exists_dvd requires proving that for every s ∈ q.primeCompl,
+  --          there exists r ∈ algebraMapSubmonoid S p.primeCompl such that s ∣ r
+  -- The uniqueness hypothesis should imply this, but the precise argument is unclear.
+  -- Mathlib lacks: either IsLocalization.of_ge (reverse of of_le) or the divisibility lemma
+  have hdisjoint : Disjoint (↑(Algebra.algebraMapSubmonoid S p.primeCompl) : Set S) (↑q : Set S) :=
+    Ideal.disjoint_primeCompl_of_liesOver q p
+  have hsub : Algebra.algebraMapSubmonoid S p.primeCompl ≤ q.primeCompl := by
+    intro x hx
+    rw [Ideal.mem_primeCompl_iff]
+    exact Set.disjoint_left.mp hdisjoint hx
+  -- We need to show: IsLocalization (algebraMapSubmonoid S p.primeCompl) (Localization.AtPrime q)
+  -- We have: IsLocalization q.primeCompl (Localization.AtPrime q)
+  -- And: algebraMapSubmonoid S p.primeCompl ≤ q.primeCompl
+  --
+  -- IsLocalization.of_le_of_exists_dvd goes from smaller to larger submonoid
+  -- But we need the reverse: from larger (q.primeCompl) to smaller (algebraMapSubmonoid)
+  -- This is the fundamental blocker - Mathlib lacks the reverse direction lemma
   sorry

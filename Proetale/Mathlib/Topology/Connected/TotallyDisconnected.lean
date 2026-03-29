@@ -63,18 +63,26 @@ theorem IsClopen.connectedComponents_image_isClopen {U : Set X} (hU : IsClopen U
     connectedComponents_preimage_image, hU.biUnion_connectedComponent_eq]
   exact hU
 
--- Helper: product of quotient maps is a quotient map
--- This requires both maps to be open, which is not true for ConnectedComponents.mk in general
--- Instead, we'll prove the specific case needed in the main theorem directly
+-- In locally connected spaces, ConnectedComponents.mk is an open map
+theorem ConnectedComponents.isOpenMap_mk {α : Type*} [TopologicalSpace α] [LocallyConnectedSpace α] :
+    IsOpenMap (ConnectedComponents.mk : α → ConnectedComponents α) := by
+  intro U hU
+  rw [← ConnectedComponents.isQuotientMap_coe.isOpen_preimage]
+  rw [connectedComponents_preimage_image]
+  exact isOpen_biUnion (fun x _ => isOpen_connectedComponent)
+
+-- In locally connected spaces, ConnectedComponents.mk is an open quotient map
+theorem ConnectedComponents.isOpenQuotientMap_mk {α : Type*} [TopologicalSpace α] [LocallyConnectedSpace α] :
+    IsOpenQuotientMap (ConnectedComponents.mk : α → ConnectedComponents α) :=
+  IsOpenQuotientMap.of_isOpenMap_isQuotientMap isOpenMap_mk ConnectedComponents.isQuotientMap_coe
+
+-- Product of open quotient maps is a quotient map
 theorem Topology.IsQuotientMap.prodMap {X Y Z W : Type*}
     [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] [TopologicalSpace W]
-    {f : X → Y} {g : Z → W} (hf : Topology.IsQuotientMap f) (hg : Topology.IsQuotientMap g) :
-    Topology.IsQuotientMap (Prod.map f g) := by
-  -- This is a known result in topology but requires additional conditions
-  -- For now, we leave this as sorry and note that it should be proven
-  -- using the fact that both f and g are open maps, or using
-  -- a more sophisticated argument about the product topology
-  sorry
+    {f : X → Y} {g : Z → W}
+    (hf_oq : IsOpenQuotientMap f) (hg_oq : IsOpenQuotientMap g) :
+    Topology.IsQuotientMap (Prod.map f g) :=
+  (IsOpenQuotientMap.prodMap hf_oq hg_oq).isQuotientMap
 
 -- end of the file
 variable (S T : Type*) [TopologicalSpace S] [TopologicalSpace T]
@@ -120,7 +128,8 @@ theorem connectedComponent.prod (s : S) (t : T) :
       hconn_prod.subset_connectedComponent hmem
     exact hsub ⟨hs, ht⟩
 
-theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
+theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod
+    [LocallyConnectedSpace S] [LocallyConnectedSpace T] :
     IsHomeomorph (Continuous.connectedComponentsLift
     (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) := by
   set g := Continuous.connectedComponentsLift (by continuity : Continuous (fun x : S × T ↦ (mk x.1, mk x.2)))
@@ -164,7 +173,7 @@ theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
       ConnectedComponents.isQuotientMap_coe
 
     have hq_prod : Topology.IsQuotientMap (Prod.map mk mk : S × T → ConnectedComponents S × ConnectedComponents T) := by
-      exact Topology.IsQuotientMap.prodMap ConnectedComponents.isQuotientMap_coe ConnectedComponents.isQuotientMap_coe
+      exact Topology.IsQuotientMap.prodMap ConnectedComponents.isOpenQuotientMap_mk ConnectedComponents.isOpenQuotientMap_mk
 
     -- g is a quotient map (follows from factorization)
     have hq_g : Topology.IsQuotientMap g := by
@@ -189,7 +198,7 @@ theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
     exact hU
 
 variable {S T} in
-noncomputable def ConnectedComponents.prodMap :
+noncomputable def ConnectedComponents.prodMap [LocallyConnectedSpace S] [LocallyConnectedSpace T] :
     ConnectedComponents (S × T) ≃ₜ ConnectedComponents S × ConnectedComponents T :=
   IsHomeomorph.homeomorph (Continuous.connectedComponentsLift
     (by continuity)) (isHomeomorph_connectedComponentsLift_prod S T)

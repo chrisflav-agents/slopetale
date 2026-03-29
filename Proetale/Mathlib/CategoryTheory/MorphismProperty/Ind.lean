@@ -28,7 +28,7 @@ universe s t w' w v u
 
 namespace CategoryTheory
 
-open Limits
+open Limits Cardinal
 
 variable {C : Type u} [Category.{v} C] (P : MorphismProperty C)
 
@@ -158,9 +158,22 @@ lemma le_pro : P ≤ pro.{w} P := by
 instance [P.ContainsIdentities] : (pro.{w} P).ContainsIdentities where
   id_mem X := le_pro _ _ (P.id_mem X)
 
+attribute [local instance] Cardinal.fact_isRegular_aleph0
+
 lemma op_isFinitelyPresentable :
-    (isFinitelyPresentable.{w} C).op = isFinitelyPresentable.{w} Cᵒᵖ :=
-  sorry
+    (isFinitelyPresentable.{w} C).op = isFinitelyPresentable.{w} Cᵒᵖ := by
+  ext X Y f
+  simp only [MorphismProperty.op, MorphismProperty.isFinitelyPresentable,
+    ObjectProperty.isFinitelyPresentable]
+  constructor
+  · intro h
+    -- h : IsFinitelyPresentable (Under.mk f.unop) in Under Y.unop (in C)
+    -- Goal: IsFinitelyPresentable (Under.mk f) in Under X (in Cᵒᵖ)
+    sorry
+  · intro h
+    -- h : IsFinitelyPresentable (Under.mk f) in Under X (in Cᵒᵖ)
+    -- Goal: IsFinitelyPresentable (Under.mk f.unop) in Under Y.unop (in C)
+    sorry
 
 lemma pro_pro [LocallySmall.{w} C] (H :P ≤ isFinitelyPresentable.{w} C) :
     pro.{w} (pro.{w} P) = pro.{w} P := by

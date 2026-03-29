@@ -187,8 +187,8 @@ instance preservesColimitsOfSize_forget_commRingCat :
   -- Blueprint: lemma:commalgcat-colimits. forget₂ CommAlgCat CommRingCat preserves colimits.
     PreservesColimits (forget₂ (CommAlgCat R) CommRingCat) := by
   -- The equivalence functor creates colimits, and Under.forget preserves them
-  -- when they exist in CommRingCat
-  refine ⟨fun {J} {_} => ⟨fun {K} => ⟨fun {c} hc => ?_⟩⟩⟩
+  -- when they exist in CommRingCat. This requires showing Under.forget preserves
+  -- all colimits (not just filtered), which needs explicit construction.
   sorry
 
 -- Helper: cocone compatibility at element level for AlgCat cocones over a CommAlgCat diagram
@@ -394,12 +394,14 @@ instance preservesFilteredColimits_forget (R : Type u) [CommRing R] :
 
 -- Note: The output universe parameters of PreservesFilteredColimitsOfSize cannot be
 -- resolved to {u, u} automatically; a direct colimit construction (like Under.forget's
--- instance in Preserves/Over.lean) would be needed for full generality. For now we use sorry.
+-- instance in Preserves/Over.lean) would be needed for full generality.
 -- The downstream uses (IsIPC, ReflectsFilteredColimitsOfSize) only need {u, u},
 -- which is provided by the preservesFilteredColimits_forget instance above.
 instance preservesFilteredColimitsOfSize_forget (R : Type u) [CommRing R] :
     PreservesFilteredColimitsOfSize (forget (CommAlgCat.{u} R)) :=
   -- Blueprint: lemma:commalgcat-colimits. forget CommAlgCat preserves filtered colimits.
+  -- Universe mismatch: PreservesFilteredColimits gives {u, u, u, u, u+1, u+1}
+  -- but we need arbitrary universe parameters. Requires explicit construction.
   sorry
 
 instance preservesLimitsOfSize_forget (R : Type u) [CommRing R] :

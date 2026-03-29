@@ -368,12 +368,9 @@ theorem quotientMap_algebraMap_bijective :
     rw [← this]
     exact Ideal.mem_comap.mpr ha_J
   · -- Surjectivity
-    -- Blueprint: lemma:closed-closed-points-tilde-w-local (item 2). A/I → A_{w,I}/IA_{w,I} is bijective.
-    -- Strategy: Use that algebraMap induces bijection on Spec, combined with BijectiveOnStalks
-    intro x
-    obtain ⟨c, rfl⟩ := Ideal.Quotient.mk_surjective x
-    -- Key: We'll show c is in the image of algebraMap modulo I.map
-    -- Use BijectiveOnStalks to work at the level of localizations
+    -- Use that the composition A → B → C factors the map A → C
+    -- and both A → B and B → C preserve surjectivity on quotients
+    apply Ideal.quotientMap_surjective
     sorry
 
 variable (I) in

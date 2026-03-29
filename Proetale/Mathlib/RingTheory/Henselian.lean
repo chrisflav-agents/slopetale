@@ -303,15 +303,24 @@ private lemma henselization_jointly_surjective (R : Type u) [CommRing R] (S : Ty
         (CommAlgCat.of R S))
       (y_j : (hensDiagram R S).obj j),
       (stageToHenselization R S j).hom y_j = y := by
-  -- Needed: PreservesColimit (hensDiagram R S) (forget (CommAlgCat R))
-  -- Proof chain: forget = forget₂ CommRingCat ⋙ forget CommRingCat (by HasForget₂.forget_comp)
-  -- forget₂ preserves filtered colimits (via commAlgCatEquivUnder + Under.forget preserves filtered)
-  -- forget CommRingCat preserves filtered colimits (CommRingCat.FilteredColimits)
-  -- Also needs: IsFiltered (CostructuredArrow L Y) (from étale R-algebras: tensor products, etc.)
-  -- Universe issue: CostructuredArrow is Category.{u} on Type (u+1), but
-  -- PreservesFilteredColimits (forget CommRingCat.{u}) is PreservesFilteredColimitsOfSize.{u, u},
-  -- so need equivSmallModel or PreservesFilteredColimitsOfSize.{u+1, u}.
-  haveI : PreservesColimit (hensDiagram R S) (forget (CommAlgCat (CommRingCat.of R))) := sorry
+  -- Strategy: Show that forget (CommAlgCat R) preserves this filtered colimit.
+  -- Key facts needed:
+  -- 1. CostructuredArrow L Y is filtered (étale algebras have tensor products)
+  -- 2. forget₂ (CommAlgCat R) CommRingCat preserves filtered colimits
+  -- 3. forget CommRingCat preserves filtered colimits (already in Mathlib)
+  let L := CommRingCat.Under.inclusion CommRingCat.Etale (CommRingCat.of R)
+  let Y := CommAlgCat.of R S
+  haveI : IsFiltered (CostructuredArrow L Y) := by
+    -- Étale R-algebras are closed under tensor products (Algebra.Etale.baseChange),
+    -- which provides the span amalgamations needed for filteredness.
+    sorry
+  haveI : PreservesFilteredColimits (forget₂ (CommAlgCat R) CommRingCat) := by
+    -- Follows from commAlgCatEquivUnder and Under.forget preserving filtered colimits.
+    sorry
+  haveI : PreservesColimit (hensDiagram R S) (forget (CommAlgCat (CommRingCat.of R))) := by
+    -- forget (CommAlgCat R) = forget₂ ⋙ forget by HasForget₂.forget_comp
+    -- Both functors preserve filtered colimits, so their composition does too
+    sorry
   -- Push y through the isomorphism to the colimit
   let iso := henselization_isom_colim R S
   -- Use Concrete.colimit_exists_rep to find a representative in the colimit

@@ -302,14 +302,19 @@ theorem ConnectedComponents.lift_bijective_of_isPullback {Y T : Type u} [Topolog
     apply connectedComponentsLift_injective g.2
     intro t
     show IsPreconnected ((g : Y → T) ⁻¹' {t})
-    -- The fiber g⁻¹{t} equals f⁻¹(mk⁻¹{i(t)}), which is a union of connected components
-    -- By the pullback property, two points in the same connected component of Y
-    -- that map to the same point in T must be equal
+    -- The fiber g⁻¹{t} maps into a connected component of X via f
+    -- Since connected components are connected, the fiber is preconnected
+    -- Mathematical argument: For any y ∈ g⁻¹{t}, we have i(t) = i(g(y)) = mk(f(y))
+    -- So all points in the fiber map to the same connected component
+    -- The fiber is thus contained in f⁻¹(connectedComponent(f(y)))
+    -- which is preconnected as the preimage of a connected set
     sorry
   · -- Surjectivity: use pullback universal property
     intro t
     obtain ⟨x, hx⟩ := ConnectedComponents.surjective_coe (i t)
-    -- Given x with mk(x) = i(t), the pullback gives us y with f(y) = x and g(y) = t
+    -- Given x with mk(x) = i(t), we need to find y with connectedComponentsLift g.2 y = t
+    -- The pullback property gives us y with f(y) = x and g(y) = t
+    -- Then connectedComponentsLift g.2 y = mk(g(y)) = mk(t) = t
     sorry
 
 @[stacks 096C "first part"]

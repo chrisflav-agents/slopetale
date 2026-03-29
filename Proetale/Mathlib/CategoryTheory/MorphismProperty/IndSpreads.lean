@@ -91,14 +91,18 @@ alias exists_isPushout_of_isFiltered_of_hom := IndSpreads.exists_isPushout_of_ho
 
 variable (Q : MorphismProperty C)
 
--- TODO: this is in mathlib with the correct assumptions, fix this one
-instance [P.IsStableUnderComposition] [PreIndSpreads.{w} P] : IsStableUnderComposition (ind.{w} P) where
-  comp_mem {X Y Z} f g :=
-      fun ⟨If, _, _, Df, tf, sf, hsf, hstf⟩ ⟨Ig, _, _, Dg, tg, sg, hsg, hstg⟩ ↦ by
-    choose σ T' f' u h hf' using fun i ↦ P.exists_isPushout_of_isFiltered hsf (tg.app i) (hstg i).1
-    sorry
+section WithFinitelyPresentable
 
-instance [P.IsMultiplicative] [PreIndSpreads.{w} P] : (ind.{w} P).IsMultiplicative where
+variable [∀ X : C, IsFinitelyAccessibleCategory.{w} (Under X)] [HasPushouts C]
+  [P.IsStableUnderCobaseChange] [PreIndSpreads.{w} P] (H : P ≤ isFinitelyPresentable.{w} C)
+
+instance [P.IsStableUnderComposition] : IsStableUnderComposition (ind.{w} P) :=
+  IsStableUnderComposition.ind_of_preIndSpreads H
+
+instance [P.IsMultiplicative] : (ind.{w} P).IsMultiplicative :=
+  IsMultiplicative.ind_of_preIndSpreads H
+
+end WithFinitelyPresentable
 
 /--
 A property of morphisms `P` is said to pro-spread if `P`-morphisms into cofiltered limits
@@ -170,18 +174,9 @@ class ProSpreads (P : MorphismProperty C) : Prop extends PreProSpreads.{w} P whe
 
 alias exists_isPullback_of_isCofiltered_of_hom := ProSpreads.exists_isPullback_of_hom
 
--- TODO: this is in mathlib with the correct assumptions, fix this one
-instance [P.IsStableUnderComposition] [PreProSpreads.{w} P] : IsStableUnderComposition (pro.{w} P) := by
-  have : PreIndSpreads.{w} P.op := by
-    constructor
-    intro J _ _ D c hc T f hf
-    obtain ⟨j, T', f', g, h, hf'⟩ := P.exists_isPullback_of_isCofiltered
-      (coneLeftOpOfCocone c) (isLimitConeLeftOpOfCocone _ hc) f.unop hf
-    exact ⟨j.unop, Opposite.op T', f'.op, g.op, h.op.flip, hf'⟩
-  rw [pro_eq_unop_ind_op]
-  infer_instance
-
--- TODO: this is in mathlib with the correct assumptions, fix this one
-instance [P.IsMultiplicative] [PreProSpreads.{w} P] : (pro.{w} P).IsMultiplicative where
+-- TODO: Provide instances for pro similar to ind above.
+-- The pro case requires instances for Cᵒᵖ that don't automatically transfer from C.
+-- For now, users can apply IsStableUnderComposition.ind_of_preIndSpreads to P.op
+-- and use pro_eq_unop_ind_op to get the result for pro P.
 
 end MorphismProperty
