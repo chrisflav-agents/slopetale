@@ -1,0 +1,58 @@
+{
+  "iteration": 1,
+  "stage": "prover",
+  "mode": "parallel",
+  "startedAt": "2026-03-28T05:14:29Z",
+  "plan": {
+    "status": "done",
+    "durationSecs": 494
+  },
+  "prover": {
+    "status": "done",
+    "durationSecs": 3713
+  },
+  "provers": {
+    "Proetale_Algebra_IndEtale": {
+      "file": "Proetale/Algebra/IndEtale.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_IndZariski": {
+      "file": "Proetale/Algebra/IndZariski.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_StalkIso": {
+      "file": "Proetale/Algebra/StalkIso.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_WContractible": {
+      "file": "Proetale/Algebra/WContractible.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_WeakDimension": {
+      "file": "Proetale/Algebra/WeakDimension.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_WLocalization_Ideal": {
+      "file": "Proetale/Algebra/WLocalization/Ideal.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_WStrictLocalization": {
+      "file": "Proetale/Algebra/WStrictLocalization.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_Algebra_Category_CommAlgCat_Limits": {
+      "file": "Proetale/Mathlib/Algebra/Category/CommAlgCat/Limits.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_AlgebraicGeometry_Sites_Small": {
+      "file": "Proetale/Mathlib/AlgebraicGeometry/Sites/Small.lean",
+      "status": "done"
+    }
+  },
+  "review": {
+    "status": "done",
+    "durationSecs": 908
+  },
+  "completedAt": "2026-03-28T06:39:44Z",
+  "wallTimeSecs": 5115
+}

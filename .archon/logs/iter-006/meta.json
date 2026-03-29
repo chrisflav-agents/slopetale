@@ -1,0 +1,34 @@
+{
+  "iteration": 6,
+  "stage": "prover",
+  "mode": "parallel",
+  "startedAt": "2026-03-28T15:39:21Z",
+  "plan": {
+    "status": "done",
+    "durationSecs": 520
+  },
+  "prover": {
+    "status": "done",
+    "durationSecs": 3012
+  },
+  "provers": {
+    "Proetale_Algebra_WContractible": {
+      "file": "Proetale/Algebra/WContractible.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_AlgebraicGeometry_Sites_Small": {
+      "file": "Proetale/Mathlib/AlgebraicGeometry/Sites/Small.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_RingTheory_Ideal_GoingDown": {
+      "file": "Proetale/Mathlib/RingTheory/Ideal/GoingDown.lean",
+      "status": "done"
+    }
+  },
+  "review": {
+    "status": "done",
+    "durationSecs": 238
+  },
+  "completedAt": "2026-03-28T16:42:11Z",
+  "wallTimeSecs": 3770
+}

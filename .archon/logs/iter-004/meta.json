@@ -1,0 +1,50 @@
+{
+  "iteration": 4,
+  "stage": "prover",
+  "mode": "parallel",
+  "startedAt": "2026-03-28T13:38:46Z",
+  "plan": {
+    "status": "done",
+    "durationSecs": 475
+  },
+  "prover": {
+    "status": "done",
+    "durationSecs": 2189
+  },
+  "provers": {
+    "Proetale_Algebra_IndEtale": {
+      "file": "Proetale/Algebra/IndEtale.lean",
+      "status": "done"
+    },
+    "Proetale_Algebra_WContractible": {
+      "file": "Proetale/Algebra/WContractible.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_RingTheory_Ideal_GoingDown": {
+      "file": "Proetale/Mathlib/RingTheory/Ideal/GoingDown.lean",
+      "status": "done"
+    },
+    "Proetale_Topology_Coherent_Affine": {
+      "file": "Proetale/Topology/Coherent/Affine.lean",
+      "status": "done"
+    },
+    "Proetale_Topology_Comparison_Affine": {
+      "file": "Proetale/Topology/Comparison/Affine.lean",
+      "status": "done"
+    },
+    "Proetale_Topology_Comparison_Etale": {
+      "file": "Proetale/Topology/Comparison/Etale.lean",
+      "status": "done"
+    },
+    "Proetale_Topology_Flat_CompactOpenCovered": {
+      "file": "Proetale/Topology/Flat/CompactOpenCovered.lean",
+      "status": "done"
+    }
+  },
+  "review": {
+    "status": "done",
+    "durationSecs": 516
+  },
+  "completedAt": "2026-03-28T14:31:46Z",
+  "wallTimeSecs": 3180
+}

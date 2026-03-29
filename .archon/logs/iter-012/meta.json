@@ -1,0 +1,30 @@
+{
+  "iteration": 12,
+  "stage": "prover",
+  "mode": "parallel",
+  "startedAt": "2026-03-28T18:16:12Z",
+  "plan": {
+    "status": "done",
+    "durationSecs": 136
+  },
+  "prover": {
+    "status": "done",
+    "durationSecs": 698
+  },
+  "provers": {
+    "Proetale_Algebra_WContractible": {
+      "file": "Proetale/Algebra/WContractible.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_RingTheory_Ideal_GoingDown": {
+      "file": "Proetale/Mathlib/RingTheory/Ideal/GoingDown.lean",
+      "status": "done"
+    }
+  },
+  "review": {
+    "status": "done",
+    "durationSecs": 218
+  },
+  "completedAt": "2026-03-28T18:33:44Z",
+  "wallTimeSecs": 1052
+}

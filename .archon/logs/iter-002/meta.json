@@ -1,0 +1,51 @@
+{
+  "iteration": 2,
+  "stage": "prover",
+  "mode": "parallel",
+  "startedAt": "2026-03-28T06:39:44Z",
+  "plan": {
+    "status": "done",
+    "durationSecs": 391
+  },
+  "prover": {
+    "status": "running"
+  },
+  "provers": {
+    "Proetale_Algebra_WContractible": {
+      "file": "Proetale/Algebra/WContractible.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_AlgebraicGeometry_Sites_Small": {
+      "file": "Proetale/Mathlib/AlgebraicGeometry/Sites/Small.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_CategoryTheory_MorphismProperty_Ind": {
+      "file": "Proetale/Mathlib/CategoryTheory/MorphismProperty/Ind.lean",
+      "status": "done"
+    },
+    "Proetale_Mathlib_CategoryTheory_MorphismProperty_IndSpreads": {
+      "file": "Proetale/Mathlib/CategoryTheory/MorphismProperty/IndSpreads.lean",
+      "status": "running"
+    },
+    "Proetale_Mathlib_RingTheory_Henselian": {
+      "file": "Proetale/Mathlib/RingTheory/Henselian.lean",
+      "status": "running"
+    },
+    "Proetale_Mathlib_RingTheory_Ideal_GoingDown": {
+      "file": "Proetale/Mathlib/RingTheory/Ideal/GoingDown.lean",
+      "status": "running"
+    },
+    "Proetale_Mathlib_RingTheory_Localization_Prod": {
+      "file": "Proetale/Mathlib/RingTheory/Localization/Prod.lean",
+      "status": "running"
+    },
+    "Proetale_Mathlib_Topology_Connected_TotallyDisconnected": {
+      "file": "Proetale/Mathlib/Topology/Connected/TotallyDisconnected.lean",
+      "status": "running"
+    },
+    "Proetale_Mathlib_Topology_QuasiSeparated": {
+      "file": "Proetale/Mathlib/Topology/QuasiSeparated.lean",
+      "status": "running"
+    }
+  }
+}
