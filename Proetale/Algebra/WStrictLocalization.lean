@@ -182,10 +182,10 @@ instance : Module.FaithfullyFlat R (WStrictLocalization R) := by
 -- `IsWLocalRing` follows from the outer `WLocalization`. Strictly Henselian stalks at maximal
 -- ideals: the `IndEtaleContraction` makes stalks of `WLocalization R` strictly Henselian, and
 -- the outer `WLocalization` (being ind-Zariski) identifies local rings at closed points.
+instance : IsWLocalRing (WStrictLocalization R) :=
+  inferInstanceAs (IsWLocalRing (WLocalization (IndEtaleContraction (WLocalization R))))
+
 instance : IsWStrictlyLocalRing (WStrictLocalization R) where
-  -- The w-local property: WStrictLocalization R = WLocalization (...) is always w-local
-  wLocalSpace_primeSepectrum :=
-    (inferInstanceAs (IsWLocalRing (WLocalization (IndEtaleContraction (WLocalization R))))).wLocalSpace_primeSepectrum
   -- Strictly Henselian stalks: the IndEtaleContraction makes stalks of WLocalization R
   -- strictly Henselian (cor:strictly-henselian-etale-contraction in blueprint), and the
   -- outer WLocalization (being ind-Zariski) identifies local rings at closed points

@@ -44,6 +44,13 @@ private lemma pderiv_toMvPolynomial_self {σ : Type*} [DecidableEq σ] (i : σ) 
       Pi.single_eq_same, map_mul, map_natCast]
     ring
 
+private def presentationS : Presentation R (S f) (Fin 2) (Fin 2) := by
+  let s : (S f) → (MvPolynomial (Fin 2) R) :=
+    Function.surjInv (f := (Ideal.Quotient.mk (idealJ f))) Quotient.mk_surjective
+  have hs (x : S f) : Ideal.Quotient.mk _ (s x) = x := by
+    rw [Function.surjInv_eq (f := (Ideal.Quotient.mk (idealJ f)))]
+  apply Presentation.naive s hs
+
 -- Helper: pderiv j (toMvPolynomial i p) = 0 when j ≠ i
 private lemma pderiv_toMvPolynomial_ne {σ : Type*} (i j : σ) (hne : j ≠ i) (p : R[X]) :
     pderiv j (toMvPolynomial i p) = 0 := by
