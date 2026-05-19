@@ -221,8 +221,18 @@ instance : Preregular (P.CostructuredArrow ⊤ Scheme.Spec S) := by
   intro X Y Z f g hg
   let F := MorphismProperty.CostructuredArrow.toOver P Scheme.Spec S
   -- The key step: show the underlying scheme map of g is surjective.
-  -- This requires: EffectiveEpi g in P.CostructuredArrow → Surjective (F.map g).left
-  -- which is non-trivial in general.
+  -- This requires: `EffectiveEpi g` in `P.CostructuredArrow ⊤ Scheme.Spec S` implies
+  -- `Surjective (F.map g).left`.
+  --
+  -- NOTE: Per `blueprint/src/chapters/pro-categories.tex` (`remark:et-not-precoherent-topology`),
+  -- this is explicitly *open* in the mathematical literature: "it is not clear to the authors
+  -- if effective epimorphisms in `affet(X)` are still surjective." So this step cannot be
+  -- proved with the current hypotheses on `P`; it would require either:
+  --   (a) original research establishing the surjectivity, or
+  --   (b) replacing `Preregular.of_hasPullbacks_of_effectiveEpi_fst` with a different
+  --       construction (e.g. via `Functor.reflects_preregular` using cover density and
+  --       an `EffectivelyEnough` instance from affine open covers — but this requires
+  --       extra hypotheses ensuring `Preregular (MorphismProperty.Over P ⊤ S)`).
   haveI hsur_g : Surjective (F.map g).left := by
     sorry
   -- Show the underlying scheme morphism of pullback.fst in the Over category is surjective.
@@ -238,7 +248,28 @@ instance : Preregular (P.CostructuredArrow ⊤ Scheme.Spec S) := by
   -- pullback.fst in Over category is EffectiveEpi (from Surjective → EffectiveEpi)
   -- NOTE: This step needs EffectiveEpi from Surjective for general P, which may not hold.
   -- For P = @Etale, this is Scheme.Etale.effectiveEpi_of_surjective.
+  -- Attempt: reduce to effective-epi at the scheme level via the two forgetful functors.
+  -- `MorphismProperty.Over.forget P ⊤ S ⋙ Over.forget S` should reflect effective epis,
+  -- and then we need `EffectiveEpi` of the underlying scheme morphism. The pullback.fst
+  -- is surjective; for `P = @Etale` it is also LocallyOfFinitePresentation + Flat (since
+  -- `F.map f` and `F.map g` carry the étale property which is base-change stable), so the
+  -- scheme map is an effective epi by `AlgebraicGeometry.Scheme` instance in Fpqc.lean.
+  -- For general `P` with only the listed typeclasses, the underlying scheme map is only
+  -- surjective; we'd need extra hypotheses (e.g. `P ⊆ Flat ⊓ LocallyOfFinitePresentation`)
+  -- to conclude.
   haveI : EffectiveEpi (pullback.fst (F.map f) (F.map g)) := by
+    apply (MorphismProperty.Over.forget P ⊤ S ⋙ CategoryTheory.Over.forget S).effectiveEpi_of_map
+    -- Goal (after `dsimp`):
+    --   `EffectiveEpi (Over.Hom.left (MorphismProperty.Comma.Hom.hom`
+    --   `  (pullback.fst (F.map f) (F.map g))))`
+    -- i.e. the underlying scheme morphism is an effective epi.
+    -- We have `Surjective` of it (via the prior `Surjective (pullback.fst …).left` step).
+    -- Mathlib provides `EffectiveEpi` from `Surjective + Flat + LocallyOfFinitePresentation`
+    -- (`Mathlib/AlgebraicGeometry/Sites/Fpqc.lean`). For `P = @Etale` the pullback inherits
+    -- these properties via base change, so `infer_instance` succeeds. For arbitrary `P`
+    -- with only `[IsZariskiLocalAtSource P, IsStableUnderBaseChange P, HasOfPostcompProperty P P,
+    -- IsMultiplicative P]`, the scheme map is only surjective; we would need additional
+    -- hypotheses (e.g. `P ≤ Flat ⊓ LocallyOfFinitePresentation`) to invoke that instance.
     sorry
   -- F preserves pullbacks and reflects effective epis, so transfer back
   apply F.effectiveEpi_of_map

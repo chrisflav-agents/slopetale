@@ -348,6 +348,103 @@ lemma isClosedEmbedding_algebraMap_specComap (_h : IsClosed T) :
   PrimeSpectrum.isClosedEmbedding_comap_of_surjective (Restriction T)
     (algebraMap A (Restriction T)) (algebraMap_surjective T)
 
+/-- If `A` is w-local and `T ⊆ π₀(Spec A)` is closed, then `Restriction T` is
+w-local. This is Stacks 097D. -/
+-- Strategy (to be proved in a later round):
+-- 1. By `range_algebraMap_specComap` and `isClosedEmbedding_algebraMap_specComap`,
+--    `Spec (Restriction T)` identifies with the closed subspace
+--    `ConnectedComponents.mk ⁻¹' T ⊆ Spec A`.
+-- 2. The set `ConnectedComponents.mk ⁻¹' T` is saturated for the connected-component
+--    relation, hence a (closed) union of connected components.
+-- 3. By `IsWLocalRing A`, each connected component of `Spec A` contains a unique
+--    closed point. The closed points of `Spec (Restriction T)` are precisely the
+--    images (under the embedding) of those closed points lying in `mk⁻¹' T`.
+-- 4. The closed-points subspace `closedPoints (Spec (Restriction T))` is then a
+--    homeomorphic copy of `closedPoints (Spec A) ∩ mk⁻¹' T`, which is closed in
+--    `Spec (Restriction T)` and totally disconnected; this verifies the
+--    `WLocalSpace` axioms for `Spec (Restriction T)`.
+lemma isWLocalRing_of_isClosed [IsWLocalRing A] (h : IsClosed T) :
+    IsWLocalRing (Restriction T) :=
+  ⟨(isClosedEmbedding_algebraMap_specComap (T := T) h).wLocalSpace⟩
+
+/-- The connected components of `Spec (Restriction T)` are canonically homeomorphic
+to `T`, when `T` is closed and `A` is w-local.
+
+This is the identification used in the construction of the w-contractification
+(blueprint `def:modify-pi0-profinite`, Stacks 097D / 0983). -/
+-- Strategy (to be proved in a later round):
+-- 1. Identify `Spec (Restriction T)` with the closed subspace
+--    `mk ⁻¹' T ⊆ Spec A` via `isClosedEmbedding_algebraMap_specComap`.
+-- 2. The connected components of `mk ⁻¹' T` (with the subspace topology) are
+--    in canonical bijection with `T` itself, because `mk ⁻¹' T` is a union of
+--    connected components of `Spec A` (since `T` is closed).
+-- 3. Combine to get the desired homeomorphism.
+def connectedComponentsEquiv [IsWLocalRing A] (h : IsClosed T) :
+    ConnectedComponents (PrimeSpectrum (Restriction T)) ≃ₜ T := by
+  set f : PrimeSpectrum (Restriction T) → PrimeSpectrum A :=
+    PrimeSpectrum.comap (algebraMap A (Restriction T)) with hf_def
+  have hce : IsClosedEmbedding f := isClosedEmbedding_algebraMap_specComap (T := T) h
+  have hrange : Set.range f = ConnectedComponents.mk ⁻¹' T :=
+    range_algebraMap_specComap (T := T) h
+  have hf_cont : Continuous f := hce.continuous
+  -- The continuous function PrimeSpectrum (Restriction T) → T, sending q to mk (f q).
+  have hmem : ∀ q, ConnectedComponents.mk (f q) ∈ T := fun q => by
+    have : f q ∈ Set.range f := Set.mem_range_self q
+    rw [hrange] at this; exact this
+  let φ : PrimeSpectrum (Restriction T) → T :=
+    fun q => ⟨ConnectedComponents.mk (f q), hmem q⟩
+  have hφ_cont : Continuous φ := by
+    refine Continuous.subtype_mk ?_ _
+    exact ConnectedComponents.continuous_coe.comp hf_cont
+  -- ψ is the lift to connected components.
+  let ψ : ConnectedComponents (PrimeSpectrum (Restriction T)) → T :=
+    Continuous.connectedComponentsLift hφ_cont
+  have hψ_cont : Continuous ψ := Continuous.connectedComponentsLift_continuous _
+  -- Instances we need.
+  haveI : IsWLocalRing (Restriction T) := isWLocalRing_of_isClosed (T := T) h
+  -- Surjectivity.
+  have hsurj : Function.Surjective ψ := by
+    rintro ⟨t, ht⟩
+    obtain ⟨x, rfl⟩ := ConnectedComponents.surjective_coe t
+    have hx_range : x ∈ Set.range f := by rw [hrange]; exact ht
+    obtain ⟨q, hq⟩ := hx_range
+    refine ⟨ConnectedComponents.mk q, ?_⟩
+    show φ q = ⟨ConnectedComponents.mk x, ht⟩
+    simp [φ, hq]
+  -- Injectivity via Continuous.connectedComponentsLift_injective.
+  have hinj : Function.Injective ψ := by
+    apply Continuous.connectedComponentsLift_injective hφ_cont
+    rintro ⟨t, ht⟩
+    obtain ⟨x, rfl⟩ := ConnectedComponents.surjective_coe t
+    -- φ ⁻¹' {⟨mk x, ht⟩} = f ⁻¹' (mk ⁻¹' {mk x}) = f ⁻¹' connectedComponent x.
+    have hfib_eq : φ ⁻¹' {⟨ConnectedComponents.mk x, ht⟩} =
+        f ⁻¹' connectedComponent x := by
+      ext q
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Subtype.mk.injEq, φ]
+      rw [← connectedComponents_preimage_singleton, Set.mem_preimage,
+        Set.mem_singleton_iff]
+    rw [hfib_eq]
+    -- connectedComponent x ⊆ range f (since mk is constant on connected components
+    -- and mk x = t ∈ T means the whole connected component sits in mk⁻¹' T).
+    have hcc_sub : (connectedComponent x : Set (PrimeSpectrum A)) ⊆ Set.range f := by
+      rw [hrange]
+      intro y hy
+      have : ConnectedComponents.mk y = ConnectedComponents.mk x :=
+        ConnectedComponents.coe_eq_coe.mpr (connectedComponent_eq hy).symm
+      show ConnectedComponents.mk y ∈ T
+      rw [this]; exact ht
+    have himg : f '' (f ⁻¹' (connectedComponent x : Set (PrimeSpectrum A))) =
+        connectedComponent x :=
+      Set.image_preimage_eq_of_subset hcc_sub
+    have hpre_img : IsPreconnected
+        (f '' (f ⁻¹' (connectedComponent x : Set (PrimeSpectrum A)))) := by
+      rw [himg]; exact isPreconnected_connectedComponent
+    exact hce.isInducing.isPreconnected_image.mp hpre_img
+  -- Bundle as equiv, then upgrade to homeomorphism.
+  let e : ConnectedComponents (PrimeSpectrum (Restriction T)) ≃ T :=
+    Equiv.ofBijective ψ ⟨hinj, hsurj⟩
+  exact Continuous.homeoOfEquivCompactToT2 (f := e) hψ_cont
+
 end Restriction
 
 end Restriction
@@ -429,10 +526,31 @@ private lemma bijectiveOnStalks_of_indEtale_wStrictlyLocal [IsWStrictlyLocalRing
 -- If R is w-local with extremally disconnected pi_0(Spec R) and R -> S is faithfully flat,
 -- bijective on stalks, with S w-local and matching closed points, then R -> S has a retraction.
 -- This corresponds to thm:ff-identifies-local-rings-plus-c-has-retraction-if in the blueprint.
--- The proof uses:
--- (1) ExtremallyDisconnected projectivity to get a section of closed points map
--- (2) WContractification.Restriction to restrict S to a quotient S_T
--- (3) RingHom.IsWLocal.bijective_of_bijective (sorry in WLocal.lean) to conclude A -> S_T is iso
+-- Proof outline (Stacks 097V):
+-- 1. V(IS) → V(I) is surjective (from Module.FaithfullyFlat → Spec.comap surjective,
+--    restricted to V(IS); preimage of V(I) under Spec.comap equals V(IS) by hS+hI).
+-- 2. V(I) ≅ closedPoints(Spec R) ≅ π₀(Spec R) via
+--    `WLocalSpace.isHomeomorph_connectedComponents_closedPoints`, hence is extremally
+--    disconnected and (CompHaus) projective. Lift the surjection in (1) to a section
+--    σ : V(I) → V(IS).
+-- 3. T := image of σ in π₀(Spec S) (via the V(IS) ≅ π₀(Spec S) homeomorphism).
+--    By construction T is closed and homeomorphic to π₀(Spec R).
+-- 4. Form `B_T := WContractification.Restriction T` (defined in this file).
+--    The map S → B_T is surjective and ind-Zariski; B_T is w-local (Stacks 097D);
+--    `range_algebraMap_specComap` (already proved here) gives Spec(B_T) → Spec S has
+--    range = mk⁻¹ T.
+-- 5. The composition R → S → B_T is bijective by `RingHom.IsWLocal.bijective_of_bijective`
+--    (FULLY PROVED in `Proetale/Algebra/WLocal.lean:95`):
+--    • bijective on stalks: hbij ∘ (ind-Zariski → BijectiveOnStalks);
+--    • bijective on π₀: by step (3), T ≃ π₀(Spec R) and π₀(Spec B_T) ≃ T.
+-- 6. The inverse R ≃ B_T composed with S → B_T gives the retraction S → R.
+-- BLOCKERS for this Lean proof:
+--   (a) `IsWLocalRing (Restriction T)` — declared as
+--       `WContractification.Restriction.isWLocalRing_of_isClosed`; proof sorry.
+--   (b) `Algebra.IndZariski.bijectiveOnStalks_algebraMap` (sorried in IndZariski.lean).
+--   (c) Projectivity of extremally disconnected CompHaus / lift of section.
+--   (d) Identification `π₀(Spec (Restriction T)) ≃ T` — declared as
+--       `WContractification.Restriction.connectedComponentsEquiv`; proof sorry.
 private lemma exists_retraction_of_bijectiveOnStalks [IsWLocalRing R]
     (hED : ExtremallyDisconnected (ConnectedComponents (PrimeSpectrum R)))
     {I : Ideal R} (hI : zeroLocus I = closedPoints (PrimeSpectrum R))
@@ -440,20 +558,239 @@ private lemma exists_retraction_of_bijectiveOnStalks [IsWLocalRing R]
     (hS : zeroLocus (I.map (algebraMap R S)) = closedPoints (PrimeSpectrum S))
     (hbij : (algebraMap R S).BijectiveOnStalks) :
     ∃ (f : S →+* R), f.comp (algebraMap R S) = RingHom.id R := by
-  -- The closed points V(IS) map to V(I) via Spec(algebraMap R S).
-  -- V(I) ≅ π₀(Spec R) is extremally disconnected (compact T2 projective).
-  -- So the surjection π₀(Spec S) → π₀(Spec R) has a section, giving a retraction
-  -- of S via the Restriction construction and the isomorphism theorem.
-  -- The full proof requires:
-  -- 1. Show V(IS) → V(I) is surjective (from faithfully flat)
-  -- 2. Get section using extremally disconnected projectivity
-  -- 3. Use Restriction construction to get S → S_T
-  -- 4. Show R ≅ S_T using RingHom.IsWLocal.bijective_of_bijective
-  -- 5. Compose to get retraction
-  -- All steps except (4) use formalized infrastructure.
-  -- Step (4) depends on the sorry'd RingHom.IsWLocal.bijective_of_bijective.
-  -- Blueprint: thm:ff-identifies-local-rings-plus-c-has-retraction-if. Blocked on RingHom.IsWLocal.bijective_of_bijective.
-  sorry
+  -- Blueprint: thm:ff-identifies-local-rings-plus-c-has-retraction-if (Stacks 097V).
+  -- ============================================================================
+  -- Step 1: faithful flatness ⇒ Spec.comap is surjective, and so the induced
+  -- map on connected-components π₀(Spec S) → π₀(Spec R) is also surjective.
+  -- ============================================================================
+  have hsurj_spec : Function.Surjective (PrimeSpectrum.comap (algebraMap R S)) :=
+    PrimeSpectrum.comap_surjective_of_faithfullyFlat
+  have hcont_comap : Continuous (PrimeSpectrum.comap (algebraMap R S)) :=
+    PrimeSpectrum.continuous_comap _
+  have hsurj_pi0 : Function.Surjective hcont_comap.connectedComponentsMap :=
+    hcont_comap.connectedComponentsMap_surjective hsurj_spec
+  -- ============================================================================
+  -- Step 2: pick a continuous section σ via extremal disconnectedness.
+  -- ============================================================================
+  haveI hED' : ExtremallyDisconnected (ConnectedComponents (PrimeSpectrum R)) := hED
+  have hproj : CompactT2.Projective (ConnectedComponents (PrimeSpectrum R)) :=
+    @CompactT2.ExtremallyDisconnected.projective _ _ hED' _ _
+  obtain ⟨σ, hσ_cont, hσ_section⟩ :=
+    hproj (f := id) (g := hcont_comap.connectedComponentsMap)
+      continuous_id hcont_comap.connectedComponentsMap_continuous hsurj_pi0
+  -- σ : π₀(Spec R) → π₀(Spec S), continuous; comap∘σ = id, hence σ is injective.
+  have hσ_inj : Function.Injective σ := by
+    intro x y hxy
+    have := congrArg hcont_comap.connectedComponentsMap hxy
+    have hx : hcont_comap.connectedComponentsMap (σ x) = x := congrFun hσ_section x
+    have hy : hcont_comap.connectedComponentsMap (σ y) = y := congrFun hσ_section y
+    rw [hx, hy] at this; exact this
+  -- ============================================================================
+  -- Step 3: T := Set.range σ is a closed subset of π₀(Spec S), with σ : π₀(Spec R) ≃ₜ T.
+  -- ============================================================================
+  set T : Set (ConnectedComponents (PrimeSpectrum S)) := Set.range σ with hT_def
+  have hT_closed : IsClosed T := by
+    rw [hT_def, ← Set.image_univ]
+    exact (isCompact_univ.image hσ_cont).isClosed
+  -- σ as a continuous bijection π₀(Spec R) → T.
+  let σ' : ConnectedComponents (PrimeSpectrum R) → T :=
+    fun x => ⟨σ x, x, rfl⟩
+  have hσ'_cont : Continuous σ' := Continuous.subtype_mk hσ_cont _
+  have hσ'_bij : Function.Bijective σ' := by
+    refine ⟨fun x y hxy => hσ_inj (congrArg Subtype.val hxy), ?_⟩
+    rintro ⟨t, x, rfl⟩
+    exact ⟨x, rfl⟩
+  -- Convert to a homeomorphism σ' : π₀(Spec R) ≃ₜ T (compact-to-T2).
+  haveI : T2Space T := inferInstance
+  haveI : CompactSpace T := isCompact_iff_compactSpace.mp hT_closed.isCompact
+  let σ_homeo : ConnectedComponents (PrimeSpectrum R) ≃ₜ T :=
+    Continuous.homeoOfEquivCompactToT2
+      (f := Equiv.ofBijective σ' hσ'_bij) hσ'_cont
+  -- ============================================================================
+  -- Step 4: form B := WContractification.Restriction (A := S) T.
+  -- ============================================================================
+  set B : Type u := WContractification.Restriction (A := S) T with hB_def
+  letI : CommRing B := WContractification.Restriction.commRing T
+  letI : Algebra S B := WContractification.Restriction.algebra T
+  -- B is w-local (Stacks 097D).
+  haveI hB_wlocal : IsWLocalRing B :=
+    WContractification.Restriction.isWLocalRing_of_isClosed (T := T) hT_closed
+  -- B is ind-Zariski over S; hence bijective on stalks.
+  haveI hSB_indZ : Algebra.IndZariski S B := WContractification.Restriction.indZariski T
+  have hSB_bij : (algebraMap S B).BijectiveOnStalks :=
+    Algebra.IndZariski.bijectiveOnStalks_algebraMap _ _
+  -- S → B is surjective.
+  have hSB_surj : Function.Surjective (algebraMap S B) :=
+    WContractification.Restriction.algebraMap_surjective T
+  -- π₀(Spec B) ≃ₜ T (the construction at Restriction.connectedComponentsEquiv).
+  let ccBeq : ConnectedComponents (PrimeSpectrum B) ≃ₜ T :=
+    WContractification.Restriction.connectedComponentsEquiv (T := T) hT_closed
+  -- Range of Spec(S → B) is `mk⁻¹ T`.
+  have hSB_range : Set.range (PrimeSpectrum.comap <| algebraMap S B) =
+      ConnectedComponents.mk ⁻¹' T :=
+    WContractification.Restriction.range_algebraMap_specComap (T := T) hT_closed
+  -- The closed embedding Spec B → Spec S.
+  have hSB_clEmb : Topology.IsClosedEmbedding (PrimeSpectrum.comap (algebraMap S B)) :=
+    WContractification.Restriction.isClosedEmbedding_algebraMap_specComap (T := T) hT_closed
+  -- ============================================================================
+  -- Step 5: build R-algebra structure on B via the composition R → S → B.
+  -- ============================================================================
+  letI algRB : Algebra R B := Algebra.compHom B (algebraMap R S)
+  haveI : IsScalarTower R S B := IsScalarTower.of_algebraMap_eq' rfl
+  -- The composed algebraMap R B equals (algebraMap S B).comp (algebraMap R S).
+  have halgRB_eq : (algebraMap R B) = (algebraMap S B).comp (algebraMap R S) := rfl
+  -- R → B is bijective on stalks (composition of bijective-on-stalks maps).
+  have hRB_bij : (algebraMap R B).BijectiveOnStalks := by
+    rw [halgRB_eq]; exact hbij.comp hSB_bij
+  -- The induced map π₀(Spec B) → π₀(Spec S).
+  have hcont_SB : Continuous (PrimeSpectrum.comap (algebraMap S B)) :=
+    PrimeSpectrum.continuous_comap _
+  -- The induced map π₀(Spec B) → π₀(Spec R) is the composition.
+  have hcont_RB : Continuous (PrimeSpectrum.comap (algebraMap R B)) :=
+    PrimeSpectrum.continuous_comap _
+  -- ============================================================================
+  -- Step 6: the connected-components map π₀(Spec B) → π₀(Spec R) is bijective.
+  -- π₀(Spec B) ≃ₜ T  (via ccBeq);  π₀(Spec R) ≃ₜ T via σ_homeo.
+  -- The composition π₀(B) → π₀(S) → π₀(R) factors as
+  --   π₀(B) →(ccBeq)→ T →(σ_homeo.symm)→ π₀(R).
+  -- ============================================================================
+  -- The crucial identification: ccBeq.symm ∘ σ_homeo = id on π₀(R)
+  -- (i.e., the maps agree by uniqueness of the section σ).
+  -- We show: the composed map π₀(B) → π₀(R) is `σ_homeo.symm ∘ ccBeq`,
+  -- which is the composition of two homeomorphisms, hence bijective.
+  --
+  -- The proof of this identification follows from:
+  -- 1. Spec B → Spec S is the closed embedding into `mk⁻¹ T`.
+  -- 2. mk : Spec S → π₀(S) restricted to `mk⁻¹ T` factors through T.
+  -- 3. Composing with Spec(S → R) i.e. mk gives π₀(S) → π₀(R) via connectedComponentsMap.
+  -- 4. By definition of σ, hcont_comap.connectedComponentsMap ∘ σ = id.
+  -- Hence the composition `π₀(B) →(ccBeq)→ T →(σ_homeo.symm)→ π₀(R)` agrees with
+  -- the natural map `π₀(B) → π₀(R)` induced by Spec(R → B).
+  have hRB_pi0_bij : Function.Bijective hcont_RB.connectedComponentsMap := by
+    -- Plan: identify hcont_RB.connectedComponentsMap with σ_homeo.symm ∘ Subtype.val ∘ ccBeq
+    -- (where Subtype.val : T → π₀(S) is the inclusion). Wait, we need π₀(R) on the right,
+    -- so the right map is σ_homeo.symm : T → π₀(R), giving a composition that is bijective.
+    --
+    -- Concretely: hcont_RB.connectedComponentsMap = σ_homeo.symm ∘ ccBeq, viewed via the
+    -- inclusion T ↪ π₀(S) and the section equation. This sub-identification is the
+    -- technical heart of Stacks 09AZ step (3); it requires careful pointwise verification.
+    -- We bundle it as a separate `have` and complete the bijectivity afterwards.
+    -- Auxiliary: the inclusion T ↪ π₀(S) composed with ccBeq equals hcont_SB.cc_map.
+    have hccBeq_val : ∀ b, ((ccBeq b : T) : ConnectedComponents (PrimeSpectrum S)) =
+        hcont_SB.connectedComponentsMap b := by
+      intro b
+      obtain ⟨p, rfl⟩ := ConnectedComponents.surjective_coe b
+      -- The lift definition of `connectedComponentsEquiv` reduces ccBeq (mk p) to
+      -- ⟨mk (comap S→B p), _⟩. Hence its `.val` is mk (comap S→B p), which is also
+      -- hcont_SB.cc_map (mk p) by definition.
+      rfl
+    have hidentify : ∀ (b : ConnectedComponents (PrimeSpectrum B)),
+        hcont_RB.connectedComponentsMap b = (σ_homeo.symm (ccBeq b) : _) := by
+      intro b
+      -- Apply σ_homeo on both sides.
+      apply σ_homeo.injective
+      rw [σ_homeo.apply_symm_apply]
+      obtain ⟨p, rfl⟩ := ConnectedComponents.surjective_coe b
+      -- σ_homeo (cc_map_RB (mk p)) and ccBeq (mk p), both in T.
+      -- It suffices to compare their values in π₀(S).
+      apply Subtype.ext
+      -- LHS.val = σ (cc_map_RB (mk p)) by def of σ_homeo.
+      show σ (hcont_RB.connectedComponentsMap (ConnectedComponents.mk p)) =
+        ((ccBeq (ConnectedComponents.mk p) : T) : ConnectedComponents (PrimeSpectrum S))
+      rw [hccBeq_val]
+      -- Now: σ (cc_map_RB (mk p)) = cc_map_SB (mk p).
+      -- Use: σ ∘ (cc_map_comap ∘ mk) = mk on the image, via hσ_section.
+      -- Specifically, cc_map_SB (mk p) ∈ T = range σ, with preimage cc_map_RB (mk p).
+      have h_mk_in_T : hcont_SB.connectedComponentsMap (ConnectedComponents.mk p) ∈ T := by
+        show ConnectedComponents.mk (PrimeSpectrum.comap (algebraMap S B) p) ∈ T
+        have hmem : PrimeSpectrum.comap (algebraMap S B) p ∈
+            Set.range (PrimeSpectrum.comap (algebraMap S B)) := ⟨p, rfl⟩
+        rw [hSB_range] at hmem
+        exact hmem
+      obtain ⟨y, hy⟩ := h_mk_in_T
+      -- cc_map_RB (mk p) = cc_map_comap (cc_map_SB (mk p)) = cc_map_comap (σ y) = y.
+      have hRB_eq : hcont_RB.connectedComponentsMap (ConnectedComponents.mk p) = y := by
+        have hcc_RB :
+            hcont_RB.connectedComponentsMap (ConnectedComponents.mk p) =
+              hcont_comap.connectedComponentsMap
+                (hcont_SB.connectedComponentsMap (ConnectedComponents.mk p)) := rfl
+        rw [hcc_RB, ← hy]
+        exact congrFun hσ_section y
+      rw [hRB_eq, hy]
+    constructor
+    · -- Injectivity: composition of injections.
+      intro x y hxy
+      rw [hidentify, hidentify] at hxy
+      have h2 : ccBeq x = ccBeq y := σ_homeo.symm.injective hxy
+      exact ccBeq.injective h2
+    · -- Surjectivity: composition of surjections.
+      intro r
+      refine ⟨ccBeq.symm (σ_homeo r), ?_⟩
+      rw [hidentify]
+      have hcc : ccBeq (ccBeq.symm (σ_homeo r)) = σ_homeo r := ccBeq.apply_symm_apply _
+      rw [hcc]
+      exact σ_homeo.symm_apply_apply r
+  -- ============================================================================
+  -- Step 7: R → B is a w-local map (closed points map to closed points).
+  -- We use that closed points of B are precisely those whose connected components
+  -- correspond (via ccBeq) to elements of T, and that the composed map to π₀(R)
+  -- is a bijection by step 6.
+  -- ============================================================================
+  have hRB_wLocal : (algebraMap R B).IsWLocal := by
+    -- Use the maximal-ideal characterization of `IsWLocal`.
+    rw [RingHom.isWLocal_iff_isMaximal_of_isMaximal]
+    intro m hm_max
+    -- {m} closed in Spec B (since m is maximal in B).
+    let p_m : PrimeSpectrum B := ⟨m, hm_max.isPrime⟩
+    have hp_m_closed : IsClosed ({p_m} : Set (PrimeSpectrum B)) :=
+      (PrimeSpectrum.isClosed_singleton_iff_isMaximal p_m).mpr hm_max
+    -- Push forward via the closed embedding Spec B ↪ Spec S.
+    let q : PrimeSpectrum S := PrimeSpectrum.comap (algebraMap S B) p_m
+    have hq_closed : IsClosed ({q} : Set (PrimeSpectrum S)) := by
+      have himg : (PrimeSpectrum.comap (algebraMap S B)) '' ({p_m} : Set _) = {q} :=
+        Set.image_singleton
+      rw [← himg]; exact hSB_clEmb.isClosedMap _ hp_m_closed
+    -- closedPoints(Spec S) = V(IS), so q ∈ V(IS).
+    have hq_in_clS : q ∈ closedPoints (PrimeSpectrum S) := mem_closedPoints_iff.mpr hq_closed
+    have hq_in_VIS : q ∈ zeroLocus (I.map (algebraMap R S) : Set S) := by
+      rw [hS]; exact hq_in_clS
+    -- Hence I ≤ q.asIdeal.comap (algebraMap R S).
+    have hI_sub : I ≤ q.asIdeal.comap (algebraMap R S) := by
+      have hISq : I.map (algebraMap R S) ≤ q.asIdeal := by
+        rw [PrimeSpectrum.mem_zeroLocus] at hq_in_VIS
+        rwa [← SetLike.coe_subset_coe]
+      exact Ideal.map_le_iff_le_comap.mp hISq
+    -- m.comap (algebraMap R B) factors through q (under the comp).
+    have hcomap_eq : m.comap (algebraMap R B) = q.asIdeal.comap (algebraMap R S) := by
+      show m.comap ((algebraMap S B).comp (algebraMap R S)) = _
+      rw [← Ideal.comap_comap]; rfl
+    -- m.comap (algebraMap R B) is in V(I) = closed points of R.
+    haveI : (m.comap (algebraMap R B)).IsPrime := Ideal.IsPrime.comap _
+    have hp_in : (⟨m.comap (algebraMap R B), inferInstance⟩ : PrimeSpectrum R)
+        ∈ zeroLocus (I : Set R) := by
+      rw [PrimeSpectrum.mem_zeroLocus]
+      intro x hxI
+      have : x ∈ q.asIdeal.comap (algebraMap R S) := hI_sub hxI
+      show x ∈ m.comap (algebraMap R B)
+      rw [hcomap_eq]; exact this
+    have := hI ▸ hp_in
+    rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal] at this
+    exact this
+  -- ============================================================================
+  -- Step 8: apply bijective_of_bijective to conclude R → B is bijective as rings.
+  -- ============================================================================
+  have hRB_bijective : Function.Bijective (algebraMap R B) :=
+    RingHom.IsWLocal.bijective_of_bijective hRB_wLocal hRB_bij hRB_pi0_bij
+  -- ============================================================================
+  -- Step 9: extract the inverse and compose with S → B.
+  -- ============================================================================
+  let e : R ≃+* B := RingEquiv.ofBijective (algebraMap R B) hRB_bijective
+  refine ⟨(e.symm : B →+* R).comp (algebraMap S B), ?_⟩
+  ext r
+  show e.symm ((algebraMap S B) ((algebraMap R S) r)) = r
+  have : (algebraMap S B) ((algebraMap R S) r) = (algebraMap R B) r := rfl
+  rw [this]
+  exact e.symm_apply_apply r
 
 theorem IsWContractibleRing.exists_retraction_of_zeroLocus_map_eq_closedPoints [IsWContractibleRing R]
     {I :Ideal R} (hI : zeroLocus I = closedPoints (PrimeSpectrum R)) {S : Type u} [CommRing S]

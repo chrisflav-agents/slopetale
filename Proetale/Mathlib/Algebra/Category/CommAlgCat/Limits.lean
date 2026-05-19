@@ -186,8 +186,18 @@ instance preservesColimitsOfShape_tensorLeft
 instance preservesColimitsOfSize_forget_commRingCat :
   -- Blueprint: lemma:commalgcat-colimits. forget₂ CommAlgCat CommRingCat preserves colimits.
     PreservesColimits (forget₂ (CommAlgCat R) CommRingCat) := by
-  -- The equivalence functor creates colimits, and Under.forget preserves them
-  -- when they exist in CommRingCat
+  -- WARNING: This statement (as `PreservesColimits` = all colimits) is FALSE in general.
+  -- Counterexamples:
+  --   * Empty diagram: initial of CommAlgCat R is R; initial of CommRingCat is ℤ.
+  --     forget₂ sends R to R, which is not initial in CommRingCat.
+  --   * Disconnected diagram (binary coproduct): A ⨿ B in CommAlgCat R is A ⊗[R] B,
+  --     but in CommRingCat it is A ⊗[ℤ] B. These differ.
+  -- forget₂ does preserve CONNECTED colimits (in particular filtered) via
+  -- commAlgCatEquivUnder + Under.forget (which preserves filtered, since Under.forget is
+  -- a right adjoint and connected colimits agree with the underlying ones in Under).
+  -- The filtered version is proven below as `preservesFilteredColimits_forget₂_commRingCat`.
+  -- The plan agent should weaken this statement to PreservesConnectedColimits or
+  -- PreservesFilteredColimitsOfSize.
   refine ⟨fun {J} {_} => ⟨fun {K} => ⟨fun {c} hc => ?_⟩⟩⟩
   sorry
 
@@ -442,4 +452,14 @@ end CommAlgCat
 instance AlgCat.preservesFilteredColimitsOfSize_forget_moduleCat (R : Type u) [CommRing R] :
     PreservesFilteredColimitsOfSize (forget₂ (AlgCat R) (ModuleCat R)) :=
   -- Blueprint: lemma:commalgcat-colimits. forget₂ AlgCat ModuleCat preserves filtered colimits.
+  -- Strategy (not yet executed): use `preservesColimit_of_reflects_of_preserves` with the
+  -- composition forget₂ (AlgCat R) (ModuleCat R) ⋙ forget (ModuleCat R) = forget (AlgCat R).
+  -- Need:
+  --   * `PreservesFilteredColimits (forget (AlgCat R))` — not in Mathlib, requires constructing
+  --     filtered colimits in AlgCat explicitly (~100 lines, mirroring
+  --     `RingCat.FilteredColimits`). Alternative: prove that filtered colimits in AlgCat are
+  --     constructed via the RingCat filtered colimit with R-algebra structure transferred via
+  --     the colimit universal property applied to the algebraMap cocone.
+  --   * `ReflectsFilteredColimits (forget (ModuleCat R))` — available (line 205 of
+  --     Mathlib/Algebra/Category/ModuleCat/FilteredColimits.lean, via reflectsIsomorphisms).
   sorry

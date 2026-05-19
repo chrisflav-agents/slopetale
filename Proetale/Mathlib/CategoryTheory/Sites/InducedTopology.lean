@@ -144,7 +144,18 @@ lemma Functor.IsCocontinuous.of_iso {J : GrothendieckTopology C} {K : Grothendie
     {F G : C ⥤ D} (e : F ≅ G) [F.IsCocontinuous J K] :
     G.IsCocontinuous J K where
   cover_lift {U} S hS := by
-    sorry
+    refine J.superset_covering ?_
+      (F.cover_lift J K (K.pullback_stable (e.hom.app U) hS))
+    intro Y f hf
+    -- `hf : S.arrows (F.map f ≫ e.hom.app U)`, want `S.arrows (G.map f)`.
+    have hf' : S.arrows (F.map f ≫ e.hom.app U) := hf
+    have heq : F.map f ≫ e.hom.app U = e.hom.app Y ≫ G.map f := e.hom.naturality f
+    rw [heq] at hf'
+    have hgf : G.map f = e.inv.app Y ≫ (e.hom.app Y ≫ G.map f) := by
+      rw [← Category.assoc, Iso.inv_hom_id_app, Category.id_comp]
+    show S.arrows (G.map f)
+    rw [hgf]
+    exact S.downward_closed hf' _
 
 lemma Functor.IsCocontinuous.iff_of_iso {J : GrothendieckTopology C} {K : GrothendieckTopology D}
     {F G : C ⥤ D} (e : F ≅ G) :
@@ -214,7 +225,16 @@ lemma induced_comp
   intro U S hS
   rw [mem_inducedTopology'_iff (G := F.op.lan) (adj := F.op.lanAdjunction _)]
   intro Y f
-  -- apply CategoryTheory.le_topology_of_closedSieves_isSheaf
+  -- Goal: `(G.inducedTopology' J).W (F.op.lan.map (Sieve.shrinkFunctor (S.pullback f)).ι)`.
+  -- This is the SGA 4 III argument for the harder direction of `induced_comp`:
+  -- from `S ∈ (F ⋙ G).inducedTopology' J`, we need to deduce that
+  -- `F.op.lan` maps the corresponding shrunk-sieve inclusion to a
+  -- `G.inducedTopology' J`-local isomorphism. The proof requires combining the
+  -- adjunctions `F.op.lan ⊣ whiskeringLeft.obj F.op` and
+  -- `G.op.lan ⊣ whiskeringLeft.obj G.op` with `Sheaf.W` transfer along
+  -- composed left Kan extensions. Mathlib currently lacks the bridge lemma
+  -- "local-iso under composed left Kan extensions" (a SGA IV.3 result).
+  -- TODO: probably needs more assumptions (e.g. `RepresentablyFlat F`).
   sorry
 
 -- This is not true in this generality, possibly with more assumptions?
@@ -259,15 +279,22 @@ lemma fooo : CoverPreserving (F.weakInducedTopology J) J F where
       intro Y f
       simp [GrothendieckTopology.mem_toPrecoverage_iff,
         Sieve.generate_map_eq_functorPushforward] at hS
+      -- hS : (Sieve.generate S).functorPushforward F ∈ J (F.obj X)
+      -- goal : ((Sieve.generate S).pullback f).functorPushforward F ∈ J (F.obj Y)
+      -- In general one only has `(T.pullback f).functorPushforward F ≤
+      --   (T.functorPushforward F).pullback (F.map f)`, so `J.pullback_stable` only
+      -- gives the *larger* sieve is in `J`, not what we need. The reverse inclusion
+      -- requires a lifting property on `F` (e.g. `RepresentablyFlat`).
       sorry
-      --simpa [GrothendieckTopology.mem_toPrecoverage_iff,
-      --  Sieve.generate_map_eq_functorPushforward] using hS
     | top X => simp
     | pullback X S _ Y f ih =>
       intros
       rw [← Sieve.pullback_comp]
       apply ih
-    | transitive X S R _ _ _ _ =>
+    | transitive X S R _ _ _ ih_R =>
+      -- ih (implicit) for S gives `(S.pullback _).functorPushforward F ∈ J`.
+      -- ih_R for R says: for any `f` with `S f`, `(R.pullback (f ≫ _)).functorPushforward F ∈ J`.
+      -- Closing requires the same lifting property as the `of` case.
       sorry
 
 lemma Functor.op_comp_isSheaf_of_isSheaf_type (J : GrothendieckTopology C)
@@ -339,9 +366,10 @@ lemma inducedTopology'_forget (X : D) :
         have := h f.left hf
         rw [Sieve.overEquiv_iff] at this
         exact this
-    · intros
-      ext
-      simp [Sieve.overEquiv_pullback]
+    · intro V W f
+      ext S : 3
+      apply Subtype.ext
+      exact Sieve.overEquiv_pullback (X := X) f.unop _
   refine le_antisymm ?_ ?_
   · apply CategoryTheory.le_topology_of_closedSieves_isSheaf
     apply Presieve.isSheaf_iso _ e.symm
@@ -363,11 +391,30 @@ lemma foobarasdfasdf (J : GrothendieckTopology C) :
   have := this U (𝟙 _)
   simp at this
   refine J.superset_covering ?_ this
+  -- Goal: `Sieve.functorPullback F (Sieve.functorPushforward F S) ≤ S`.
+  -- This inequality is the reverse of `Sieve.le_functorPushforward_pullback` and
+  -- only holds when `F` is full and faithful (cf. `Sieve.functorPullback_functorPushforward_eq`).
+  -- In this generality (no faithfulness/fullness assumption on `F`),
+  -- `foobarasdfasdf` as stated does not follow from the cover-preserving argument
+  -- and may require additional hypotheses such as `F.IsCoverDense` or
+  -- `RepresentablyFlat F` to close.
   sorry
 
 lemma foobarasdfasdf' (K : GrothendieckTopology D) :
     K ≤ F.coinducedTopology (F.inducedTopology' K) := by
   rw [Functor.le_coinducedTopology_iff]
+  -- Goal: `F.IsCocontinuous (F.inducedTopology' K) K`.
+  -- Unfolded: for every `X : C` and every `S ∈ K (F.obj X)`,
+  -- `Sieve.functorPullback F S ∈ F.inducedTopology' K X`.
+  -- Equivalently (by the definition of `inducedTopology'`), for every K-sheaf
+  -- `G : Dᵒᵖ ⥤ Type _`, `F.op ⋙ G` must be a sheaf for `Sieve.functorPullback F S`
+  -- pulled back along any `g : Y ⟶ X`. But matching families for `F.op ⋙ G` over
+  -- the latter sieve correspond to matching families for `G` over
+  -- `(Sieve.functorPullback F S).functorPushforward F`, which is in general a
+  -- *strict* sub-sieve of `S` — so the K-sheaf property on `G` does not immediately
+  -- supply the required amalgamation. This direction needs a "cover-lifting"
+  -- assumption on `F` (e.g. `F.IsCoverDense K` or `RepresentablyFlat F`) and is
+  -- not provable in this generality.
   sorry
 
 lemma asdfasdf (J : GrothendieckTopology C) (K : GrothendieckTopology D) :
@@ -377,8 +424,16 @@ lemma asdfasdf (J : GrothendieckTopology C) (K : GrothendieckTopology D) :
     simp only [Functor.mem_coinducedTopology_iff]
     intro U f
     apply h
+    -- Goal: `Sieve.functorPullback F (S.pullback f) ∈ F.inducedTopology' K U`.
+    -- This is exactly `foobarasdfasdf'` applied to the K-cover `S.pullback f`,
+    -- so it inherits the same obstruction: needs a cover-lifting hypothesis on `F`.
     sorry
-  · sorry
+  · intro hK
+    -- Want: `F.inducedTopology' K ≤ J`. Strategy: monotonicity of `F.inducedTopology'`
+    -- in `K`, plus `foobarasdfasdf : F.inducedTopology' (F.coinducedTopology J) ≤ J`.
+    -- Both ingredients currently rely on auxiliary sorries (mono needs a lemma
+    -- that does not yet exist in this file; `foobarasdfasdf` is itself open).
+    sorry
 
 variable (J : GrothendieckTopology C) (K : GrothendieckTopology D)
 
@@ -393,7 +448,12 @@ lemma aux [RepresentablyFlat F] {X : C} (S : Sieve X)
     S ∈ F.inducedTopology' K X := by
   rw [mem_inducedTopology'_iff (adj := F.op.lanAdjunction _)]
   intro Y f
-  -- rw [GrothendieckTopology.mem_iff_isSheafFor_closedSieves]
+  -- Goal: `K.W (F.op.lan.map (Sieve.shrinkFunctor (S.pullback f)).ι)`.
+  -- Standard SGA 4 III argument: `F` is `RepresentablyFlat`, hence
+  -- `CompatiblePreserving`. For a `K`-sheaf `G`, sections of `F.op ⋙ G` over
+  -- `S.pullback f` are amalgamated via the compatibility lemma using
+  -- `hS : (S.pullback f).functorPushforward F ∈ K`. This needs a fair amount of
+  -- sheafification machinery; not in scope here.
   sorry
 
 lemma bla [RepresentablyFlat F] : F.inducedTopology' K = F.weakInducedTopology K := by
@@ -401,11 +461,11 @@ lemma bla [RepresentablyFlat F] : F.inducedTopology' K = F.weakInducedTopology K
   · intro X S hS
     apply mem_weakInducedTopology_of_functorPushforward_mem
     apply (CoverPreserving.of_isContinuous F _ K).cover_preserve hS
-  · --rw [le_inducedTopology'_iff, Functor.isContinuous_iff_coverPreserving]
-    --constructor
-    rw [Functor.weakInducedTopology, Precoverage.toGrothendieck_le_iff_le_toPrecoverage]
+  · rw [Functor.weakInducedTopology, Precoverage.toGrothendieck_le_iff_le_toPrecoverage]
     intro U S hS
-    simp at hS
-    sorry
+    rw [Precoverage.mem_comap_iff, GrothendieckTopology.mem_toPrecoverage_iff] at hS
+    rw [GrothendieckTopology.mem_toPrecoverage_iff]
+    apply aux
+    rwa [← Sieve.generate_map_eq_functorPushforward]
 
 end CategoryTheory

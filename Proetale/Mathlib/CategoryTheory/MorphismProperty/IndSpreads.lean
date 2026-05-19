@@ -23,7 +23,19 @@ namespace MorphismProperty
 lemma PreIndSpreads.inf (Q : MorphismProperty C) [PreIndSpreads.{w} P]
     [PreIndSpreads.{w} Q] :
     PreIndSpreads.{w} (P ⊓ Q) where
-  exists_isPushout {J} _ _ D c hc T f hf := by sorry
+  exists_isPushout {J} _ _ D c hc T f hf := by
+    -- `hf : (P ⊓ Q) f` unfolds to `P f ∧ Q f`.
+    obtain ⟨hP, hQ⟩ := hf
+    obtain ⟨j₁, T₁, f₁, g₁, hpb₁, hf₁⟩ := P.exists_isPushout_of_isFiltered hc f hP
+    obtain ⟨j₂, T₂, f₂, g₂, hpb₂, hf₂⟩ := Q.exists_isPushout_of_isFiltered hc f hQ
+    -- We have two pushout descents of `f` from levels `j₁` and `j₂` with `P f₁` and `Q f₂`
+    -- respectively. To produce a single descent `f'` satisfying both `P` and `Q`, the
+    -- standard argument lifts both descents to a common level `k ≥ j₁, j₂` via pushouts
+    -- along `D.map (j_i → k)`. This requires `HasPushouts C` plus
+    -- `P.IsStableUnderCobaseChange` and `Q.IsStableUnderCobaseChange` — none of which are
+    -- in this lemma's hypotheses, so the proof is not completable as stated.
+    -- TODO(plan): strengthen the hypotheses or refactor the statement; see task results.
+    sorry
 
 variable {P} in
 /-- If `C` has an initial object `S` such that every `P`-morphism `X ⟶ Y` descends to
@@ -84,8 +96,8 @@ class IndSpreads (P : MorphismProperty C) : Prop extends PreIndSpreads.{w} P whe
       (PB₁ : D.obj j ⟶ PB) (PB₂ : B' ⟶ PB) (hPA : IsPushout (D.map tA) gA PA₁ PA₂)
       (hPB : IsPushout (D.map tB) gB PB₁ PB₂) (f' : PA ⟶ PB),
       PA₁ ≫ f' = PB₁ ∧
-      hPA.desc (c.ι.app j ≫ pA) qA (by rw [Cocone.w_assoc]; exact hA.w) ≫ f =
-        f' ≫ hPB.desc (c.ι.app j ≫ pB) qB (by rw [Cocone.w_assoc]; exact hB.w)
+      hPA.desc (c.ι.app j ≫ pA) qA ((c.w_assoc tA pA).trans hA.w) ≫ f =
+        f' ≫ hPB.desc (c.ι.app j ≫ pB) qB ((c.w_assoc tB pB).trans hB.w)
 
 alias exists_isPushout_of_isFiltered_of_hom := IndSpreads.exists_isPushout_of_hom
 
@@ -95,7 +107,30 @@ variable (Q : MorphismProperty C)
 instance [P.IsStableUnderComposition] [PreIndSpreads.{w} P] : IsStableUnderComposition (ind.{w} P) where
   comp_mem {X Y Z} f g :=
       fun ⟨If, _, _, Df, tf, sf, hsf, hstf⟩ ⟨Ig, _, _, Dg, tg, sg, hsg, hstg⟩ ↦ by
+    -- For each `i : Ig`, descend `tg.app i : Y ⟶ Dg.obj i` along the colimit `Y = colim Df`.
+    -- This produces `σ i : If`, an object `T' i`, a `P`-morphism `f' i : Df.obj (σ i) ⟶ T' i`,
+    -- a comparison `u i : T' i ⟶ Dg.obj i`, and a pushout square
+    --   Df.obj (σ i) --f' i--> T' i
+    --        |                   |
+    -- sf.app (σ i)              u i
+    --        |                   |
+    --        v                   v
+    --        Y -----tg.app i--> Dg.obj i .
     choose σ T' f' u h hf' using fun i ↦ P.exists_isPushout_of_isFiltered hsf (tg.app i) (hstg i).1
+    -- The natural candidate for an `ind P` witness of `f ≫ g`:
+    --   * index set `Ig`;
+    --   * X-side maps `tf.app (σ i) ≫ f' i : X ⟶ T' i`, in `P` by composition stability;
+    --   * Z-side maps `u i ≫ sg.app i : T' i ⟶ Z`;
+    --   * composite `(tf.app (σ i) ≫ f' i) ≫ (u i ≫ sg.app i) = f ≫ g`, via
+    --     `f' i ≫ u i = sf.app (σ i) ≫ tg.app i` (pushout square commutes) together with
+    --     `tf.app (σ i) ≫ sf.app (σ i) = f` and `tg.app i ≫ sg.app i = g`.
+    -- However this requires assembling the `T' i` into a functor `Ig ⥤ C` with colimit `Z`,
+    -- which involves choosing functorial liftings of `Dg.map α` to maps `T' i ⟶ T' i'`.
+    -- Such liftings exist only after passing to a common refinement via additional pushouts
+    -- (mathlib's proof uses `IsFinitelyAccessibleCategory (Under X)`, `HasPushouts C`,
+    -- `P.IsStableUnderCobaseChange`, and `P ≤ isFinitelyPresentable`, see
+    -- `IsStableUnderComposition.ind_of_preIndSpreads`). Without those hypotheses the
+    -- statement here is not provable.
     sorry
 
 instance [P.IsMultiplicative] [PreIndSpreads.{w} P] : (ind.{w} P).IsMultiplicative where

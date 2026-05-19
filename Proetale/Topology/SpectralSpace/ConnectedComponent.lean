@@ -297,20 +297,69 @@ theorem ConnectedComponents.lift_bijective_of_isPullback {Y T : Type u} [Topolog
     (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩)) :
     Function.Bijective (connectedComponentsLift g.2) := by
   have comm : ∀ y, i (g y) = mk (f y) := fun y => congrFun (congrArg (·.hom) pb.w) y
-  constructor
+  -- The pullback square gives a homeomorphism Y ≃ {p : T × X // i p.1 = mk p.2}.
+  have inst_hp := pb.hasPullback
+  let E := homeoOfIso (pb.isoPullback ≪≫
+    pullbackIsoProdSubtype (ofHom i) (ofHom ⟨mk, continuous_coe⟩))
+  have hE_g : ∀ y, (E y).val.1 = g y := by
+    intro y
+    show ((pb.isoPullback ≪≫
+      pullbackIsoProdSubtype (ofHom i) (ofHom ⟨mk, continuous_coe⟩)).hom y).val.1 = _
+    simp only [Iso.trans_hom, ConcreteCategory.comp_apply]
+    rw [pullbackIsoProdSubtype_hom_apply]
+    exact ConcreteCategory.congr_hom pb.isoPullback_hom_fst y
+  refine ⟨?_, ?_⟩
   · -- Injectivity: use that fibers of g are preconnected
-    apply connectedComponentsLift_injective g.2
-    intro t
-    show IsPreconnected ((g : Y → T) ⁻¹' {t})
-    -- The fiber g⁻¹{t} equals f⁻¹(mk⁻¹{i(t)}), which is a union of connected components
-    -- By the pullback property, two points in the same connected component of Y
-    -- that map to the same point in T must be equal
-    sorry
-  · -- Surjectivity: use pullback universal property
+    apply Continuous.connectedComponentsLift_injective g.2
+    intro t₀
+    -- The fiber g⁻¹{t₀} is preconnected: under `E` it corresponds to
+    -- `A = {p : T × X // i p.1 = mk p.2 ∧ p.1 = t₀}`, which sits over the
+    -- connected component `mk⁻¹{i t₀} ⊆ X`.
+    obtain ⟨x₀, hx₀⟩ := ConnectedComponents.surjective_coe (i t₀)
+    have hcc_pre : IsPreconnected
+        ((ConnectedComponents.mk : X → ConnectedComponents X) ⁻¹' {i t₀}) := by
+      have heq : (ConnectedComponents.mk : X → ConnectedComponents X) ⁻¹' {i t₀} =
+          connectedComponent x₀ := by
+        rw [show ({i t₀} : Set (ConnectedComponents X)) = {ConnectedComponents.mk x₀} from
+          by rw [hx₀]]
+        exact connectedComponents_preimage_singleton
+      rw [heq]
+      exact isPreconnected_connectedComponent
+    -- The image of `mk⁻¹{i t₀}` under `x ↦ (t₀, x)` is preconnected in `T × X`.
+    have hψ_pre : IsPreconnected
+        ((fun x : X => (t₀, x)) ''
+          ((ConnectedComponents.mk : X → ConnectedComponents X) ⁻¹' {i t₀})) :=
+      hcc_pre.image _ (continuous_const.prodMk continuous_id).continuousOn
+    -- Define the slice `A` of the pullback subtype.
+    set A : Set { p : T × X // i p.1 = mk p.2 } := {p | p.val.1 = t₀} with hA_def
+    have hA_val_eq : (Subtype.val : _ → T × X) '' A =
+        (fun x : X => (t₀, x)) ''
+          ((ConnectedComponents.mk : X → ConnectedComponents X) ⁻¹' {i t₀}) := by
+      ext z
+      constructor
+      · rintro ⟨⟨⟨t, x⟩, hp⟩, htA, hval⟩
+        have ht_eq : t = t₀ := htA
+        subst ht_eq
+        refine ⟨x, ?_, hval⟩
+        exact hp.symm
+      · rintro ⟨x, hx, rfl⟩
+        refine ⟨⟨(t₀, x), ?_⟩, rfl, rfl⟩
+        exact (hx : ConnectedComponents.mk x = i t₀).symm
+    have hA_pre : IsPreconnected A :=
+      Topology.IsInducing.subtypeVal.isPreconnected_image.mp (hA_val_eq ▸ hψ_pre)
+    have hfiber_eq : g.toFun ⁻¹' {t₀} = (E : Y → _) ⁻¹' A := by
+      ext y
+      exact ⟨fun h => (hE_g y).trans h, fun h => (hE_g y).symm.trans h⟩
+    rw [hfiber_eq]
+    exact E.isPreconnected_preimage.mpr hA_pre
+  · -- Surjectivity: use pullback universal property via the homeomorphism `E`.
     intro t
     obtain ⟨x, hx⟩ := ConnectedComponents.surjective_coe (i t)
-    -- Given x with mk(x) = i(t), the pullback gives us y with f(y) = x and g(y) = t
-    sorry
+    refine ⟨ConnectedComponents.mk (E.symm ⟨(t, x), hx.symm⟩), ?_⟩
+    show g (E.symm ⟨(t, x), hx.symm⟩) = t
+    rw [← hE_g]
+    show (E (E.symm ⟨(t, x), hx.symm⟩)).val.1 = t
+    rw [E.apply_symm_apply]
 
 @[stacks 096C "first part"]
 theorem ConnectedComponents.isHomeomorph_lift_of_isPullback {Y T : Type u} [TopologicalSpace Y]

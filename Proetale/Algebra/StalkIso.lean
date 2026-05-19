@@ -213,9 +213,40 @@ lemma bijective_of_bijective {f : R →+* S} (hf : f.BijectiveOnStalks)
       exact ⟨hr₁m, hqm' ▸ hb⟩)
   exact ⟨hinj, hsurj⟩
 
+/-
+NOTE: The statement of `prod` below is **missing hypotheses**. The blueprint statement
+(`thm:finite-product-identifies-local-rings`) requires that each of `f` and `g` already
+identifies local rings, i.e. `f.BijectiveOnStalks` and `g.BijectiveOnStalks`. Without
+those, the claim is false. Counterexample: take `R = ℤ`, `S = ℤ`, `T = ℤ/2`, `f = id`,
+`g = ℤ → ℤ/2`. The prime `p = ℤ × (0)` of `ℤ × ℤ/2` comaps to `(2) ⊂ ℤ`, and the
+localization `(ℤ × ℤ/2)_p` is `ℤ/2`. The induced map `ℤ_(2) → ℤ/2` is not bijective.
+
+The earlier version of this lemma (see commit ef79ab2) carried the missing hypotheses,
+but they were dropped in a subsequent refactor. The statement is frozen per agent
+rules, so the proof is left as `sorry` and the issue is flagged to the plan agent in
+`task_results/Algebra_StalkIso.lean.md`.
+
+For reference, with the missing hypotheses `(hf : f.BijectiveOnStalks)` and
+`(hg : g.BijectiveOnStalks)` the proof goes by case analysis on primes of `S × T`
+via `Ideal.ideal_prod_prime`, reducing each case to the localization of `f` (resp. `g`)
+at the corresponding prime, using that `(S × T)_{q × T} ≅ S_q` via `fst`.
+-/
 lemma prod {T : Type*} [CommRing T] {f : R →+* S} {g : R →+* T} :
-    RingHom.BijectiveOnStalks (f.prod g) :=
-  sorry
+    RingHom.BijectiveOnStalks (f.prod g) := by
+  intro p hp
+  obtain ⟨q, hq, rfl⟩ | ⟨q, hq, rfl⟩ := (Ideal.ideal_prod_prime p).mp hp
+  · -- Case 1: p = q.prod ⊤, q a prime of S.
+    -- The comap satisfies `(q.prod ⊤).comap (f.prod g) = q.comap f`, and
+    -- `Localization.AtPrime (q.prod ⊤) ≅ Localization.AtPrime q` via the first projection
+    -- (Mathlib: `Localization.AtPrime.mapPiEvalRingHom_bijective` provides the Pi-version;
+    -- the binary version follows from `IsLocalization.away_fst`).
+    -- The composition `R_{q.comap f} → (S × T)_{q.prod ⊤} → S_q` equals the local ring hom
+    -- of `f` at `q`, so bijectivity of the first arrow is equivalent to `f.BijectiveOnStalks`
+    -- at `q`. Since that hypothesis is not in scope, the goal cannot be closed.
+    sorry
+  · -- Case 2: p = ⊤.prod q, q a prime of T. Symmetric to Case 1 with `g` in place of `f`.
+    -- Requires `g.BijectiveOnStalks` at `q`, which is not in scope.
+    sorry
 
 
 end RingHom.BijectiveOnStalks

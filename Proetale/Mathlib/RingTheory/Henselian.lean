@@ -47,8 +47,8 @@ private lemma pderiv_toMvPolynomial_self {σ : Type*} [DecidableEq σ] (i : σ) 
 private def presentationS : Presentation R (S f) (Fin 2) (Fin 2) := by
   let s : (S f) → (MvPolynomial (Fin 2) R) :=
     Function.surjInv (f := (Ideal.Quotient.mk (idealJ f))) Quotient.mk_surjective
-  have hs (x : S f) : Ideal.Quotient.mk _ (s x) = x := by
-    rw [Function.surjInv_eq (f := (Ideal.Quotient.mk (idealJ f)))]
+  have hs (x : S f) : Ideal.Quotient.mk _ (s x) = x :=
+    Function.surjInv_eq _ x
   apply Presentation.naive s hs
 
 -- Helper: pderiv j (toMvPolynomial i p) = 0 when j ≠ i
@@ -179,6 +179,15 @@ def CommRingCat.Under.inclusion :
 abbrev CategoryTheory.CommRingCat.Etale : MorphismProperty CommRingCat :=
   RingHom.toMorphismProperty RingHom.Etale
 
+instance : CommRingCat.Etale.IsStableUnderCobaseChange := by
+  rw [show CommRingCat.Etale = RingHom.toMorphismProperty RingHom.Etale from rfl,
+    RingHom.isStableUnderCobaseChange_toMorphismProperty_iff]
+  exact RingHom.Etale.isStableUnderBaseChange
+
+instance : CommRingCat.Etale.IsMultiplicative where
+  id_mem _ := RingHom.Etale.of_bijective Function.bijective_id
+  comp_mem _ _ hf hg := RingHom.Etale.stableUnderComposition _ _ hf hg
+
 instance {C : Type*} [Category C] [HasColimits C] (X : C) : HasColimits (Under X) := by
   constructor
   intro J _
@@ -222,6 +231,130 @@ instance : EssentiallySmall.{u, u, u + 1} (CommRingCat.Etale.Under ⊤ R) := by
   exact RingHom.FiniteType.of_finitePresentation (by
     algebraize [f.hom]
     exact (hf : Algebra.Etale _ _).finitePresentation)
+
+/-- The category `CostructuredArrow (CommRingCat.Under.inclusion CommRingCat.Etale R) Y` is
+filtered: this is the diagram shape underlying the Henselization of `Y` as a colimit of
+étale neighbourhoods. Filteredness uses tensor products (= pushouts) of étale `R`-algebras for
+cocone existence, and a coequalizer-of-parallel-pairs argument that is currently incomplete. -/
+instance isFiltered_costructuredArrow_etale_inclusion
+    {R : CommRingCat.{u}} (Y : CommAlgCat R) :
+    IsFiltered (CostructuredArrow
+      (CommRingCat.Under.inclusion CommRingCat.Etale R) Y) := by
+  -- Abbreviations.
+  let L : MorphismProperty.Under CommRingCat.Etale ⊤ R ⥤ CommAlgCat R :=
+    CommRingCat.Under.inclusion CommRingCat.Etale R
+  -- Identity étale R-algebra `R → R`.
+  let idUnder : MorphismProperty.Under CommRingCat.Etale ⊤ R :=
+    MorphismProperty.Under.mk ⊤ (𝟙 R) (CommRingCat.Etale.id_mem R)
+  -- Target morphism for the trivial étale algebra: `L.obj idUnder ⟶ Y` in `CommAlgCat R`.
+  -- `L.obj idUnder = e.inverse.obj (Under.mk (𝟙 R)) = CommAlgCat.of R R`, and there is a
+  -- unique R-alg map from `R` to `Y` since `CommAlgCat.of R R` is initial.
+  let idHom : L.obj idUnder ⟶ Y := CommAlgCat.isInitialSelf.to Y
+  haveI hNonempty : Nonempty (CostructuredArrow L Y) := ⟨CostructuredArrow.mk idHom⟩
+  haveI hOrE : IsFilteredOrEmpty (CostructuredArrow L Y) := by
+    refine ⟨?_, ?_⟩
+    · -- Cocone (upper bound): use pushout (tensor product) of étale R-algebras.
+      intro u v
+      -- Pushout in CommRingCat of `u.left.hom : R → u.left.right` and `v.left.hom`.
+      let fU : R ⟶ u.left.right := u.left.hom
+      let fV : R ⟶ v.left.right := v.left.hom
+      let iL : u.left.right ⟶ Limits.pushout fU fV := Limits.pushout.inl fU fV
+      let iR : v.left.right ⟶ Limits.pushout fU fV := Limits.pushout.inr fU fV
+      -- `iL` is the cobase change of the étale map `fV` along `fU`, so it is étale.
+      have h_iL : CommRingCat.Etale iL :=
+        MorphismProperty.pushout_inl fU fV v.left.prop
+      -- The structure map `R → pushout` (going through `u.left.right`) is étale by composition.
+      have h_diag : CommRingCat.Etale (fU ≫ iL) :=
+        CommRingCat.Etale.comp_mem _ _ u.left.prop h_iL
+      let w_left : MorphismProperty.Under CommRingCat.Etale ⊤ R :=
+        MorphismProperty.Under.mk ⊤ (fU ≫ iL) h_diag
+      -- Wrap `u.hom`, `v.hom` (R-alg maps to `Y`) as `CommRingCat` morphisms.
+      let u_crm : u.left.right ⟶ CommRingCat.of Y :=
+        CommRingCat.ofHom u.hom.hom.toRingHom
+      let v_crm : v.left.right ⟶ CommRingCat.of Y :=
+        CommRingCat.ofHom v.hom.hom.toRingHom
+      -- Compatibility: both compositions agree with the algebra map `R → Y`.
+      have huv : fU ≫ u_crm = fV ≫ v_crm := by
+        ext r
+        have hu : u.hom.hom (u.left.hom.hom r) = algebraMap R Y r := u.hom.hom.commutes r
+        have hv : v.hom.hom (v.left.hom.hom r) = algebraMap R Y r := v.hom.hom.commutes r
+        show u.hom.hom (u.left.hom.hom r) = v.hom.hom (v.left.hom.hom r)
+        rw [hu, hv]
+      -- Universal descent from the pushout.
+      let w_desc : Limits.pushout fU fV ⟶ CommRingCat.of Y :=
+        Limits.pushout.desc u_crm v_crm huv
+      -- Move to `Under R` and use the equivalence `commAlgCatEquivUnder` to land in `CommAlgCat R`.
+      let under_target := (commAlgCatEquivUnder R).functor.obj Y
+      let under_source := (MorphismProperty.Under.forget CommRingCat.Etale ⊤ R).obj w_left
+      let w_under_hom : under_source ⟶ under_target :=
+        Under.homMk w_desc (by
+          show (fU ≫ iL) ≫ w_desc = _
+          rw [Category.assoc, Limits.pushout.inl_desc]
+          ext r
+          show u.hom.hom (u.left.hom.hom r) = (algebraMap R Y) r
+          exact u.hom.hom.commutes r)
+      let w_alg_hom_raw := (commAlgCatEquivUnder R).inverse.map w_under_hom
+      let w_hom : L.obj w_left ⟶ Y :=
+        w_alg_hom_raw ≫ (commAlgCatEquivUnder R).unitIso.inv.app Y
+      let W : CostructuredArrow L Y := CostructuredArrow.mk w_hom
+      -- The two cocone legs are the pushout injections `iL` and `iR`.
+      let u_to_w_under : u.left ⟶ w_left :=
+        MorphismProperty.Under.homMk iL (by show fU ≫ iL = fU ≫ iL; rfl) trivial
+      let v_to_w_under : v.left ⟶ w_left :=
+        MorphismProperty.Under.homMk iR (by
+          show fV ≫ iR = fU ≫ iL
+          exact Limits.pushout.condition.symm) trivial
+      refine ⟨W, CostructuredArrow.homMk u_to_w_under ?_,
+        CostructuredArrow.homMk v_to_w_under ?_, trivial⟩
+      · -- L.map u_to_w_under ≫ W.hom = u.hom
+        apply CommAlgCat.hom_ext
+        ext x
+        show w_desc.hom (iL.hom x) = u.hom.hom x
+        show (iL ≫ w_desc).hom x = u.hom.hom x
+        rw [Limits.pushout.inl_desc]
+        rfl
+      · -- L.map v_to_w_under ≫ W.hom = v.hom
+        apply CommAlgCat.hom_ext
+        ext x
+        show w_desc.hom (iR.hom x) = v.hom.hom x
+        show (iR ≫ w_desc).hom x = v.hom.hom x
+        rw [Limits.pushout.inr_desc]
+        rfl
+    · -- Coequalizer (parallel pair) condition.
+      intro u v f g
+      -- Setup: `f g : u ⟶ v` in `CostructuredArrow L Y`. The CostructuredArrow morphism
+      -- condition gives `L.map f.left ≫ v.hom = u.hom = L.map g.left ≫ v.hom` (both maps
+      -- of étale R-algebras agree once postcomposed with the section `v.hom : A_v → Y`).
+      --
+      -- We seek `(Z : CostructuredArrow L Y)` and `h : v ⟶ Z` with `f ≫ h = g ≫ h`.
+      -- Since `(commAlgCatEquivUnder R).inverse ∘ (MorphismProperty.Under.forget _ ⊤ _)`
+      -- is fully faithful and the latter forgets only the ⊤ constraint, it suffices to
+      -- produce a ring map `p : A_v ⟶ A_Z` in étale-R-algebras with `A_v →_{L.f} A_v ≫ p`
+      -- and `A_v →_{L.g} A_v ≫ p` equal, together with a section `σ : A_Z → Y` extending
+      -- `v.hom = p ≫ σ`.
+      --
+      -- Étale-idempotent strategy (Stacks 02G3 / 03PJ, "spreading out coequalizers"):
+      --   1. The diagonal `Δ : A_v ⊗_R A_v ⟶ A_v` of an étale `R → A_v` is the cokernel
+      --      of an idempotent `e ∈ A_v ⊗_R A_v`, i.e. `A_v ⊗_R A_v ≅ A_v × J` for some
+      --      étale R-algebra `J` (the off-diagonal complement).
+      --   2. The pair `(L.map f.left, L.map g.left) : A_u ⟶ A_v` induces a ring map
+      --      `φ : A_v ⊗_R A_v ⟶ A_v ⊗_{A_u} A_v` and we look at the image of `e` along
+      --      the map into `A_v` agreeing on the section to `Y`.
+      --   3. Localising `A_v` at this idempotent (= passing to a connected component)
+      --      gives the desired `A_Z`; the section to `Y` lifts because `v.hom` factors
+      --      through this connected component (it agrees on f, g images).
+      --
+      -- The construction in `Proetale/Algebra/Contraction/IndContraction.lean:33` proves
+      -- the analogous statement for general `P` under the hypothesis
+      -- `[HasCoequalizers (P.Under ⊤ X)]`; that hypothesis is **false** for `P = Etale`
+      -- (quotients of étale algebras are not étale), so we cannot reuse it directly.
+      -- A targeted analogue using only the étale-idempotent structure of the diagonal
+      -- would suffice, but requires substantial new Mathlib infrastructure
+      -- (`Algebra.Etale.diagonal_isIdempotent_split`, étale-product decomposition along
+      -- the diagonal, and lift of sections through idempotent localisation). This is
+      -- left for a future round.
+      sorry
+  exact { }
 
 instance (R : Type u) [CommRing R] :
     (CommRingCat.Under.inclusion CommRingCat.Etale (CommRingCat.of R)).HasPointwiseLeftKanExtension
@@ -311,14 +444,24 @@ private lemma henselization_jointly_surjective (R : Type u) [CommRing R] (S : Ty
       (y_j : (hensDiagram R S).obj j),
       (stageToHenselization R S j).hom y_j = y := by
   -- Needed: PreservesColimit (hensDiagram R S) (forget (CommAlgCat R))
-  -- Proof chain: forget = forget₂ CommRingCat ⋙ forget CommRingCat (by HasForget₂.forget_comp)
-  -- forget₂ preserves filtered colimits (via commAlgCatEquivUnder + Under.forget preserves filtered)
-  -- forget CommRingCat preserves filtered colimits (CommRingCat.FilteredColimits)
-  -- Also needs: IsFiltered (CostructuredArrow L Y) (from étale R-algebras: tensor products, etc.)
-  -- Universe issue: CostructuredArrow is Category.{u} on Type (u+1), but
-  -- PreservesFilteredColimits (forget CommRingCat.{u}) is PreservesFilteredColimitsOfSize.{u, u},
-  -- so need equivSmallModel or PreservesFilteredColimitsOfSize.{u+1, u}.
-  haveI : PreservesColimit (hensDiagram R S) (forget (CommAlgCat (CommRingCat.of R))) := sorry
+  --
+  -- Proof strategy:
+  --   * forget on CommAlgCat preserves filtered colimits via
+  --     `preservesFilteredColimitsOfSize_forget` in
+  --     Proetale/Mathlib/Algebra/Category/CommAlgCat/Limits.lean
+  --     (currently sorry-marked at universe-polymorphic generality).
+  --   * The diagram shape `CostructuredArrow L Y` is filtered: an analogue of
+  --     `isFiltered_costructuredArrow_forget` in IndContraction.lean, where the
+  --     filteredness uses pushouts (= tensor products) of étale R-algebras.
+  --   * Combining gives `PreservesColimitsOfShape (CostructuredArrow L Y) forget`
+  --     hence `PreservesColimit (hensDiagram R S) forget`.
+  --
+  -- Universe note: the diagram shape `CostructuredArrow L Y` lives at
+  -- `Category.{u, u+1}` (because L's source is at Type (u+1)). So we need
+  -- `PreservesFilteredColimitsOfSize.{u, u+1}`, requiring the
+  -- universe-polymorphic Under.forget instance pending in Limits.lean.
+  haveI : PreservesColimit (hensDiagram R S) (forget (CommAlgCat (CommRingCat.of R))) := by
+    sorry
   -- Push y through the isomorphism to the colimit
   let iso := henselization_isom_colim R S
   -- Use Concrete.colimit_exists_rep to find a representative in the colimit
@@ -502,11 +645,40 @@ theorem henselization_of_quotient_is_henselian {R : Type*} [CommRing R] (I : Ide
     exact isUnit_algebraMap_mul_add_one_of_mem_jacobson I hI r hr y
   · intro S _ _ _ g
     -- Goal: ∃ σ : S →ₐ[Hens] Hens, (Ideal.Quotient.mk (I.map _)).comp σ = g.
-    -- Strategy: S is étale (hence finitely presented) over Hens = colim A_i.
-    -- By finite presentation, S descends to some stage A_j: there exists an étale
-    -- A_j-algebra T_j with S ≅ T_j ⊗_{A_j} Hens. The section g : S → Hens/(I.map)
-    -- restricts to T_j → R/I, making (T_j, g|_{T_j}) an object in the colimit diagram.
-    -- The colimit map T_j → Hens provides the desired section S → Hens.
-    -- This proof requires: descent of finitely presented algebras from filtered colimits,
-    -- descent of sections, and the universal property of the colimit.
+    --
+    -- Mathematical strategy (descent of étale algebras + universal property of colimit):
+    --
+    -- 1. Hens R (R⧸I) is a filtered colimit of étale R-algebras: Hens = colim A_i,
+    --    where the diagram is the costructured-arrow diagram into R⧸I.
+    --
+    -- 2. S is étale (hence finitely presented) over Hens. By the descent of finitely
+    --    presented algebras along filtered colimits of rings, S descends to some stage:
+    --    there exist an index j and a finitely-presented étale A_j-algebra T_j such that
+    --    S ≅ T_j ⊗_{A_j} Hens. (Reference: Stacks 00QO, EGA IV.3 §8.8.)
+    --
+    -- 3. Étale descent: T_j is automatically étale over A_j (étaleness descends along
+    --    faithfully flat extensions). Hence T_j is étale over R (via étale composition).
+    --
+    -- 4. The section g : S →ₐ[Hens] (Hens / I.map) composes with the canonical
+    --    Hens / I.map ≅ R⧸I (since I maps to itself under R → Hens → Hens / I.map
+    --    = R⧸I) to give a section g_T_j : T_j → R⧸I extending j.hom.
+    --
+    -- 5. Hence (T_j, g_T_j) defines a new object j' : CostructuredArrow L (R⧸I) that
+    --    refines j. The colimit injection ι_{j'} : T_j → Hens R (R⧸I) gives a section
+    --    T_j → Hens.
+    --
+    -- 6. By the descent isomorphism S ≅ T_j ⊗_{A_j} Hens, this T_j-section extends
+    --    uniquely to the desired σ : S → Hens (using the tensor-product universal
+    --    property: σ_{T_j} on the left, identity on the right).
+    --
+    -- 7. Verification: (Ideal.Quotient.mk (I.map _)).comp σ agrees with g on T_j by
+    --    construction (step 4) and on Hens via the algebra structure; by tensor-product
+    --    universal property they agree on S.
+    --
+    -- This proof requires substantial categorical infrastructure not yet in Mathlib:
+    --   * Descent of finitely-presented algebras along filtered colimits in CommRing
+    --   * Étale descent (a special case of faithfully flat descent of étaleness)
+    --   * Tensor product compatibility with filtered colimits
+    -- The autoformalize stage leaves this sorry to be filled by a future iteration
+    -- with deeper categorical/descent infrastructure.
     sorry

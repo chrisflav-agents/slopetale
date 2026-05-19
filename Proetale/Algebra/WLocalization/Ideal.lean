@@ -368,12 +368,49 @@ theorem quotientMap_algebraMap_bijective :
     rw [← this]
     exact Ideal.mem_comap.mpr ha_J
   · -- Surjectivity
-    -- Blueprint: lemma:closed-closed-points-tilde-w-local (item 2). A/I → A_{w,I}/IA_{w,I} is bijective.
-    -- Strategy: Use that algebraMap induces bijection on Spec, combined with BijectiveOnStalks
+    -- Blueprint: lemma:closed-closed-points-tilde-w-local (item 2). A/I → A_{w,I}/IA_{w,I} is
+    -- bijective. The blueprint statement carries the hypothesis that V(I) ⊆ closedPoints
+    -- (and that A is w-local). The current Lean statement is unconditional, so as written it
+    -- is mathematically FALSE: e.g. take I = ⊥. Then I.WLocalization ≃ WLocalization A and
+    -- the quotient map becomes A → WLocalization A, which is never surjective for A that is
+    -- not already w-local.
+    --
+    -- This sorry remains as a placeholder. The plan agent should split the theorem into:
+    --   (a) injectivity, which holds unconditionally (already proved above), and
+    --   (b) surjectivity under the hypothesis `[IsWLocalRing A]` together with
+    --       `hI : zeroLocus I ⊆ closedPoints (PrimeSpectrum A)`.
+    -- Under (b), the proof goes: A → C is ind-Zariski hence bijective on stalks; combined
+    -- with V(IC) → V(I) bijection (which follows from
+    --   `zeroLocus_map_algebraMap_eq_closedPoints` and the bijection on closed points of A)
+    -- this gives that A/I → C/IC is bijective via `Algebra.BijectiveOnStalks.bijective_of_bijective`.
+    --
+    -- Partial reduction below: we reduce surjectivity to surjectivity of the composition
+    -- `A → B → B/J`, where B = WLocalization A and J = I·B. The element s ∈ S becomes a unit
+    -- in C/I·C (because the saturation hcomap_map_J shows J·C ∩ B = J, and S elements are
+    -- units modulo J in B). Thus `c ≡ algebraMap B C b (mod I·C)` after multiplying by s⁻¹.
+    -- What remains is to find a ∈ A with `algebraMap A B a ≡ b (mod J)`, i.e. surjectivity
+    -- of `A → B/J`. This is the step that requires the missing hypotheses.
     intro x
     obtain ⟨c, rfl⟩ := Ideal.Quotient.mk_surjective x
-    -- Key: We'll show c is in the image of algebraMap modulo I.map
-    -- Use BijectiveOnStalks to work at the level of localizations
+    -- Extract a representative: c · (algebraMap B C s) = algebraMap B C b for some b, s.
+    have hIsLoc : IsLocalization S I.WLocalization :=
+      inferInstanceAs (IsLocalization (Generalization.submonoid 1 J) (Generalization 1 J))
+    obtain ⟨⟨b, s⟩, hbs⟩ := IsLocalization.surj S c
+    -- hbs : c * (algebraMap B I.WLocalization) s.1 = (algebraMap B I.WLocalization) b
+    -- Show: algebraMap B I.WLocalization s.1 is a unit modulo I.map (A → I.WLocalization).
+    -- This uses that s ∈ S means s is a unit in B/J (by S-saturation property hsat applied
+    -- backwards), combined with the factorisation I.map(A → C) = J.map(B → C).
+    have hImap_eq : I.map (algebraMap A I.WLocalization) =
+        J.map (algebraMap B I.WLocalization) := by
+      show I.map (algebraMap A I.WLocalization) =
+        (I.map (algebraMap A B)).map (algebraMap B (Generalization 1 (I.map (algebraMap A B))))
+      rw [Ideal.map_map]; congr 1
+    -- The remaining surjectivity step needs: given b ∈ B, exists a ∈ A with
+    -- `algebraMap A B a - b ∈ J` (i.e. surjectivity of A → B/J).
+    -- For I = ⊥ this becomes surjectivity of A → B = WLocalization A, which fails.
+    -- Hence this sorry is mathematically unfillable under the current hypotheses; the
+    -- correct fix is to strengthen the statement to assume [IsWLocalRing A] and
+    -- `zeroLocus I ⊆ closedPoints (PrimeSpectrum A)`.
     sorry
 
 variable (I) in
