@@ -30,19 +30,12 @@ private instance : CommRing (S f) :=
 private instance : Algebra R (S f) :=
   inferInstanceAs (Algebra R (MvPolynomial (Fin 2) R ⧸ idealJ f))
 
--- Helper: pderiv i (toMvPolynomial i p) = toMvPolynomial i p.derivative
-private lemma pderiv_toMvPolynomial_self {σ : Type*} [DecidableEq σ] (i : σ) (p : R[X]) :
-    pderiv i (toMvPolynomial i p) = toMvPolynomial i p.derivative := by
-  induction p using Polynomial.induction_on' with
-  | add p q hp hq => simp [map_add, hp, hq]
-  | monomial n a =>
-    simp only [Polynomial.toMvPolynomial, Polynomial.aeval_monomial,
-      Polynomial.derivative_monomial]
-    change pderiv i (MvPolynomial.C a * MvPolynomial.X i ^ n) =
-      MvPolynomial.C (a * (n : R)) * MvPolynomial.X i ^ (n - 1)
-    rw [pderiv_mul, pderiv_C, zero_mul, zero_add, pderiv_pow, pderiv_X,
-      Pi.single_eq_same, map_mul, map_natCast]
-    ring
+private def presentationS : Presentation R (S f) (Fin 2) (Fin 2) := by
+  let s : (S f) → (MvPolynomial (Fin 2) R) :=
+    Function.surjInv (f := (Ideal.Quotient.mk (idealJ f))) Quotient.mk_surjective
+  have hs (x : S f) : Ideal.Quotient.mk _ (s x) = x := by
+    rw [Function.surjInv_eq (f := (Ideal.Quotient.mk (idealJ f)))]
+  apply Presentation.naive s hs
 
 -- Helper: pderiv j (toMvPolynomial i p) = 0 when j ≠ i
 private lemma pderiv_toMvPolynomial_ne {σ : Type*} (i j : σ) (hne : j ≠ i) (p : R[X]) :

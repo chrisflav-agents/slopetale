@@ -6,8 +6,6 @@ Authors: Jiedong Jiang, Christian Merten
 import Proetale.Mathlib.Topology.Inseparable
 import Proetale.Mathlib.Topology.Separation.Basic
 import Proetale.Mathlib.Topology.Spectral.Basic
-import Proetale.Topology.SpectralSpace.Constructible
-import Proetale.Topology.SpectralSpace.ConnectedComponent
 import Mathlib.Topology.JacobsonSpace
 
 /-!

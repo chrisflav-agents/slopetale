@@ -63,19 +63,6 @@ theorem IsClopen.connectedComponents_image_isClopen {U : Set X} (hU : IsClopen U
     connectedComponents_preimage_image, hU.biUnion_connectedComponent_eq]
   exact hU
 
--- Helper: product of quotient maps is a quotient map
--- This requires both maps to be open, which is not true for ConnectedComponents.mk in general
--- Instead, we'll prove the specific case needed in the main theorem directly
-theorem Topology.IsQuotientMap.prodMap {X Y Z W : Type*}
-    [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] [TopologicalSpace W]
-    {f : X → Y} {g : Z → W} (hf : Topology.IsQuotientMap f) (hg : Topology.IsQuotientMap g) :
-    Topology.IsQuotientMap (Prod.map f g) := by
-  -- This is a known result in topology but requires additional conditions
-  -- For now, we leave this as sorry and note that it should be proven
-  -- using the fact that both f and g are open maps, or using
-  -- a more sophisticated argument about the product topology
-  sorry
-
 -- end of the file
 variable (S T : Type*) [TopologicalSpace S] [TopologicalSpace T]
 
