@@ -194,12 +194,6 @@ instance (priority := 100) of_indZariski [IndZariski R S] : IndEtale R S := by
   refine ObjectProperty.ind_mono (isLocalIso_le_etale R) _ ?_
   rwa [← Algebra.IndZariski.iff_ind_isLocalIso]
 
-instance (priority := 100) of_indZariski [IndZariski R S] : IndEtale R S := by
-  rw [iff_ind_etale]
-  rw [Algebra.IndZariski.iff_ind_isLocalIso] at *
-  exact ObjectProperty.ind_mono (isLocalIso_le_etale R) _ ‹_›
-
-
 -- Helper: if A is etale over a field k, and we have a k-algebra hom to a local ring B,
 -- then every element's image has separable minimal polynomial.
 -- Uses the product decomposition A ≅ ∏ Lᵢ (finite separable field extensions)

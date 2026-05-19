@@ -24,11 +24,13 @@ private def idealJ (f : R[X]) : Ideal (MvPolynomial (Fin 2) R) :=
 
 private def S : Type u := MvPolynomial (Fin 2) R ⧸ (idealJ f)
 
-private instance : CommRing (S f) :=
-  inferInstanceAs (CommRing (MvPolynomial (Fin 2) R ⧸ idealJ f))
+private instance : CommRing (S f) := by
+  unfold S
+  infer_instance
 
-private instance : Algebra R (S f) :=
-  inferInstanceAs (Algebra R (MvPolynomial (Fin 2) R ⧸ idealJ f))
+private instance : Algebra R (S f) := by
+  unfold S
+  infer_instance
 
 private def presentationS : Presentation R (S f) (Fin 2) (Fin 2) := by
   let s : (S f) → (MvPolynomial (Fin 2) R) :=
@@ -37,60 +39,74 @@ private def presentationS : Presentation R (S f) (Fin 2) (Fin 2) := by
     rw [Function.surjInv_eq (f := (Ideal.Quotient.mk (idealJ f)))]
   apply Presentation.naive s hs
 
--- Helper: pderiv j (toMvPolynomial i p) = 0 when j ≠ i
-private lemma pderiv_toMvPolynomial_ne {σ : Type*} (i j : σ) (hne : j ≠ i) (p : R[X]) :
-    pderiv j (toMvPolynomial i p) = 0 := by
-  apply pderiv_eq_zero_of_notMem_vars
-  rw [Polynomial.toMvPolynomial_eq_rename_comp, AlgHom.comp_apply]
-  intro hmem
-  obtain ⟨_, _, hk⟩ := MvPolynomial.mem_vars_rename _ _ hmem
-  exact absurd hk.symm hne
+private def preSubmersivePresentationS : PreSubmersivePresentation R (S f) (Fin 2) (Fin 2) := {
+  toPresentation := presentationS f
+  map := id
+  map_inj _ _ h := h
+}
 
--- Helper: toMvPolynomial 0 f.derivative is a unit in S f
-private lemma isUnit_toMvPolynomial_derivative :
-    IsUnit (Ideal.Quotient.mk (idealJ f) (toMvPolynomial (0 : Fin 2) f.derivative)) := by
-  rw [isUnit_iff_exists_inv]
-  refine ⟨Ideal.Quotient.mk (idealJ f) (X 1), ?_⟩
-  rw [← map_mul, ← map_one (Ideal.Quotient.mk (idealJ f)), Ideal.Quotient.eq]
-  apply Ideal.subset_span
-  simp only [Set.mem_range]
-  exact ⟨1, by simp [Matrix.cons_val_one, Matrix.cons_val_fin_one]⟩
+@[simp]
+theorem pderiv_toMvPolynomial_eq_zero_of_ne (n : ℕ) (i j : Fin n) (h : i ≠ j) :
+    (pderiv i) ((toMvPolynomial j) f) = 0 := by
+  induction f using Polynomial.induction_on with
+  | C a => simp
+  | add p q _ _ => simp_all
+  | monomial n a _ => simp [Pi.single_eq_of_ne h.symm]
+
+@[simp]
+theorem pderiv_toMvPolynomial_eq_toMvPolynomial_pderiv (n : ℕ) (i : Fin n) :
+    (pderiv i) ((toMvPolynomial i) f) = (toMvPolynomial i) f.derivative := by
+  induction f using Polynomial.induction_on with
+  | C a => simp
+  | add p q _ _ => simp_all
+  | monomial n a _ => simp
+
+lemma preSubmersivePresentationS_jacobiMatrix_00 :
+    (preSubmersivePresentationS f).jacobiMatrix 0 0 =
+    (mk (idealJ f) (toMvPolynomial (0 : Fin 2) f.derivative)) := by
+  rw [Algebra.PreSubmersivePresentation.jacobiMatrix_apply]
+  simp [preSubmersivePresentationS, presentationS]
+
+lemma preSubmersivePresentationS_jacobiMatrix_11 :
+    (preSubmersivePresentationS f).jacobiMatrix 1 1 =
+    (mk (idealJ f) (toMvPolynomial (0 : Fin 2) f.derivative)) := by
+  rw [Algebra.PreSubmersivePresentation.jacobiMatrix_apply]
+  simp [preSubmersivePresentationS, presentationS]
+
+lemma preSubmersivePresentationS_jacobiMatrix_01 :
+    (preSubmersivePresentationS f).jacobiMatrix 1 0 = 0 := by
+  rw [Algebra.PreSubmersivePresentation.jacobiMatrix_apply]
+  simp [preSubmersivePresentationS, presentationS]
+
+private def submersivePresentationS (f : R[X]) : SubmersivePresentation R (S f) (Fin 2) (Fin 2) := {
+  toPreSubmersivePresentation := preSubmersivePresentationS f
+  jacobian_isUnit := by
+    let f' := (mk (idealJ f) (toMvPolynomial (0 : Fin 2) f.derivative))
+    have unit_f' : IsUnit f' := by
+      apply IsUnit.of_mul_eq_one (mk (idealJ f) (X 1))
+      rw [← map_mul, ← map_one (Ideal.Quotient.mk _), mk_eq_mk_iff_sub_mem]
+      apply Ideal.subset_span
+      simp
+    have : (preSubmersivePresentationS f).jacobian = f' * f' := by
+      rw [Algebra.PreSubmersivePresentation.jacobian_eq_jacobiMatrix_det]
+      rw [Matrix.det_fin_two]
+      have (x : (MvPolynomial (Fin 2) R)) :
+          (algebraMap (preSubmersivePresentationS f).Ring (S f)) x = mk (idealJ f) x := by rfl
+      rw [this]
+      simp
+      rw [preSubmersivePresentationS_jacobiMatrix_00]
+      rw [preSubmersivePresentationS_jacobiMatrix_11]
+      rw [preSubmersivePresentationS_jacobiMatrix_01]
+      simp [f']
+    rw [this]
+    simp [unit_f']
+}
 
 private instance : IsStandardSmoothOfRelativeDimension 0 R (S f) := by
-  let v : Fin 2 → MvPolynomial (Fin 2) R :=
-    ![toMvPolynomial (0 : Fin 2) f,
-      (toMvPolynomial (0 : Fin 2) f.derivative) * X 1 - 1]
-  let P := PreSubmersivePresentation.naive (R := R) (σ := Fin 2) (ι := Fin 2)
-    (v := v) (_root_.id) (Function.injective_id)
-  suffices h : IsUnit P.jacobian by
-    exact (SubmersivePresentation.mk P h).isStandardSmoothOfRelativeDimension
-      (by simp [Presentation.dimension])
-  -- Compute Jacobian matrix entries using jacobiMatrix_apply
-  -- P.jacobiMatrix i j = pderiv (P.map i) (P.relation j) = pderiv (id i) (v j) = pderiv i (v j)
-  have hm00 : P.jacobiMatrix 0 0 = pderiv (0 : Fin 2) (v 0) :=
-    PreSubmersivePresentation.jacobiMatrix_apply P 0 0
-  have hm01 : P.jacobiMatrix 0 1 = pderiv (0 : Fin 2) (v 1) :=
-    PreSubmersivePresentation.jacobiMatrix_apply P 0 1
-  have hm10 : P.jacobiMatrix 1 0 = pderiv (1 : Fin 2) (v 0) :=
-    PreSubmersivePresentation.jacobiMatrix_apply P 1 0
-  have hm11 : P.jacobiMatrix 1 1 = pderiv (1 : Fin 2) (v 1) :=
-    PreSubmersivePresentation.jacobiMatrix_apply P 1 1
-  -- Compute each pderiv entry
-  have h10 : pderiv (1 : Fin 2) (v 0) = 0 := by
-    simp only [v, Matrix.cons_val_zero]
-    exact pderiv_toMvPolynomial_ne (0 : Fin 2) (1 : Fin 2) (by decide) f
-  have h00 : pderiv (0 : Fin 2) (v 0) = toMvPolynomial (0 : Fin 2) f.derivative := by
-    simp only [v, Matrix.cons_val_zero]
-    exact pderiv_toMvPolynomial_self (0 : Fin 2) f
-  have h11 : pderiv (1 : Fin 2) (v 1) = toMvPolynomial (0 : Fin 2) f.derivative := by
-    simp only [v, Matrix.cons_val_one, Matrix.cons_val_fin_one]
-    rw [map_sub, pderiv_one, sub_zero, pderiv_mul,
-      pderiv_toMvPolynomial_ne (0 : Fin 2) (1 : Fin 2) (by decide) f.derivative,
-      zero_mul, zero_add, pderiv_X, Pi.single_eq_same, mul_one]
-  -- Assemble: det = h00 * h11 - h01 * h10 = f'^2 (since h10 = 0)
-  rw [P.jacobian_eq_jacobiMatrix_det, Matrix.det_fin_two,
-    hm00, hm01, hm10, hm11, h10, h00, h11, mul_zero, sub_zero, map_mul]
-  exact (isUnit_toMvPolynomial_derivative f).mul (isUnit_toMvPolynomial_derivative f)
+  unfold S
+  constructor
+  use (Fin 2), (Fin 2), inferInstance, inferInstance, (submersivePresentationS f)
+  simp [Presentation.dimension]
 
 private def g {I : Ideal R} {f : R[X]} {a₀ : R} (e : Polynomial.eval a₀ f ∈ I)
     (u : IsUnit ((Ideal.Quotient.mk I) (Polynomial.eval a₀ (derivative f)))) : S f →ₐ[R] R ⧸ I := by

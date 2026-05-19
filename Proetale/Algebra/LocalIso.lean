@@ -182,14 +182,6 @@ lemma trans (T : Type*) [CommSemiring T] [Algebra S T] [Algebra R T] [IsScalarTo
     Algebra.isPushout_of_isLocalization (.powers g) _ _ _
   exact .of_isPushout S (Localization.Away x) _ _
 
-lemma span_isStandardOpenImmersion_eq_top [Algebra.IsLocalIso R S] :
-    Ideal.span {g : S | Algebra.IsStandardOpenImmersion R (Localization.Away g)} = ⊤ := by
-  by_contra hne
-  obtain ⟨m, hm, hms⟩ := Ideal.exists_le_maximal _ hne
-  obtain ⟨g, hgm, hstd⟩ :=
-    Algebra.IsLocalIso.exists_notMem_isStandardOpenImmersion (R := R) m
-  exact hgm (hms (Ideal.subset_span hstd))
-
 end Algebra.IsLocalIso
 
 section Flat

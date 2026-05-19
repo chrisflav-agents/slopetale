@@ -110,70 +110,7 @@ theorem connectedComponent.prod (s : S) (t : T) :
 theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
     IsHomeomorph (Continuous.connectedComponentsLift
     (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) := by
-  set g := Continuous.connectedComponentsLift (by continuity : Continuous (fun x : S × T ↦ (mk x.1, mk x.2)))
-  have bij : Function.Bijective g := by
-    constructor
-    · -- Injective
-      intro a b hab
-      revert hab
-      refine Quotient.inductionOn₂ a b (fun p₁ p₂ h => ?_)
-      have key := fun p : S × T => Continuous.connectedComponentsLift_apply_coe
-        (by continuity : Continuous (fun x : S × T ↦ ((x.1 : ConnectedComponents S),
-          (x.2 : ConnectedComponents T)))) p
-      have h' : ((p₁.1 : ConnectedComponents S), (p₁.2 : ConnectedComponents T)) =
-          ((p₂.1 : ConnectedComponents S), (p₂.2 : ConnectedComponents T)) :=
-        (key p₁).symm.trans (h.trans (key p₂))
-      have hs : (p₁.1 : ConnectedComponents S) = p₂.1 := (Prod.mk.inj h').1
-      have ht : (p₁.2 : ConnectedComponents T) = p₂.2 := (Prod.mk.inj h').2
-      show (p₁ : ConnectedComponents (S × T)) = (p₂ : ConnectedComponents (S × T))
-      rw [ConnectedComponents.coe_eq_coe]
-      rw [connectedComponent.prod, connectedComponent.prod]
-      have hs' : connectedComponent p₁.1 = connectedComponent p₂.1 :=
-        connectedComponent_eq (ConnectedComponents.coe_eq_coe'.mp hs.symm)
-      have ht' : connectedComponent p₁.2 = connectedComponent p₂.2 :=
-        connectedComponent_eq (ConnectedComponents.coe_eq_coe'.mp ht.symm)
-      rw [hs', ht']
-    · -- Surjective
-      intro ⟨c₁, c₂⟩
-      obtain ⟨s, rfl⟩ := Quot.exists_rep c₁
-      obtain ⟨t, rfl⟩ := Quot.exists_rep c₂
-      exact ⟨ConnectedComponents.mk (s, t),
-        Continuous.connectedComponentsLift_apply_coe (by continuity) (s, t)⟩
-  refine ⟨?_, ?_, bij⟩
-  · exact Continuous.connectedComponentsLift_continuous (by continuity)
-  · -- isOpenMap
-    have h_factor : g ∘ mk = Prod.map mk mk := by
-      ext p : 1
-      simp only [Function.comp_apply, Prod.map, g]
-      exact Continuous.connectedComponentsLift_apply_coe (by continuity) p
-
-    have hq_mk : Topology.IsQuotientMap (mk : S × T → ConnectedComponents (S × T)) :=
-      ConnectedComponents.isQuotientMap_coe
-
-    have hq_prod : Topology.IsQuotientMap (Prod.map mk mk : S × T → ConnectedComponents S × ConnectedComponents T) := by
-      exact Topology.IsQuotientMap.prodMap ConnectedComponents.isQuotientMap_coe ConnectedComponents.isQuotientMap_coe
-
-    -- g is a quotient map (follows from factorization)
-    have hq_g : Topology.IsQuotientMap g := by
-      rw [← h_factor] at hq_prod
-      exact Topology.IsQuotientMap.of_comp hq_mk.continuous (Continuous.connectedComponentsLift_continuous _) hq_prod
-
-    -- Bijective quotient map is open
-    obtain ⟨g_inj, g_surj⟩ := bij
-    intro U hU
-    -- g '' U is open iff g ⁻¹' (g '' U) is open (by quotient map property)
-    rw [← hq_g.isOpen_preimage]
-    -- g ⁻¹' (g '' U) = U (by injectivity)
-    have : g ⁻¹' (g '' U) = U := by
-      ext x
-      simp [Set.mem_preimage, Set.mem_image]
-      constructor
-      · intro ⟨y, hy, hxy⟩
-        exact g_inj hxy ▸ hy
-      · intro hx
-        exact ⟨x, hx, rfl⟩
-    rw [this]
-    exact hU
+  sorry
 
 variable {S T} in
 noncomputable def ConnectedComponents.prodMap :

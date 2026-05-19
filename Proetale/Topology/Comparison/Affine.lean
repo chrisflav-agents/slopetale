@@ -62,85 +62,6 @@ end CategoryTheory
 
 namespace AlgebraicGeometry.Scheme
 
-section
-
-variable {S T : Scheme.{u}} (f : S ⟶ T)
-  (P : MorphismProperty Scheme.{u}) [P.IsMultiplicative] [P.RespectsIso]
-  [P.IsStableUnderBaseChange]
-variable (A : Type*) [Category* A]
-
-instance :
-    (Over.pullback P ⊤ f).PreservesOneHypercovers
-      (T.smallGrothendieckTopology P)
-      (S.smallGrothendieckTopology P) := by
-  intro X E
-  constructor
-  · -- mem₀: Need (E.map (Over.pullback P ⊤ f)).sieve₀ ∈ S.smallGrothendieckTopology P.
-    -- Since smallGrothendieckTopology P = (forget P ⊤ S).inducedTopology (overGrothendieckTopology P S),
-    -- this reduces to showing the pushforward of the image sieve through Over.forget is in
-    -- S.overGrothendieckTopology P. The original hypercover E gives a P-cover of X.left;
-    -- base change along pullback.fst X.hom f gives a P-cover of pullback X.hom f
-    -- (using P.IsStableUnderBaseChange). Missing: formal infrastructure for relating
-    -- sieve operations across the induced topology and the pullback functor.
-    rw [Functor.mem_inducedTopology_sieves_iff]
-    sorry
-  · -- mem₁: Similar argument for the fiber product sieves.
-    intro i₁ i₂ W p₁ p₂ hw
-    rw [Functor.mem_inducedTopology_sieves_iff]
-    sorry
-
-noncomputable
-abbrev smallPushforward :
-    Sheaf (S.smallGrothendieckTopology P) A ⥤ Sheaf (T.smallGrothendieckTopology P) A :=
-  (Over.pullback P ⊤ f).sheafPushforwardContinuous _ _ _
-
--- Requires IsContinuous (from PreservesOneHypercovers above) + existence of left adjoint
--- (HasWeakSheafify or HasLeftKanExtension for the small site categories).
-instance :
-    ((Over.pullback P ⊤ f).sheafPushforwardContinuous A (smallGrothendieckTopology P)
-      (smallGrothendieckTopology P)).IsRightAdjoint :=
-  sorry
-
-noncomputable
-abbrev smallPullback :
-    Sheaf (T.smallGrothendieckTopology P) A ⥤ Sheaf (S.smallGrothendieckTopology P) A :=
-  (Over.pullback P ⊤ f).sheafPullback _ _ _
-
-noncomputable
-def smallPullbackPushforwardAdj :
-    smallPullback f P A ⊣ smallPushforward f P A :=
-  (Over.pullback P ⊤ f).sheafAdjunctionContinuous A _ _
-
--- IsContinuous for Over.map ⊤ hf between smallGrothendieckTopology.
--- Approach 1 (CoverPreserving + CompatiblePreserving): CoverPreserving follows from the
--- commutative diagram Over.map ⊤ hf ⋙ Over.forget P ⊤ T = Over.forget P ⊤ S ⋙ Over.map f
--- and over_map_coverPreserving. CompatiblePreserving is blocked: needs RepresentablyFlat
--- (hard to establish) or IsCoverDense+IsLocallyFaithful (Over.map is not cover dense).
--- Approach 2 (PreservesOneHypercovers): mem₀ works (same underlying cover). mem₁ is blocked:
--- needs to construct W' : P.Over ⊤ S from W : P.Over ⊤ T (requires HasOfPostcompProperty P).
--- Approach 3 (direct): use IsContinuous of Over.map f for over topologies and transfer through
--- the induced topology structure. Missing formal infrastructure for this transfer.
-instance (hf : P f) :
-    (Over.map ⊤ hf).IsContinuous (smallGrothendieckTopology P) (smallGrothendieckTopology P) := by
-  sorry
-
-def smallSheafRestrict (hf : P f) :
-    Sheaf (T.smallGrothendieckTopology P) A ⥤ Sheaf (S.smallGrothendieckTopology P) A :=
-  (Over.map ⊤ hf).sheafPushforwardContinuous _ _ _
-
-noncomputable def smallSheafRestrictAdj (hf : P f) :
-    smallSheafRestrict f P A hf ⊣ smallPushforward f P A :=
-  (Over.mapPullbackAdj P ⊤ f hf trivial).sheaf _ _
-
-/-- If `f : S ⟶ T` satisfies `P` the pullback functor `Shv(T) ⥤ Shv(S)` is
-naturally isomorphic to the restriction functor. -/
-noncomputable def smallPullbackIsoRestrict (hf : P f) :
-    smallPullback f P A ≅ smallSheafRestrict f P A hf :=
-  (conjugateIsoEquiv (smallSheafRestrictAdj f P A hf) (smallPullbackPushforwardAdj f P A)).symm
-    (Iso.refl _)
-
-end
-
 variable {S : Scheme.{u}}
 
 /-- The pro-étale affine site is the full subcategory of the pro-étale site where every
@@ -330,11 +251,6 @@ instance isEquivalence_sheafPushforwardContinuous_toProEt {A : Type*} [Category*
     ((toProEt.{u} S).sheafPushforwardContinuous A
       (topology S) (ProEt.topology S)).IsEquivalence :=
   inferInstance
-
-instance : (toProEt S).IsContinuous (topology S) (ProEt.topology S) := by
-  change (toProEt S).IsContinuous ((toProEt S).inducedTopology (ProEt.topology S))
-    (ProEt.topology S)
-  infer_instance
 
 /-- The restriction of sheafs on the pro-étale site to sheaf on the affine pro-étale site. -/
 noncomputable
