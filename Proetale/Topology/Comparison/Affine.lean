@@ -464,25 +464,6 @@ lemma isSheaf {F : (AffineProEt S)ᵒᵖ ⥤ Type*}
   -- This is definitional because `topology S := (toProEt S).inducedTopology _`
   -- and `Functor.mem_inducedTopology_sieves_iff` is `Iff.rfl`. The
   -- `IsDenseSubsite` instance at L417 records this with `by rfl`.
-  have hR' : R.val.functorPushforward (toProEt S) ∈ ProEt.topology S ((toProEt S).obj X) := hR
-  -- Skeleton of the transitivity argument (NEXT STEPS):
-  --   * the proof of `isCoverDense_toProEt` exhibits a decomposition of every
-  --     `ProEt.topology` cover into a Zariski step (via `affineCover` of `X.left`)
-  --     plus a singleton-surjective qc step (via `exists_indEtale_comp`);
-  --   * `isSheafFor_trans` then reduces sheaf-ness of `R` to sheaf-ness of the
-  --     intermediate Zariski cover (from `h₁`) and sheaf-ness of `R.pullback _`
-  --     on each piece (from `h₂` after a further refinement to a singleton).
-  -- The full formalization mirrors the proof of `isCoverDense_toProEt` but on
-  -- the affine pro-étale site directly. The deep technical step is to lift the
-  -- singleton-surjective refinement back to a member of `topology S` in the
-  -- affine site and conclude via `h₂` and `isSheafFor_subsieve_aux`.
-  --
-  -- Concrete Mathlib lemmas to use:
-  --   * `Presieve.isSheafFor_trans` (Mathlib/CategoryTheory/Sites/IsSheafFor.lean:1030)
-  --   * `Presieve.isSheafFor_subsieve_aux` (ibid. L739)
-  --   * `Presieve.isSheafFor_bind` (ibid. L975)
-  --   * `Functor.mem_inducedTopology_sieves_iff` (Mathlib's
-  --       Sites/DenseSubsite/InducedTopology.lean:105)
   sorry
 
 end AffineProEt

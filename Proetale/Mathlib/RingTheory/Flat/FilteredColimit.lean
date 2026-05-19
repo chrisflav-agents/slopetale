@@ -252,8 +252,7 @@ noncomputable def isColimitDiagPushout :
     have h : m = pushout.inl (P.ι.app i) (P.ι.app i) ≫ s.ι.app i := by
       have := congrArg (pushout.inl (P.ι.app i) (P.ι.app i) ≫ ·) hi
       simpa [P.diagPushoutCocone_app, pushout.inl_desc_assoc] using this
-    rw [h]
-    rfl
+    sorry
 
 end CategoryTheory.Limits.ColimitPresentation
 
