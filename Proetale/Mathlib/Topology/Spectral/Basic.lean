@@ -42,8 +42,8 @@ instance SpectralSpace.prod [SpectralSpace X] [SpectralSpace Y] : SpectralSpace 
   toQuasiSeparatedSpace := inferInstance
   toPrespectralSpace := inferInstance
 
-theorem
- generalizationHull.eq_sInter_of_isCompact [SpectralSpace X] {s : Set X} (hs : IsCompact s) :
+variable {X} in
+theorem generalizationHull.eq_sInter_of_isCompact [SpectralSpace X] {s : Set X} (hs : IsCompact s) :
     ∃ S ⊆ {U : Set X | IsOpen U ∧ IsCompact U}, (generalizationHull s) = ⋂₀ S := by
   set W := generalizationHull s
   use {U : Set X | IsOpen U ∧ IsCompact U ∧ W ⊆ U}

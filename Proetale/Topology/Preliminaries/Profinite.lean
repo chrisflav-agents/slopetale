@@ -12,9 +12,11 @@ import Mathlib.Topology.Separation.Profinite
 -/
 
 instance Prespectral.of_profinite {T : Type*} [TopologicalSpace T] [T2Space T] [CompactSpace T]
-  [TotallyDisconnectedSpace T] : PrespectralSpace T :=
-  PrespectralSpace.of_isTopologicalBasis isTopologicalBasis_isClopen
-    fun _ hU => IsClosed.isCompact (IsClopen.isClosed hU)
+  [TotallyDisconnectedSpace T] : PrespectralSpace T := by
+  refine PrespectralSpace.of_isTopologicalBasis (B := { U : Set T | IsClopen U })
+    (basis := isTopologicalBasis_isClopen (X := T)) ?_
+  intro U hU
+  exact hU.1.isCompact
 
 instance Spectral.of_profinite {T : Type*} [TopologicalSpace T] [T2Space T] [CompactSpace T]
   [TotallyDisconnectedSpace T] : SpectralSpace T where

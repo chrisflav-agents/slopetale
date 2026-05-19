@@ -8,6 +8,7 @@ import Mathlib.RingTheory.Etale.Basic
 import Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
 import Proetale.Mathlib.RingTheory.Henselian
 import Proetale.Topology.SpectralSpace.WLocal.Basic
+import Proetale.Topology.SpectralSpace.WLocal.ConnectedComponents
 import Proetale.Algebra.StalkIso
 import Proetale.Mathlib.RingTheory.Ideal.GoingDown
 

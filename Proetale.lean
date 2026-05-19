@@ -23,12 +23,15 @@ import Proetale.Algebra.WeaklyEtale
 import Proetale.Basic
 import Proetale.FromPi1.Etale
 import Proetale.Mathlib.Algebra.Algebra.Pi
+import Proetale.Mathlib.Algebra.Category.AlgCat.FilteredColimits
 import Proetale.Mathlib.Algebra.Category.CommAlgCat.Basic
 import Proetale.Mathlib.Algebra.Category.CommAlgCat.Limits
 import Proetale.Mathlib.Algebra.Category.Ring.FilteredColimits
 import Proetale.Mathlib.Algebra.Homology.ShortComplex.Exact
 import Proetale.Mathlib.AlgebraicGeometry.Cover.MorphismProperty
 import Proetale.Mathlib.AlgebraicGeometry.Extensive
+import Proetale.Mathlib.AlgebraicGeometry.Morphisms.FinitePresentation
+import Proetale.Mathlib.AlgebraicGeometry.Morphisms.RingHomProperties
 import Proetale.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
 import Proetale.Mathlib.AlgebraicGeometry.Sites.BigZariski
 import Proetale.Mathlib.AlgebraicGeometry.Sites.MorphismProperty
@@ -109,4 +112,5 @@ import Proetale.Topology.SpectralSpace.ConnectedComponent
 import Proetale.Topology.SpectralSpace.Constructible
 import Proetale.Topology.SpectralSpace.WLocal.Basic
 import Proetale.Topology.SpectralSpace.WLocal.ClosedPoints
+import Proetale.Topology.SpectralSpace.WLocal.ConnectedComponents
 import Proetale.Topology.SpectralSpace.WLocal.Pullback

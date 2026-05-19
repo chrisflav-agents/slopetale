@@ -181,7 +181,7 @@ lemma op_isFinitelyPresentable :
   -- See the comment above; this is the residual mathematical gap.
   sorry
 
-lemma pro_pro [LocallySmall.{w} C] (H :P ≤ isFinitelyPresentable.{w} C) :
+lemma pro_pro [LocallySmall.{w} C] (H : P ≤ isFinitelyPresentable.{w} C) :
     pro.{w} (pro.{w} P) = pro.{w} P := by
   rw [pro_eq_unop_ind_op, pro_eq_unop_ind_op, op_unop, ind_ind]
   rw [← op_isFinitelyPresentable]
