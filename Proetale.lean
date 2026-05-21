@@ -27,6 +27,7 @@ import Proetale.Mathlib.Algebra.Category.AlgCat.FilteredColimits
 import Proetale.Mathlib.Algebra.Category.CommAlgCat.Basic
 import Proetale.Mathlib.Algebra.Category.CommAlgCat.Limits
 import Proetale.Mathlib.Algebra.Category.Ring.FilteredColimits
+import Proetale.Mathlib.Algebra.Category.Ring.FilteredDescent
 import Proetale.Mathlib.Algebra.Homology.ShortComplex.Exact
 import Proetale.Mathlib.Algebra.LocalIso.Spreads
 import Proetale.Mathlib.AlgebraicGeometry.Cover.MorphismProperty

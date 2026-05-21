@@ -4,12 +4,14 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Christian Merten
 -/
 import Proetale.Mathlib.AlgebraicGeometry.Morphisms.WeaklyEtale
+import Proetale.Mathlib.Algebra.Category.Ring.FilteredDescent
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.Ind
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.IndSpreads
 import Proetale.Morphisms.WeaklyEtale
 import Proetale.Algebra.IndEtale
 import Proetale.Algebra.IndWeaklyEtale
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.OfObjectProperty
+import Proetale.Topology.Coherent.Affine
 
 /-!
 # Pro-affine-étale morphisms
@@ -52,6 +54,40 @@ instance : proAffineEtale.HasOfPostcompProperty proAffineEtale := by
   -- The cleanest argument uses the equivalence between `pro` and `(ind ·.op).unop`
   -- combined with the dual `HasOfPrecompProperty` for `ind`. Currently this relies on
   -- the `PreProSpreads` instance below.
+  -- Structural setup: both X and Y are affine, since the source of a `proAffineEtale`
+  -- morphism is affine (this is `proAffineEtale_isAffine_source`, proved later in this
+  -- file; we inline the affineness extraction here to avoid a forward reference).
+  constructor
+  intro X Y Z f g hg hfg
+  -- Affineness of X via the data of `hfg : proAffineEtale (f ≫ g)`.
+  have hXaff : IsAffine X := by
+    obtain ⟨J, _, _, D, _, s, hs, hst⟩ := hfg
+    haveI : ∀ j, IsAffine (D.obj j) := fun j => by
+      have := (hst j).1.2
+      rwa [ofObjectProperty_top_right_iff] at this
+    exact Scheme.isAffine_of_isLimit (Cone.mk _ s) hs
+  -- Affineness of Y via the data of `hg : proAffineEtale g`.
+  have hYaff : IsAffine Y := by
+    obtain ⟨J, _, _, D, _, s, hs, hst⟩ := hg
+    haveI : ∀ j, IsAffine (D.obj j) := fun j => by
+      have := (hst j).1.2
+      rwa [ofObjectProperty_top_right_iff] at this
+    exact Scheme.isAffine_of_isLimit (Cone.mk _ s) hs
+  -- Reduce to the affine/Spec picture. Set `φ : Γ(Y) ⟶ Γ(X)` such that
+  -- `Spec.map φ` represents `f` up to isoSpec.
+  --
+  -- It suffices to show `Y.isoSpec.inv ≫ f ≫ X.isoSpec.hom : Spec Γ(Y) ⟶ Spec Γ(X)` is
+  -- pro-affine étale, since pre/post composing by the isomorphisms `Y.isoSpec.inv` and
+  -- `X.isoSpec.hom` preserves (and reflects) the property of being pro-affine étale.
+  -- Via `proAffineEtale_Spec_iff`, this reduces to showing the corresponding ring map is
+  -- `IndEtale`.
+  -- Given:
+  --   * `g : Y ⟶ Z` pro-aff-étale,
+  --   * `f ≫ g : X ⟶ Z` pro-aff-étale,
+  -- we get (via Stacks 092Q / WeaklyEtale) that `f` is weakly-étale on stalks, hence the
+  -- factorisation through `Γ(Y)` should be ind-étale. The full proof requires
+  -- `HasOfPrecompProperty` for the `ind` property of `CommRingCat.etale`, which is the
+  -- ring-side analog of this lemma (Stacks 097W). Mathlib does not provide this yet.
   sorry
 
 /-- The property `Etale ⊓ ofObjectProperty (IsAffine ·) ⊤` pre-pro-spreads.
@@ -66,15 +102,35 @@ is precisely what `PreProSpreads.exists_isPullback` requires; supplying the pull
 witness and propagating the affineness/étaleness of `f'` is the remaining technical step. -/
 instance : MorphismProperty.PreProSpreads.{u}
     (@Etale ⊓ .ofObjectProperty (IsAffine ·) (⊤ : ObjectProperty Scheme.{u})) := by
-  -- Outline:
-  --   constructor
-  --   intro J _ _ D c hc T f ⟨hEt, hAff⟩
-  --   -- T is affine via `hAff` (the `ofObjectProperty IsAffine ⊤` factor).
-  --   -- Each `D.obj j` need not be affine, but the limit `c.pt` is some scheme.
-  --   -- Apply `Scheme.exists_π_app_comp_eq_of_locallyOfFinitePresentation` to descend
-  --   -- `f : T ⟶ c.pt` (locally of FP since etale) to a finite level `j` with
-  --   -- `f' : T' ⟶ D.obj j`. Verify that `f'` is etale (`HasRingHomProperty.descent` /
-  --   -- direct construction) and that `T'` can be chosen affine.
+  -- Structural setup: destructure the property to isolate `Etale f` and `IsAffine T`.
+  constructor
+  intro J _ _ D c hc T f hf
+  obtain ⟨hEt, hAff⟩ := hf
+  haveI : IsAffine T := ofObjectProperty_top_right_iff.mp hAff
+  haveI : Etale f := hEt
+  -- Mathlib's `Scheme.exists_π_app_comp_eq_of_locallyOfFinitePresentation` provides the
+  -- spreading-out of an LFP morphism `Y → S` along a cofiltered limit of qcqs schemes with
+  -- affine transition maps. Étale morphisms are LFP, so this would apply once we have:
+  --   (a) each `D.obj j` is qcqs (compact + quasi-separated),
+  --   (b) each transition `D.map α` is affine, and
+  --   (c) `D` factors through `(Functor.const _).obj S` for some base `S`.
+  -- These are not in the hypotheses of `PreProSpreads`; the statement is universal over all
+  -- cofiltered diagrams in `Scheme`. To make this work for the use case (combining with
+  -- `proAffineEtale`), one would need to refine the `PreProSpreads` class to take these
+  -- additional assumptions, or restrict the diagrams used to construct `proAffineEtale`
+  -- morphisms to have these properties (Stacks 01ZM / 00U2 deep descent).
+  -- The construction would proceed:
+  --   1. Take the qc-qs cover of `c.pt` by `T`'s image (since `T` is affine, this is qc).
+  --   2. Use `CommRingCat.exists_fp_algebra_descent_of_isColimit` on `Γ(T) ≃ colim Γ(D.obj j)`
+  --      (when `c.pt` is affine, from `Scheme.isColimit_Γ_mapCocone_op_of_isLimit`) and the
+  --      LFP ring map `Γ(c.pt) → Γ(T)` to obtain a stage `j₀` with an FP-pushout square.
+  --   3. Take `Spec` of the pushout square to obtain the scheme-side pullback witness
+  --      `T' = Spec(Aⱼ)`, `f' : T' → D.obj j₀ = Spec(Γ(D.obj j₀))`.
+  --   4. Check `f'` is étale (descended along the FP-pushout: étaleness is local on the
+  --      source and stable under base change; here it descends via `RingHom.Etale.descent`-
+  --      style lemmas for FP base changes — not present in Mathlib for arbitrary FP descent).
+  -- Steps 2-4 are the deep ring-side descent of étale algebras (Stacks 00U2), which is
+  -- the missing piece of Mathlib infrastructure.
   sorry
 
 instance : proAffineEtale.IsStableUnderComposition := by
@@ -423,5 +479,116 @@ lemma proAffineEtale_le_weaklyEtale : proAffineEtale ≤ @WeaklyEtale := by
   refine WeaklyEtale.of_pro ?_ hf
   rintro A B g ⟨hEt, _⟩
   exact letI := hEt; inferInstance
+
+/-! ### Helpers for spreading out pro-affine-étale data
+
+The following helpers package the cofiltered presentation underlying a `proAffineEtale`
+morphism as data living in `S.AffineEtale` and provide a Spec-level spreading lemma
+that allows us to descend morphisms into the limit to a finite stage. They are
+designed to be consumed by `Proetale.Topology.Comparison.Affine`.
+-/
+
+/-- Promote a cofiltered diagram of affine schemes étale over `S` to a (covariant)
+functor into the small affine étale site `S.AffineEtale`.
+
+Given the data of a cofiltered presentation `(J, D, t)` with each `D.obj j` affine and
+each `t.app j : D.obj j ⟶ S` étale, this produces the corresponding functor
+`liftAffineEtale D t hAff hEt : J ⥤ S.AffineEtale`, sending each `j : J` to the
+affine étale object `(D.obj j).isoSpec.inv ≫ t.app j : Spec Γ(D.obj j) ⟶ S`. -/
+noncomputable def liftAffineEtale
+    {S : Scheme.{u}} {J : Type u} [SmallCategory J] [IsCofiltered J]
+    (D : J ⥤ Scheme.{u}) (t : D ⟶ (Functor.const J).obj S)
+    (hAff : ∀ j, IsAffine (D.obj j)) (hEt : ∀ j, Etale (t.app j)) :
+    J ⥤ Scheme.AffineEtale S where
+  obj j :=
+    haveI : IsAffine (D.obj j) := hAff j
+    haveI hE : Etale (t.app j) := hEt j
+    MorphismProperty.CostructuredArrow.mk (P := @Etale) ⊤
+      ((D.obj j).isoSpec.inv ≫ t.app j)
+      (MorphismProperty.comp_mem _ _ _ inferInstance hE)
+  map {j k} α :=
+    haveI : IsAffine (D.obj j) := hAff j
+    haveI : IsAffine (D.obj k) := hAff k
+    MorphismProperty.CostructuredArrow.homMk (((D.map α).appTop).op) trivial <| by
+      change Scheme.Spec.map (((D.map α).appTop).op) ≫
+        ((D.obj k).isoSpec.inv ≫ t.app k) = (D.obj j).isoSpec.inv ≫ t.app j
+      have h1 : Scheme.Spec.map (((D.map α).appTop).op) =
+          Spec.map ((D.map α).appTop) := rfl
+      rw [h1]
+      have hnat : Spec.map ((D.map α).appTop) ≫ (D.obj k).isoSpec.inv =
+          (D.obj j).isoSpec.inv ≫ D.map α :=
+        Scheme.isoSpec_inv_naturality (D.map α)
+      have htnat := t.naturality α
+      simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.comp_id] at htnat
+      calc Spec.map ((D.map α).appTop) ≫ (D.obj k).isoSpec.inv ≫ t.app k
+          = (Spec.map ((D.map α).appTop) ≫ (D.obj k).isoSpec.inv) ≫ t.app k :=
+            (Category.assoc _ _ _).symm
+        _ = ((D.obj j).isoSpec.inv ≫ D.map α) ≫ t.app k := by rw [hnat]
+        _ = (D.obj j).isoSpec.inv ≫ (D.map α ≫ t.app k) := Category.assoc _ _ _
+        _ = (D.obj j).isoSpec.inv ≫ t.app j :=
+            congrArg ((D.obj j).isoSpec.inv ≫ ·) htnat
+  map_id j := by
+    haveI : IsAffine (D.obj j) := hAff j
+    apply MorphismProperty.CostructuredArrow.Hom.ext
+    show ((D.map (𝟙 j)).appTop).op = 𝟙 _
+    simp
+  map_comp {j k l} α β := by
+    haveI : IsAffine (D.obj j) := hAff j
+    haveI : IsAffine (D.obj k) := hAff k
+    haveI : IsAffine (D.obj l) := hAff l
+    apply MorphismProperty.CostructuredArrow.Hom.ext
+    show ((D.map (α ≫ β)).appTop).op = ((D.map α).appTop).op ≫ ((D.map β).appTop).op
+    simp
+
+/-- Scheme-level finite-stage factoring for affine-target maps into a cofiltered limit.
+
+If `D : J ⥤ Scheme` is a cofiltered diagram of affines with affine étale transition
+maps over `S`, with limit `c.pt`, and `Y` is an affine scheme finitely presented over
+`S`, then any `S`-morphism `c.pt ⟶ Y` factors through one of the finite stages `D.obj j`.
+
+This is the affine specialization of
+`Scheme.exists_π_app_comp_eq_of_locallyOfFinitePresentation`. -/
+lemma Scheme.exists_factor_through_finite_stage_of_isAffine
+    {S : Scheme.{u}} {J : Type u} [SmallCategory J] [IsCofiltered J]
+    {D : J ⥤ Scheme.{u}} {c : Cone D} (hc : IsLimit c)
+    (t : D ⟶ (Functor.const J).obj S)
+    [hT : ∀ {i j} (α : i ⟶ j), IsAffineHom (D.map α)]
+    [hCpt : ∀ i, CompactSpace (D.obj i)]
+    [hQS : ∀ i, QuasiSeparatedSpace (D.obj i)]
+    {Y : Scheme.{u}} (f : Y ⟶ S) [hLFP : LocallyOfFinitePresentation f]
+    (a : c.pt ⟶ Y) (ha : c.π ≫ t = (Functor.const _).map (a ≫ f)) :
+    ∃ (j : J) (g : D.obj j ⟶ Y), c.π.app j ≫ g = a ∧ g ≫ f = t.app j :=
+  Scheme.exists_π_app_comp_eq_of_locallyOfFinitePresentation D t f c hc a ha
+
+/-! ### Spec-level into-limit descent helpers (round-16 OBJ B, partial)
+
+Given a cofiltered diagram `D : J ⥤ Scheme` of affines étale over a base `S`, with affine
+limit `c.pt`, the full into-limit descent (EGA IV.8 / Stacks 01ZM / 00U2) states that any
+étale arrow `Y → c.pt` with `Y` affine factors as a pullback of an étale arrow
+`Y₀ → D.obj j₀` for some finite stage `j₀`. This requires the descent of étale algebras
+along filtered colimits of rings (Stacks 00U2), which is not in Mathlib and is the deeper
+piece of remaining infrastructure.
+
+The helper below provides the constructive packaging of the colimit identification at the
+ring level (`Γ(c.pt) ≃ colim_J Γ(D.obj j)`), which is the cornerstone of the descent and
+the obvious starting point for future work on this objective. -/
+
+/-- Constructive (`noncomputable`) version of `AlgebraicGeometry.nonempty_isColimit_Γ_mapCocone`:
+for a cofiltered diagram `D : J ⥤ Scheme` of qcqs schemes with affine transition maps and a
+limit cone `c`, the global-sections functor `Scheme.Γ` turns `c.op` into a colimit cocone in
+`CommRingCat`. In particular `Γ(c.pt) ≅ colim_J Γ(D.obj j)` as a filtered colimit.
+
+This is the building block for descending data on `Γ(c.pt)` to a finite stage via Mathlib's
+filtered-colimit-of-rings machinery (e.g.
+`RingHom.EssFiniteType.exists_eq_comp_ι_app_of_isColimit`,
+`IsFinitelyPresentable.exists_hom_of_isColimit`). -/
+noncomputable def Scheme.isColimit_Γ_mapCocone_op_of_isLimit
+    {J : Type u} [SmallCategory J] [IsCofiltered J] {D : J ⥤ Scheme.{u}}
+    (c : Cone D) (hc : IsLimit c)
+    [∀ {i j : J} (f : i ⟶ j), IsAffineHom (D.map f)]
+    [∀ i, CompactSpace (D.obj i)]
+    [∀ i, QuasiSeparatedSpace (D.obj i)] :
+    IsColimit (Scheme.Γ.mapCocone c.op) :=
+  (AlgebraicGeometry.nonempty_isColimit_Γ_mapCocone D c hc).some
 
 end AlgebraicGeometry
