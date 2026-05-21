@@ -222,7 +222,7 @@ lemma isStandardOpenImmersion_localization_away_includeRight (g : T)
         (R := R) (A := S) (B := T)).toRingHom g)) := by
   show Algebra.IsStandardOpenImmersion S (Localization.Away ((1 : S) ⊗ₜ[R] g))
   have h : Algebra.IsStandardOpenImmersion S (S ⊗[R] Localization.Away g) := inferInstance
-  exact Algebra.IsStandardOpenImmersion.of_algEquiv S _ _ (tensorLocAwayAlgEquiv S g)
+  exact Algebra.IsStandardOpenImmersion.of_algEquiv (tensorLocAwayAlgEquiv S g)
 
 /-- Base change of a local isomorphism is a local isomorphism.
 
@@ -233,7 +233,8 @@ Since the `1 ⊗ g_α` span the top ideal of `S ⊗[R] T`, this gives the local 
 structure on `S → S ⊗[R] T`. -/
 instance baseChange [Algebra.IsLocalIso R T] :
     Algebra.IsLocalIso S (S ⊗[R] T) := by
-  refine (Algebra.IsLocalIso.iff_span_isStandardOpenImmersion_eq_top S (S ⊗[R] T)).mpr ?_
+  refine (Algebra.IsLocalIso.iff_span_isStandardOpenImmersion_eq_top
+    (R := S) (S := S ⊗[R] T)).mpr ?_
   rw [_root_.eq_top_iff]
   -- The image of the standard-open-immersion elements of `T` under `includeRight`
   -- generates `⊤` in `S ⊗[R] T`.
@@ -1116,7 +1117,7 @@ private lemma _root_.Algebra.IsLocalIso.descent_one_isLocalIso_template
   -- r₀ (Loc.Away r₀)`) along the `R₀`-algebra equivalence to `Loc.Away g₀`.
   haveI : Algebra.IsStandardOpenImmersion R₀ (Localization.Away r₀) := inferInstance
   haveI : Algebra.IsStandardOpenImmersion R₀ (Localization.Away g₀) :=
-    Algebra.IsStandardOpenImmersion.of_algEquiv R₀ _ _ algEquiv
+    Algebra.IsStandardOpenImmersion.of_algEquiv algEquiv
   -- Conclude via the priority-100 instance `Algebra.IsLocalIso.instIsLocalIso`.
   infer_instance
 

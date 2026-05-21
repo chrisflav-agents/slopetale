@@ -42,7 +42,6 @@ import Proetale.Mathlib.AlgebraicGeometry.Sites.MorphismProperty
 import Proetale.Mathlib.AlgebraicGeometry.Sites.Small
 import Proetale.Mathlib.CategoryTheory.Comma.StructuredArrow.Basic
 import Proetale.Mathlib.CategoryTheory.Limits.Comma
-import Proetale.Mathlib.CategoryTheory.Limits.Constructions.Over.Connected
 import Proetale.Mathlib.CategoryTheory.Limits.FilteredColimitCommutesProduct
 import Proetale.Mathlib.CategoryTheory.Limits.MorphismProperty
 import Proetale.Mathlib.CategoryTheory.Limits.Preserves.Finite
@@ -93,6 +92,7 @@ import Proetale.Mathlib.Topology.Separation.Basic
 import Proetale.Mathlib.Topology.Separation.Hausdorff
 import Proetale.Mathlib.Topology.Sober
 import Proetale.Mathlib.Topology.Spectral.Basic
+import Proetale.Mathlib.Topology.Spectral.ConstructibleTopology
 import Proetale.Mathlib.Topology.Spectral.Prespectral
 import Proetale.Morphisms.ProAffineEtale
 import Proetale.Morphisms.WeaklyEtale

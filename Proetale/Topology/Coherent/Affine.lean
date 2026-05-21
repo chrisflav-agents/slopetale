@@ -7,7 +7,7 @@ import Mathlib
 import Proetale.FromPi1.Etale
 import Proetale.Mathlib.AlgebraicGeometry.Extensive
 import Proetale.Mathlib.CategoryTheory.Limits.MorphismProperty
-import Proetale.Mathlib.CategoryTheory.Limits.Constructions.Over.Connected
+import Mathlib.CategoryTheory.Limits.Constructions.Over.Connected
 import Proetale.Mathlib.CategoryTheory.Limits.Comma
 import Proetale.Topology.Flat.Sheaf
 import Proetale.Topology.Coherent.Etale
@@ -57,46 +57,6 @@ variable [P.IsStableUnderBaseChange]
   [P.IsStableUnderComposition] [P.HasOfPostcompProperty P]
   [PreservesLimitsOfShape WalkingCospan F] [HasPullbacks C] [HasPullbacks D]
 
-lemma closedUnderLimitsOfShape_walkingCospan :
-    (P.costructuredArrowObj F (X := X)).IsClosedUnderLimitsOfShape WalkingCospan where
-  limitsOfShape_le := by
-    rintro Y ⟨pres, hpres⟩
-    have h : IsPullback (F.map (pres.π.app .left).left) (F.map (pres.π.app .right).left)
-        (F.map (pres.diag.map WalkingCospan.Hom.inl).left)
-          (F.map (pres.diag.map WalkingCospan.Hom.inr).left) :=
-      IsPullback.of_isLimit_cone <| isLimitOfPreserves
-        (CategoryTheory.CostructuredArrow.toOver F X ⋙ CategoryTheory.Over.forget X) pres.isLimit
-    rw [costructuredArrowObj_iff]
-    have hw1 : Y.hom = F.map (pres.π.app .left).left ≫ (pres.diag.obj .left).hom := by
-      have := (pres.π.app WalkingCospan.left).w
-      simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.comp_id] at this
-      exact this.symm
-    rw [hw1]
-    apply P.comp_mem _ _ (P.of_isPullback h.flip ?_) (hpres _)
-    have hw2 : F.map (pres.diag.map WalkingCospan.Hom.inr).left ≫
-        (pres.diag.obj WalkingCospan.one).hom = (pres.diag.obj WalkingCospan.right).hom := by
-      have := (pres.diag.map WalkingCospan.Hom.inr).w
-      simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.comp_id] at this
-      exact this
-    exact P.of_postcomp _ (pres.diag.obj WalkingCospan.one).hom (hpres .one)
-      (hw2 ▸ hpres .right)
-
-noncomputable
-instance createsLimitsOfShape_walkingCospan [HasPullbacks C] [HasPullbacks D] :
-    CreatesLimitsOfShape WalkingCospan (CostructuredArrow.forget P ⊤ F X) :=
-  haveI : HasLimitsOfShape WalkingCospan (Comma F (Functor.fromPUnit X)) :=
-    inferInstanceAs <| HasLimitsOfShape WalkingCospan (CostructuredArrow F X)
-  have : (commaObj F (Functor.fromPUnit X) P).IsClosedUnderLimitsOfShape WalkingCospan := by
-    apply closedUnderLimitsOfShape_walkingCospan
-  Comma.forgetCreatesLimitsOfShapeOfClosed P
-
-instance hasPullbacks : HasPullbacks (P.CostructuredArrow ⊤ F X) :=
-  haveI : HasLimitsOfShape WalkingCospan (Comma F (Functor.fromPUnit X)) :=
-    inferInstanceAs <| HasLimitsOfShape WalkingCospan (CostructuredArrow F X)
-  have : (commaObj F (Functor.fromPUnit X) P).IsClosedUnderLimitsOfShape WalkingCospan := by
-    apply closedUnderLimitsOfShape_walkingCospan
-  Comma.hasLimitsOfShape_of_closedUnderLimitsOfShape P
-
 instance : PreservesLimitsOfShape WalkingCospan (CostructuredArrow.toOver P F X) := by
   have : PreservesLimitsOfShape WalkingCospan
       (CostructuredArrow.toOver P F X ⋙ Over.forget P ⊤ X) := by
@@ -116,39 +76,6 @@ namespace AlgebraicGeometry
 namespace Scheme
 
 variable {S : Scheme.{u}}
-
-section
-
-@[simps! hom left]
-noncomputable
-def affineOverMk {P : MorphismProperty Scheme.{u}} {R : CommRingCat.{u}}
-    (f : Spec R ⟶ S) (hf : P f) :
-    P.CostructuredArrow ⊤ Scheme.Spec S :=
-  .mk ⊤ f hf
-
-instance isCoverDense_toOver_Spec (P : MorphismProperty Scheme.{u}) [P.IsMultiplicative]
-    [IsZariskiLocalAtSource P] [P.IsStableUnderBaseChange] [P.HasOfPostcompProperty P] :
-    (MorphismProperty.CostructuredArrow.toOver P Scheme.Spec S).IsCoverDense
-      (smallGrothendieckTopology P) where
-  is_cover U := by
-    rw [Scheme.mem_smallGrothendieckTopology]
-    let 𝒰 : Cover.{u} (precoverage P) U.left :=
-      U.left.affineCover.changeProp
-      (fun _ ↦ IsZariskiLocalAtSource.of_isOpenImmersion _)
-    let _ (i : 𝒰.I₀) : (𝒰.X i).Over S := ⟨𝒰.f i ≫ U.hom⟩
-    refine ⟨𝒰, ?_, ?_, ?_⟩
-    · exact ⟨fun i ↦ inferInstance, fun i ↦ ⟨rfl⟩⟩
-    · intro i
-      apply P.comp_mem
-      exact 𝒰.map_prop i
-      exact U.prop
-    · rintro X f ⟨i⟩
-      simp only [Sieve.coverByImage]
-      refine ⟨⟨affineOverMk (𝒰.f i ≫ U.hom) (P.comp_mem _ _ (𝒰.map_prop i) U.prop), ?_, ?_, ?_⟩⟩
-      · exact MorphismProperty.CostructuredArrow.homMk (𝟙 _) ⟨⟩ (Category.id_comp _)
-      · dsimp
-        exact MorphismProperty.Over.homMk (𝒰.f i) (by simp) trivial
-      · ext; dsimp; exact Category.id_comp _
 
 variable {P : MorphismProperty Scheme.{u}} [IsZariskiLocalAtSource P]
 
@@ -278,8 +205,6 @@ instance : Preregular (P.CostructuredArrow ⊤ Scheme.Spec S) := by
     from (PreservesPullback.iso_hom_fst F f g).symm]
   infer_instance
 
-end
-
 noncomputable
 def Cover.etaleAffineRefinement (𝒰 : S.Cover (precoverage @Etale)) :
     S.AffineCover @Etale where
@@ -294,43 +219,7 @@ def Cover.etaleAffineRefinement (𝒰 : S.Cover (precoverage @Etale)) :
     have : Etale (𝒰.f j.fst) := 𝒰.map_prop _
     exact MorphismProperty.comp_mem _ _ _ (IsZariskiLocalAtSource.of_isOpenImmersion _) ‹_›
 
-def AffineEtale (S : Scheme.{u}) : Type (u + 1) :=
-  MorphismProperty.CostructuredArrow @Etale.{u} ⊤ Scheme.Spec.{u} S
-
 namespace AffineEtale
-
-@[simps!]
-protected noncomputable def mk {R : CommRingCat} (f : Spec R ⟶ S) [Etale f] : AffineEtale S :=
-  MorphismProperty.CostructuredArrow.mk ⊤ f ‹_›
-
-noncomputable
-instance : Category S.AffineEtale :=
-  inferInstanceAs <| Category (MorphismProperty.CostructuredArrow _ _ _ _)
-
-@[simps! obj_left obj_hom map_left]
-protected noncomputable def Spec (S : Scheme.{u}) : S.AffineEtale ⥤ S.Etale :=
-  MorphismProperty.CostructuredArrow.toOver _ _ _
-
-instance : (AffineEtale.Spec S).Faithful :=
-  inferInstanceAs <| (MorphismProperty.CostructuredArrow.toOver _ _ _).Faithful
-
-instance : (AffineEtale.Spec S).Full :=
-  inferInstanceAs <| (MorphismProperty.CostructuredArrow.toOver _ _ _).Full
-
-instance : (AffineEtale.Spec S).IsCoverDense S.smallEtaleTopology :=
-  inferInstanceAs <| (MorphismProperty.CostructuredArrow.toOver _ _ _).IsCoverDense
-    (smallGrothendieckTopology _)
-
-variable (S) in
-noncomputable def topology : GrothendieckTopology S.AffineEtale :=
-  (AffineEtale.Spec S).inducedTopology (smallEtaleTopology S)
-
-/-- The category of sheafs on the small, affine étale site is equivalent to the category of
-sheafs on the small étale site. -/
-noncomputable def sheafEquiv (A : Type*) [Category A]
-    [∀ (X : S.Etaleᵒᵖ), Limits.HasLimitsOfShape (StructuredArrow X (AffineEtale.Spec S).op) A] :
-    Sheaf (AffineEtale.topology S) A ≌ Sheaf (smallEtaleTopology S) A :=
-  (AffineEtale.Spec S).sheafInducedTopologyEquivOfIsCoverDense _ _
 
 instance : (AffineEtale.Spec S).ReflectsEffectiveEpis :=
   inferInstanceAs <| (MorphismProperty.CostructuredArrow.toOver _ _ _).ReflectsEffectiveEpis

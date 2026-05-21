@@ -1449,6 +1449,37 @@ private lemma comap_eval_factor {E : Finset A}
     PrimeSpectrum.comap (algebraMap A (ProdStrata E)) y := by
   rw [hq]; ext a; simp only [PrimeSpectrum.comap_asIdeal, Ideal.mem_comap]; rfl
 
+instance (E : Finset A) : Finite (Stratification.Index E) := by
+  classical
+  refine Finite.of_injective (β := Set ↥E × Set ↥E)
+    (fun i ↦ ((↑) ⁻¹' (i.left : Set A), (↑) ⁻¹' (i.right : Set A))) ?_
+  rintro ⟨l₁, r₁, _, u₁⟩ ⟨l₂, r₂, _, u₂⟩ heq
+  obtain ⟨hL, hR⟩ := Prod.mk.inj heq
+  have aux : ∀ {s₁ s₂ : Finset A}, (s₁ : Set A) ⊆ E → (s₂ : Set A) ⊆ E →
+      ((↑) : ↥E → A) ⁻¹' (s₁ : Set A) = ((↑) : ↥E → A) ⁻¹' (s₂ : Set A) → s₁ = s₂ := by
+    intro s₁ s₂ h₁ h₂ hst
+    ext a
+    refine ⟨fun ha ↦ (Set.ext_iff.mp hst ⟨a, h₁ ha⟩).mp ha,
+            fun ha ↦ (Set.ext_iff.mp hst ⟨a, h₂ ha⟩).mpr ha⟩
+  have sub : ∀ {l r : Finset A}, (l : Set A) ∪ r = E →
+      (l : Set A) ⊆ E ∧ (r : Set A) ⊆ E :=
+    fun h ↦ ⟨fun a ha ↦ h ▸ Set.mem_union_left _ ha,
+            fun a ha ↦ h ▸ Set.mem_union_right _ ha⟩
+  obtain ⟨hl₁, hr₁⟩ := sub u₁
+  obtain ⟨hl₂, hr₂⟩ := sub u₂
+  exact (Stratification.Index.mk.injEq ..).mpr ⟨aux hl₁ hl₂ hL, aux hr₁ hr₂ hR⟩
+
+lemma indZariski_prodStrata (E : Finset A) :
+    Algebra.IndZariski A (ProdStrata E) := by
+  change Algebra.IndZariski A
+    (∀ i : Stratification.Index E, Generalization i.function i.ideal)
+  exact Algebra.IndZariski.pi A _
+
+instance indZariski : Algebra.IndZariski A (WLocalization A) := by
+  have h := fun E => indZariski_prodStrata (A := A) E
+  exact @Algebra.IndZariski.of_colimitPresentation A (WLocalization A) _ _ _
+    (Finset A) _ _ colimitPresentation h
+
 -- Helper: strata separation at a singleton stage.
 -- If p, q ∈ V(I_E) with E = {f} and comap(alg) p, comap(alg) q are in the same
 -- locClosedSubset, then f ∈ comap(alg) p ↔ f ∈ comap(alg) q.
@@ -1656,33 +1687,6 @@ instance isWLocalRing : IsWLocalRing (WLocalization A) := by
     hxc hxc'
 
 -- Each ProdStrata E is ind-Zariski over A (finite product of ind-Zariski localizations).
--- We reduce to ULift (Fin n) index via AlgEquiv.piCongrLeft, avoiding the expensive
--- elaboration of Algebra.IndZariski.pi directly on Stratification.Index E.
-set_option maxHeartbeats 12000000 in
-private lemma prodStrata_indZariski (E : Finset A) :
-    Algebra.IndZariski A (ProdStrata E) := by
-  change Algebra.IndZariski A
-    (∀ (i : Stratification.Index E), Generalization i.function i.ideal)
-  obtain ⟨n, ⟨e_fin⟩⟩ := Finite.exists_equiv_fin (Stratification.Index E)
-  let e : ULift.{u} (Fin n) ≃ Stratification.Index E :=
-    Equiv.ulift.trans e_fin.symm
-  let S : Stratification.Index E → Type u := fun i => Generalization i.function i.ideal
-  have h1 : Algebra.IndZariski A (∀ k : ULift.{u} (Fin n), S (e k)) :=
-    Algebra.IndZariski.pi A (fun k => S (e k))
-  exact Algebra.IndZariski.of_equiv
-    (R := A) (S := ∀ k : ULift.{u} (Fin n), S (e k)) (T := ∀ i, S i)
-    (AlgEquiv.piCongrLeft A S e)
-
--- WLocalization A is ind-Zariski: filtered colimit of ind-Zariski ProdStrata algebras.
--- Explicit @ is essential here to resolve the instance diamond.
-set_option maxHeartbeats 10000000 in
-noncomputable instance indZariski : Algebra.IndZariski A (WLocalization A) := by
-  letI cr := WLocalization.commRing A
-  letI al := WLocalization.algebra A
-  have h := fun (E : Finset A) => prodStrata_indZariski (A := A) E
-  exact @Algebra.IndZariski.of_colimitPresentation A (WLocalization A) _ cr al
-    (Finset A) _ _ colimitPresentation h
-
 -- For any E and maximal m, the ideal m does not generate the unit ideal in ProdStrata E.
 -- Proof: by iUnion_stratum, m lies in some locClosedSubset, so the submonoid is disjoint from m,
 -- hence the localization at that submonoid preserves properness of m. By the projection from
@@ -1847,6 +1851,7 @@ lemma bijOn_specComap_zeroLocus_map (I : Ideal A)
     have hm : m.asIdeal.IsMaximal := by
       simpa [isClosed_singleton_iff_isMaximal] using hI (Ideal.le_comap_of_map_le hq)
     have : q.asIdeal.LiesOver m.asIdeal := ⟨PrimeSpectrum.ext_iff.mp hm_def⟩
+    letI := Localization.AtPrime.algebraOfLiesOver m.asIdeal q.asIdeal
     have : Algebra.IsSeparable m.asIdeal.ResidueField q.asIdeal.ResidueField :=
       Algebra.IndEtale.isSeparable_residueField (R := A) (S := WLocalization A) m.asIdeal
         q.asIdeal

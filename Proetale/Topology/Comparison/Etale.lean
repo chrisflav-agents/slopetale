@@ -36,42 +36,21 @@ instance : HasFiniteLimits S.Etale :=
   inferInstanceAs <| HasFiniteLimits (MorphismProperty.Over @Etale ⊤ S)
 
 instance : PreservesFiniteLimits (toProEtale S) := by
-  have h1 : PreservesFiniteLimits (toProEtale S ⋙ ProEt.forget S) :=
+  have : PreservesFiniteLimits (toProEtale S ⋙ ProEt.forget S) :=
     inferInstanceAs <| PreservesFiniteLimits (MorphismProperty.Over.forget @Etale ⊤ S)
   exact preservesFiniteLimits_of_reflects_of_preserves (toProEtale S) (ProEt.forget S)
 
-/-- `RepresentablyFlat (toProEtale S)`: the structured-arrow comma category
-`StructuredArrow Y (toProEtale S)` is cofiltered for every `Y : S.ProEt`.
-Since `S.Etale` has all finite limits and `toProEtale S` preserves them (via the
-forgetful functor `ProEt.forget S`, which is fully faithful and hence reflects
-limits), the conclusion is `flat_of_preservesFiniteLimits`. -/
 instance representablyFlat_toProEtale : RepresentablyFlat (toProEtale S) :=
   flat_of_preservesFiniteLimits _
 
-/-- The inclusion of the étale site into the pro-étale site is continuous.
-
-The proof factors through the equality
-`toProEtale S ⋙ Over.forget @WeaklyEtale ⊤ S = Over.forget @Etale ⊤ S`
-(both functors compute the underlying `Over S` object), the inequality
-`etaleTopology ≤ proetaleTopology` (so étale covers are pro-étale covers), and
-`RepresentablyFlat (toProEtale S)` (to get the `CompatiblePreserving` half via
-`compatiblePreservingOfFlat`). -/
+/-- The inclusion of the étale site into the pro-étale site is continuous. -/
 instance isContinuous_toProEtale :
     (toProEtale S).IsContinuous (smallEtaleTopology S) (ProEt.topology S) := by
   refine Functor.isContinuous_of_coverPreserving
     (compatiblePreservingOfFlat _ (toProEtale S)) ?_
   refine ⟨fun {X R} hR ↦ ?_⟩
-  -- `R` is a small-étale cover of `X : S.Etale`. We must show its pushforward along
-  -- `toProEtale S` is a pro-étale cover of `(toProEtale S).obj X` in `S.ProEt`.
   rw [ProEt.topology_eq_inducedTopology, Functor.mem_inducedTopology_sieves_iff,
     ← Sieve.functorPushforward_comp]
-  -- The composition `toProEtale S ⋙ Over.forget @WeaklyEtale ⊤ S` agrees with
-  -- `Over.forget @Etale ⊤ S` by definition of `Over.changeProp` (the underlying
-  -- `Over S` object is preserved). After this rewrite the goal becomes:
-  -- `R.functorPushforward (Over.forget @Etale ⊤ S) ∈ proetaleTopology.over S _`.
-  -- The hypothesis `hR : R ∈ smallEtaleTopology S X` unfolds to
-  -- `R.functorPushforward (Over.forget @Etale ⊤ S) ∈ etaleTopology.over S _`,
-  -- and we conclude using `etaleTopology_le_proetaleTopology` lifted to `.over S`.
   have hR' : R.functorPushforward (Over.forget @Etale ⊤ S) ∈ etaleTopology.over S _ := hR
   rw [GrothendieckTopology.mem_over_iff] at hR' ⊢
   exact etaleTopology_le_proetaleTopology _ hR'

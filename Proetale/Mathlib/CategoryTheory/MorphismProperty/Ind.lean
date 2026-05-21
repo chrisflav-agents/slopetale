@@ -44,8 +44,6 @@ namespace ObjectProperty
 lemma ind_of_univLE (P : ObjectProperty C) [UnivLE.{w', w}] :
     ind.{w'} P ≤ ind.{w} P := by
   intro X ⟨J, _, _, pres, H⟩
-  haveI : EssentiallySmall.{w} J :=
-    @essentiallySmall_of_small_of_locallySmall J _ (UnivLE.small J) inferInstance
   exact of_essentiallySmall_index pres H
 
 @[gcongr]
@@ -130,14 +128,9 @@ lemma pro_eq_unop_ind_op : pro.{w} P = (ind.{w} P.op).unop := by
 lemma ind_eq_unop_pro_op : ind.{w} P = (pro.{w} P.op).unop := by
   ext X Y f
   refine ⟨fun ⟨J, _, _, D, t, s, hs, hst⟩ ↦ ?_, fun ⟨J, _, _, D, t, s, hs, hst⟩ ↦ ?_⟩
-  · -- ind P f → (pro P.op).unop f = pro P.op f.op
-    -- Use D.op, NatTrans.op t, NatTrans.op s, hs.op
-    exact ⟨Jᵒᵖ, inferInstance, inferInstance, D.op, NatTrans.op t,
+  · exact ⟨Jᵒᵖ, inferInstance, inferInstance, D.op, NatTrans.op t,
       NatTrans.op s, hs.op, fun j ↦ ⟨(hst j.unop).1, by simp [← (hst j.unop).2]⟩⟩
-  · -- (pro P.op).unop f → ind P f
-    -- D : J ⥤ Cᵒᵖ, t : D ⟶ const(op X), s : const(op Y) ⟶ D, hs : IsLimit (Cone.mk _ s)
-    -- Use D.leftOp, NatTrans.leftOp t, NatTrans.leftOp s, isColimitCoconeLeftOpOfCone D hs
-    exact ⟨Jᵒᵖ, inferInstance, inferInstance, D.leftOp, NatTrans.leftOp t,
+  · exact ⟨Jᵒᵖ, inferInstance, inferInstance, D.leftOp, NatTrans.leftOp t,
       NatTrans.leftOp s, isColimitCoconeLeftOpOfCone D hs, fun j ↦ ⟨(hst j.unop).1,
       Quiver.Hom.op_inj (hst j.unop).2⟩⟩
 

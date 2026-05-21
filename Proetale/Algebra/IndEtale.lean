@@ -367,93 +367,12 @@ instance isSeparable (k : Type u) [Field k] [hAlg : Algebra k R] [IndEtale k R] 
   haveI : Algebra.Etale k (P.diag.obj i) := hP i
   exact @isSeparable_of_etale_to_local k _ (P.diag.obj i) _ _ _ R _ hAlg _ (P.ι.app i).hom a
 
--- Helper: for s : S with R → S ind-étale, the image of s in q.ResidueField is separable
--- over p.ResidueField. Uses base change of the étale algebra Aᵢ to p.ResidueField,
--- then applies isSeparable_of_etale_to_local.
-set_option maxHeartbeats 400000 in
-private lemma isSeparable_image_of_indEtale [Algebra.IndEtale R S]
-    (p : Ideal R) (q : Ideal S) [q.LiesOver p] [p.IsPrime] [q.IsPrime]
-    (s : S) : IsSeparable (Ideal.ResidueField p) (algebraMap S (Ideal.ResidueField q) s) := by
-  -- Write S as filtered colimit of étale R-algebras Aᵢ
-  obtain ⟨ι, hcat, hfilt, P, hP⟩ := IndEtale.exists_colimitPresentation (R := R) (S := S)
-  letI := hcat; letI := hfilt
-  -- Lift s to some Aᵢ
-  have hcolim : IsColimit ((forget (CommAlgCat.{u} R)).mapCocone P.cocone) :=
-    isColimitOfPreserves (forget (CommAlgCat.{u} R)) P.isColimit
-  obtain ⟨i, a, ha⟩ := Types.jointly_surjective_of_isColimit hcolim s
-  haveI : Algebra.Etale R (P.diag.obj i) := hP i
-  -- The map Aᵢ → S → κ(q) as R-algebra hom
-  have himage : algebraMap S (Ideal.ResidueField q) s =
-      algebraMap S (Ideal.ResidueField q) ((P.ι.app i).hom a) :=
-    congrArg (algebraMap S (Ideal.ResidueField q)) ha.symm
-  rw [himage]
-  -- Factor through base change: κ(p) ⊗[R] Aᵢ is étale over κ(p)
-  -- Build the R-algebra hom φ : Aᵢ → κ(q) and the κ(p)-algebra hom Φ : κ(p) ⊗[R] Aᵢ → κ(q)
-  let φ : (P.diag.obj i : Type u) →ₐ[R] (Ideal.ResidueField q) :=
-    (IsScalarTower.toAlgHom R S (Ideal.ResidueField q)).comp (P.ι.app i).hom
-  -- Explicitly ensure Algebra R κ(p) is available for tensor product
-  letI : Algebra R (Ideal.ResidueField p) := inferInstance
-  let Φ : ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u)) →ₐ[Ideal.ResidueField p]
-      (Ideal.ResidueField q) :=
-    Algebra.TensorProduct.lift
-      (Algebra.ofId (Ideal.ResidueField p) (Ideal.ResidueField q))
-      φ (fun _ _ => Commute.all _ _)
-  -- Φ(1 ⊗ a) = φ(a) = algebraMap S κ(q) ((P.ι.app i).hom a)
-  have hΦ : Φ (1 ⊗ₜ[R] a) = algebraMap S (Ideal.ResidueField q) ((P.ι.app i).hom a) := by
-    show (Algebra.ofId (Ideal.ResidueField p) (Ideal.ResidueField q)) 1 * φ a = _
-    simp [Algebra.ofId_apply, φ, AlgHom.comp_apply, IsScalarTower.toAlgHom_apply]
-  rw [← hΦ]
-  -- κ(p) ⊗[R] Aᵢ is étale over κ(p) (base change of étale along R → κ(p) is étale)
-  -- All instances (rightAlgebra, scalar towers, IsPushout) are built inside the by block
-  -- to avoid leaking them and confusing instance search.
-  haveI : Algebra.Etale (Ideal.ResidueField p)
-      ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u)) := by
-    rw [← RingHom.etale_algebraMap]
-    letI : Algebra (↥(P.diag.obj i))
-        ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u)) :=
-      Algebra.TensorProduct.rightAlgebra
-    haveI : IsScalarTower R (↥(P.diag.obj i))
-        ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u)) :=
-      Algebra.TensorProduct.right_isScalarTower
-    haveI hst : IsScalarTower R (Ideal.ResidueField p)
-        ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u)) :=
-      .of_algebraMap_eq' rfl
-    exact @RingHom.Etale.isStableUnderBaseChange R (↥(P.diag.obj i)) (Ideal.ResidueField p)
-      ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u))
-      _ _ _ _
-      _ _ _ _ _
-      _ hst
-      TensorProduct.isPushout'
-      (RingHom.etale_algebraMap.mpr ‹Algebra.Etale R (P.diag.obj i)›)
-  -- κ(q) is a field, hence a local ring — apply isSeparable_of_etale_to_local
-  exact isSeparable_of_etale_to_local (Ideal.ResidueField p)
-    ((Ideal.ResidueField p) ⊗[R] (P.diag.obj i : Type u)) (Ideal.ResidueField q) Φ (1 ⊗ₜ[R] a)
-
-set_option maxHeartbeats 800000 in
 instance isSeparable_residueField [Algebra.IndEtale R S] (p : Ideal R) (q : Ideal S)
-    [q.LiesOver p] [p.IsPrime] [q.IsPrime] :
-    Algebra.IsSeparable (Ideal.ResidueField p) (Ideal.ResidueField q) := by
-  set κp := Ideal.ResidueField p
-  set κq := Ideal.ResidueField q
-  constructor
-  intro x
-  -- Every element of κ(q) = FractionField(S/q) can be written as a/b
-  -- with a, b ∈ S/q, and each element of S/q is the image of some s ∈ S.
-  obtain ⟨a, b, _, hab⟩ := IsFractionRing.div_surjective (A := S ⧸ q) (K := κq) x
-  rw [← hab]
-  -- Lift a, b from S/q to S
-  obtain ⟨sa, rfl⟩ := Ideal.Quotient.mk_surjective a
-  obtain ⟨sb, rfl⟩ := Ideal.Quotient.mk_surjective b
-  -- algebraMap (S ⧸ q) κq (Ideal.Quotient.mk q s) = algebraMap S κq s
-  -- These are definitionally equal via IsScalarTower R (S ⧸ q) κq
-  change IsSeparable κp (algebraMap (S ⧸ q) κq (Ideal.Quotient.mk q sa) /
-    algebraMap (S ⧸ q) κq (Ideal.Quotient.mk q sb))
-  rw [Ideal.algebraMap_quotient_residueField_mk, Ideal.algebraMap_quotient_residueField_mk]
-  -- div = mul * inv
-  rw [div_eq_mul_inv]
-  exact Field.isSeparable_mul
-    (isSeparable_image_of_indEtale R S p q sa)
-    (Field.isSeparable_inv (isSeparable_image_of_indEtale R S p q sb))
+    [q.LiesOver p] [p.IsPrime] [q.IsPrime]
+    [Algebra (Localization.AtPrime p) (Localization.AtPrime q)]
+    [Localization.AtPrime.IsLiesOverAlgebra p q] :
+    Algebra.IsSeparable p.ResidueField q.ResidueField :=
+  sorry
 
 end Algebra.IndEtale
 

@@ -4,8 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jiedong Jiang, Christian Merten
 -/
 import Proetale.Mathlib.Topology.Inseparable
+import Proetale.Mathlib.Topology.Separation.Basic
+import Proetale.Mathlib.Topology.Spectral.ConstructibleTopology
 import Mathlib.Topology.Spectral.Basic
-import Mathlib.Topology.Spectral.ConstructibleTopology
 import Mathlib.Topology.JacobsonSpace
 import Mathlib.Data.Set.Card
 import Mathlib.Topology.Connected.Separation
@@ -27,61 +28,32 @@ it is the specialization of a point in `s`. -/
 lemma exists_specializes_of_isClosed_constructibleTopology_of_mem_closure [SpectralSpace X]
     {s : Set X} (hs : IsClosed[constructibleTopology X] s) {x : X} (hx : x ∈ closure s) :
     ∃ y ∈ s, y ⤳ x := by
-  -- Strategy: For each compact open U ∋ x, U ∩ s is closed in the constructible topology
-  -- and nonempty. By compactness of WithConstructibleTopology X, the total intersection
-  -- is nonempty. Any point in the intersection specializes to x.
-  --
-  -- Compact opens are clopen in the constructible topology
-  have hU_closed_constr : ∀ (U : Set X), IsOpen U → IsCompact U →
-      @IsClosed (WithConstructibleTopology X) _ U := by
-    intro U hUo hUc
-    rw [← @isOpen_compl_iff (WithConstructibleTopology X)]
-    show @IsOpen (WithConstructibleTopology X) _ Uᶜ
-    have h1 : IsClosed Uᶜ := hUo.isClosed_compl
-    have h2 : IsCompact Uᶜᶜ := by rwa [compl_compl]
-    exact h2.isOpen_constructibleTopology_of_isClosed h1
-  -- Define the family indexed by compact opens containing x
+  -- The family of intersections `U ∩ s` indexed by compact opens `U` containing `x` consists of
+  -- closed sets in the constructible topology and has the finite intersection property in `X`
+  -- (since `x ∈ closure s` and any finite intersection of compact opens containing `x` is open).
   let ι := { U : Set X // IsOpen U ∧ IsCompact U ∧ x ∈ U }
-  -- Each U_i ∩ s is closed in the constructible topology
-  have hF_closed : ∀ i : ι, @IsClosed (WithConstructibleTopology X) _
-      ((i : Set X) ∩ s) := by
-    rintro ⟨U, hUo, hUc, _⟩
-    exact (hU_closed_constr U hUo hUc).inter hs
-  -- Total intersection is nonempty by compactness + FIP
+  have hF_closed (i : ι) : IsClosed[constructibleTopology X] ((i : Set X) ∩ s) :=
+    have hi : IsClosed[constructibleTopology X] (i : Set X) :=
+      i.2.2.1.isClosed_constructibleTopology_of_isOpen i.2.1
+    @IsClosed.inter X _ _ (constructibleTopology X) hi hs
   have h_inter : (⋂ i : ι, ((i : Set X) ∩ s)).Nonempty := by
-    have := @CompactSpace.iInter_nonempty (WithConstructibleTopology X) _
-      compactSpace_withConstructibleTopology (ι := ι) (t := fun i => (i : Set X) ∩ s)
-      hF_closed
-    apply this; clear this
-    intro T
-    -- ⋂ i ∈ T, (U_i ∩ s) ⊇ (⋂ i ∈ T, U_i) ∩ s
-    -- Need: (⋂ j ∈ T, ((j : Set X) ∩ s)).Nonempty
-    -- This follows from: (⋂ j ∈ T, (j : Set X)) ∩ s is nonempty
-    -- and ⋂ j ∈ T, ((j : Set X) ∩ s) ⊇ (⋂ j ∈ T, (j : Set X)) ∩ s
+    refine CompactSpace.iInter_nonempty (X := WithConstructibleTopology X) hF_closed fun T => ?_
     have hopen : IsOpen (⋂ j ∈ T, (j : Set X)) :=
       Set.Finite.isOpen_biInter T.finite_toSet fun j _ => j.2.1
-    have hmem : x ∈ ⋂ j ∈ T, (j : Set X) :=
-      Set.mem_biInter fun j _ => j.2.2.2
-    have hne := mem_closure_iff_nhds.mp hx _ (hopen.mem_nhds hmem)
-    obtain ⟨y, hy⟩ := hne
-    refine ⟨y, ?_⟩
-    rw [Set.mem_iInter]
-    intro j
-    rw [Set.mem_iInter]
-    intro hj
-    exact Set.mem_inter ((Set.mem_iInter₂.mp hy.1) j hj) hy.2
-  -- Extract point and verify properties
+    have hmem : x ∈ ⋂ j ∈ T, (j : Set X) := Set.mem_biInter fun j _ => j.2.2.2
+    obtain ⟨y, hyU, hys⟩ := mem_closure_iff_nhds.mp hx _ (hopen.mem_nhds hmem)
+    exact ⟨y, Set.mem_iInter₂.mpr fun j hj =>
+      ⟨(Set.mem_iInter₂.mp hyU) j hj, hys⟩⟩
+  -- Any point in the total intersection lies in `s` (taking `U = univ`) and specializes to `x`
+  -- (using that compact opens form a basis of the topology).
   obtain ⟨y, hy⟩ := h_inter
   rw [Set.mem_iInter] at hy
-  refine ⟨y, ?_, ?_⟩
-  · -- y ∈ s
-    exact (hy ⟨Set.univ, isOpen_univ, CompactSpace.isCompact_univ, Set.mem_univ x⟩).2
-  · -- y ⤳ x
-    rw [specializes_iff_forall_open]
-    intro U hUo hxU
-    obtain ⟨W, ⟨hWo, hWc⟩, hxW, hWU⟩ :=
-      PrespectralSpace.isTopologicalBasis.exists_subset_of_mem_open hxU hUo
-    exact hWU (hy ⟨W, hWo, hWc, hxW⟩).1
+  refine ⟨y, (hy ⟨Set.univ, isOpen_univ, CompactSpace.isCompact_univ, Set.mem_univ x⟩).2, ?_⟩
+  rw [specializes_iff_forall_open]
+  intro U hUo hxU
+  obtain ⟨W, ⟨hWo, hWc⟩, hxW, hWU⟩ :=
+    PrespectralSpace.isTopologicalBasis.exists_subset_of_mem_open hxU hUo
+  exact hWU (hy ⟨W, hWo, hWc, hxW⟩).1
 
 /-- If `s` is closed in the constructible topology and stable under specialization, it is closed. -/
 @[stacks 0903 "(2)"]
@@ -128,16 +100,18 @@ private lemma SpectralSpace.totallySeparatedSpace_of_isClosed_singleton [Spectra
   exact ⟨W, clopen W hWo hWc, hxW, by simp [Set.mem_compl_iff]; exact fun h => hWU h (Set.mem_singleton y)⟩
 
 @[stacks 0905 "(6) → (1)"]
-theorem SpectralSpace.t2Space_of_isClosed_singleton [SpectralSpace X]
-    (h : ∀ x : X, IsClosed ({x} : Set X)) : T2Space X :=
-  letI := SpectralSpace.totallySeparatedSpace_of_isClosed_singleton h
-  inferInstance
-
-@[stacks 0905 "(6) → (1)"]
-theorem SpectralSpace.totallyDisconnectedSpace_of_isClosed_singleton [SpectralSpace X]
-    (h : ∀ x : X, IsClosed ({x} : Set X)) : TotallyDisconnectedSpace X :=
-  letI := SpectralSpace.totallySeparatedSpace_of_isClosed_singleton h
-  inferInstance
--- use `isTotallyDisconnected_of_isClopen_set`
--- use `exists_specializes_of_isClosed_constructibleTopology_of_mem_closure,
--- IsClosed.of_isClosed_constructibleTopology`
+instance SpectralSpace.totallySeparatedSpace [SpectralSpace X] [T1Space X] :
+    TotallySeparatedSpace X := by
+  -- Every compact open `U` is clopen: it is constructibly closed (by
+  -- `IsCompact.isClosed_constructibleTopology_of_isOpen`) and specialization-stable
+  -- because `X` is T1.
+  have clopen (U : Set X) (hUo : IsOpen U) (hUc : IsCompact U) : IsClopen U :=
+    ⟨(hUc.isClosed_constructibleTopology_of_isOpen hUo).of_isClosed_constructibleTopology
+      (.of_t1Space U), hUo⟩
+  -- Compact opens form a basis, so any two distinct points are separated by a clopen.
+  rw [totallySeparatedSpace_iff_exists_isClopen]
+  intro x y hxy
+  obtain ⟨W, ⟨hWo, hWc⟩, hxW, hWy⟩ :=
+    PrespectralSpace.isTopologicalBasis.exists_subset_of_mem_open
+      (show x ∈ ({y} : Set X)ᶜ by simp [hxy]) isClosed_singleton.isOpen_compl
+  exact ⟨W, clopen W hWo hWc, hxW, fun hyW ↦ hWy hyW rfl⟩
