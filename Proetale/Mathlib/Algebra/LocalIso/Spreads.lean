@@ -649,6 +649,707 @@ private lemma _root_.Algebra.IsLocalIso.section_descends_to_R0_per_gen_decomp
   rw [← hval]
   exact hxc
 
+/-- **Cancellation of base change with localization (round 34, OBJ A helper).**
+The localisation `Loc.Away (algebraMap R₀ R r₀)` of `R` at the image of
+`r₀ : R₀` is canonically `R`-algebra isomorphic to the base change
+`R ⊗[R₀] Loc.Away r₀`.
+
+This is the "cancellation" step recurring in Stacks 04D1's descent argument:
+tensoring a localisation with the base ring along a scalar tower yields the
+corresponding localisation downstairs. The proof composes
+`IsLocalization.algEquiv` between two localisations of `R` at
+`Submonoid.powers (algebraMap R₀ R r₀)`: the canonical model
+`Loc.Away (algebraMap R₀ R r₀)` and the base change `R ⊗[R₀] Loc.Away r₀`
+(which is also `IsLocalization.Away` over `R` via `IsLocalization.Away.tensor`).
+
+Direction of the equivalence: the canonical `Loc.Away (algebraMap R₀ R r₀)` is
+the domain so that the equivalence is exactly the symmetric form of Mathlib's
+`IsLocalization.Away.tensorEquiv`. -/
+private noncomputable def _root_.Algebra.IsLocalIso.cancelBaseChange_localization_iso
+    {R : Type u} [CommRing R] {R₀ : Type u} [CommRing R₀]
+    [Algebra R₀ R] (r₀ : R₀) :
+    Localization.Away (algebraMap R₀ R r₀) ≃ₐ[R]
+      R ⊗[R₀] Localization.Away r₀ :=
+  (IsLocalization.algEquiv (Submonoid.powers (algebraMap R₀ R r₀))
+    (Localization.Away (algebraMap R₀ R r₀)) (R ⊗[R₀] Localization.Away r₀))
+
+/-- **Numerator descent under base-change cancellation (round 35, L1 step 4).**
+The base-change cancellation iso of round 34 sends the canonical image of a
+numerator `n : R` in `Loc.Away (algebraMap R₀ R r₀)` to the simple tensor
+`n ⊗ₜ 1` in `R ⊗[R₀] Loc.Away r₀`.
+
+This is the elementary computational fact driving the per-generator descent
+in step 4 of the round-31 L1 plan: `section_descends_to_R0_per_gen_decomp`
+writes `secR s * algMap _ ((algMap r₀)^k) = algMap R _ n` for some `n : R`,
+and the round-34 iso then flattens the numerator into the pure-tensor
+expression `n ⊗ₜ 1` inside `R ⊗[R₀] Loc.Away r₀`. The eventual `sec₀`
+construction will combine this identification with the bridge `R₀ → R` to
+isolate the `R₀`-component of `n` modulo a power of `algMap r₀`. -/
+private lemma _root_.Algebra.IsLocalIso.section_descends_to_R0_numerator_descent
+    {R : Type u} [CommRing R] {R₀ : Type u} [CommRing R₀]
+    [Algebra R₀ R] (r₀ : R₀) (n : R) :
+    Algebra.IsLocalIso.cancelBaseChange_localization_iso (R := R) (R₀ := R₀) r₀
+        ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀))) n) =
+      n ⊗ₜ[R₀] (1 : Localization.Away r₀) := by
+  rw [(Algebra.IsLocalIso.cancelBaseChange_localization_iso
+    (R := R) (R₀ := R₀) r₀).commutes n]
+  rfl
+
+/-- **Per-generator tensor identity (round 36, L1 step 4).**
+Combining the round-32 per-generator denominator clearing
+(`section_descends_to_R0_per_gen_decomp`) and the round-35 numerator descent
+(`section_descends_to_R0_numerator_descent`): pushing the round-32 identity
+through `cancelBaseChange_localization_iso r₀` produces a clean per-generator
+tensor identity for `secR s` inside `R ⊗[R₀] Loc.Away r₀`. Concretely there
+exist `n : R` and `k : ℕ` with
+`iso (secR s) * ((algebraMap R₀ R r₀)^k ⊗ₜ 1) = n ⊗ₜ 1`. This is the direct
+input for the eventual `sec₀` assembly: it isolates the pure-tensor form of
+`secR s` modulo a power of `algMap r₀`. -/
+private lemma _root_.Algebra.IsLocalIso.section_descends_to_R0_per_gen_tensor
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    (r₀ : R₀)
+    (secR : S₀et →ₐ[R₀et] Localization.Away ((algebraMap R₀ R) r₀))
+    (s : S₀et) :
+    ∃ (n : R) (k : ℕ),
+      Algebra.IsLocalIso.cancelBaseChange_localization_iso
+          (R := R) (R₀ := R₀) r₀ (secR s) *
+        (((algebraMap R₀ R r₀) ^ k : R) ⊗ₜ[R₀]
+          (1 : Localization.Away r₀)) =
+      (n : R) ⊗ₜ[R₀] (1 : Localization.Away r₀) := by
+  obtain ⟨n, k, hnk⟩ :=
+    Algebra.IsLocalIso.section_descends_to_R0_per_gen_decomp r₀ secR s
+  refine ⟨n, k, ?_⟩
+  have h := congrArg
+    (Algebra.IsLocalIso.cancelBaseChange_localization_iso
+      (R := R) (R₀ := R₀) r₀) hnk
+  rw [map_mul,
+    Algebra.IsLocalIso.section_descends_to_R0_numerator_descent r₀
+      ((algebraMap R₀ R r₀) ^ k),
+    Algebra.IsLocalIso.section_descends_to_R0_numerator_descent r₀ n] at h
+  exact h
+
+/-- **Unit witness for the denominator tensor (round 37, L1 step 4 sequel).**
+The element `((algebraMap R₀ R r₀)^k : R) ⊗ₜ 1` in `R ⊗[R₀] Loc.Away r₀`
+is a unit. Combined with the round-36 per-gen tensor identity, this
+allows `iso (secR s)` to be solved for explicitly inside
+`R ⊗[R₀] Loc.Away r₀`. -/
+private lemma _root_.Algebra.IsLocalIso.section_descends_to_R0_pow_r₀_tmul_one_isUnit
+    {R : Type u} [CommRing R] {R₀ : Type u} [CommRing R₀]
+    [Algebra R₀ R] (r₀ : R₀) (k : ℕ) :
+    IsUnit (((algebraMap R₀ R r₀) ^ k : R) ⊗ₜ[R₀]
+      (1 : Localization.Away r₀)) := by
+  rw [← Algebra.IsLocalIso.section_descends_to_R0_numerator_descent
+        (R := R) (R₀ := R₀) r₀ ((algebraMap R₀ R r₀) ^ k),
+      map_pow]
+  exact ((IsLocalization.Away.algebraMap_isUnit
+    (S := Localization.Away ((algebraMap R₀ R) r₀))
+    ((algebraMap R₀ R) r₀)).pow k).map
+    (Algebra.IsLocalIso.cancelBaseChange_localization_iso
+      (R := R) (R₀ := R₀) r₀)
+
+/-- **Explicit solved form for `iso (secR s)` (round 38, L1 step 4 sequel).**
+Combining the round-36 per-gen tensor identity
+(`section_descends_to_R0_per_gen_tensor`) with the round-37 unit
+witness (`section_descends_to_R0_pow_r₀_tmul_one_isUnit`),
+`iso (secR s)` is expressed in `R ⊗[R₀] Loc.Away r₀` as
+`(n ⊗ₜ 1) * Ring.inverse (((algMap r₀)^k : R) ⊗ₜ 1)` for some `n : R`
+and `k : ℕ`. This is the form consumed by the eventual `sec₀`
+construction. -/
+private lemma _root_.Algebra.IsLocalIso.section_descends_to_R0_per_gen_explicit
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    (r₀ : R₀)
+    (secR : S₀et →ₐ[R₀et] Localization.Away ((algebraMap R₀ R) r₀))
+    (s : S₀et) :
+    ∃ (n : R) (k : ℕ),
+      Algebra.IsLocalIso.cancelBaseChange_localization_iso
+          (R := R) (R₀ := R₀) r₀ (secR s) =
+        ((n : R) ⊗ₜ[R₀] (1 : Localization.Away r₀)) *
+        Ring.inverse (((algebraMap R₀ R r₀) ^ k : R) ⊗ₜ[R₀]
+          (1 : Localization.Away r₀)) := by
+  obtain ⟨n, k, hnk⟩ :=
+    Algebra.IsLocalIso.section_descends_to_R0_per_gen_tensor
+      (R := R) (R₀ := R₀) r₀ secR s
+  refine ⟨n, k, ?_⟩
+  have hD := Algebra.IsLocalIso.section_descends_to_R0_pow_r₀_tmul_one_isUnit
+    (R := R) (R₀ := R₀) r₀ k
+  rw [← hnk, mul_assoc, Ring.mul_inverse_cancel _ hD, mul_one]
+
+/-- **Solved form for `secR s` on the `Loc.Away (algMap r₀)` side
+(round 39, L1 step 5).** The companion to round-38's
+`section_descends_to_R0_per_gen_explicit`: instead of expressing
+`iso (secR s)` inside `R ⊗[R₀] Loc.Away r₀`, this expresses `secR s`
+directly inside `Loc.Away ((algebraMap R₀ R) r₀)` as
+`(algMap R _ n) * Ring.inverse (algMap R _ ((algMap r₀)^k))` for some
+`n : R` and `k : ℕ`. This is the form consumed by the bridge
+`algebraMap_localization_R₀_to_R r₀` when assembling `sec₀`. -/
+private lemma _root_.Algebra.IsLocalIso.section_descends_to_R0_per_gen_solved_form
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    (r₀ : R₀)
+    (secR : S₀et →ₐ[R₀et] Localization.Away ((algebraMap R₀ R) r₀))
+    (s : S₀et) :
+    ∃ (n : R) (k : ℕ),
+      secR s =
+        (algebraMap R (Localization.Away ((algebraMap R₀ R) r₀))) n *
+          Ring.inverse
+            ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+              ((algebraMap R₀ R r₀) ^ k)) := by
+  obtain ⟨n, k, hnk⟩ :=
+    Algebra.IsLocalIso.section_descends_to_R0_per_gen_decomp r₀ secR s
+  refine ⟨n, k, ?_⟩
+  have hD : IsUnit ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+      ((algebraMap R₀ R r₀) ^ k)) := by
+    rw [map_pow]
+    exact (IsLocalization.Away.algebraMap_isUnit
+      (S := Localization.Away ((algebraMap R₀ R) r₀))
+      ((algebraMap R₀ R) r₀)).pow k
+  rw [← hnk, mul_assoc, Ring.mul_inverse_cancel _ hD, mul_one]
+
+/-- **Bridge image of an R₀-side solved form (round 40, L1 step 6).** Companion
+to round 39's `section_descends_to_R0_per_gen_solved_form`: applies the bridge
+`algebraMap_localization_R₀_to_R r₀` to a generic R₀-side solved form
+`(algebraMap R₀ (Loc.Away r₀)) m * Ring.inverse ((algebraMap R₀ (Loc.Away r₀)) (r₀^k))`
+and produces the R-side solved form
+`(algebraMap R (Loc.Away (algMap r₀))) (algMap R₀ R m) *
+  Ring.inverse ((algebraMap R (Loc.Away (algMap r₀))) ((algMap r₀)^k))`.
+
+This is the foundational identity for verifying `bridge (sec₀ s) = secR s` in the
+descent: once a candidate `sec₀ s = α₀ m_s * Ring.inverse (α₀ (r₀^{j_s}))` is
+chosen, applying the bridge yields a form directly comparable with round 39's
+expression for `secR s`. -/
+private lemma _root_.Algebra.IsLocalIso.bridge_image_of_R₀_solved_form
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    (r₀ : R₀) (m : R₀) (k : ℕ) :
+    (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀)
+      ((algebraMap R₀ (Localization.Away r₀)) m *
+        Ring.inverse ((algebraMap R₀ (Localization.Away r₀)) (r₀ ^ k))) =
+      (algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+          ((algebraMap R₀ R) m) *
+        Ring.inverse ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+          ((algebraMap R₀ R r₀) ^ k)) := by
+  have hUR : IsUnit ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+      ((algebraMap R₀ R r₀) ^ k)) := by
+    rw [map_pow]
+    exact (IsLocalization.Away.algebraMap_isUnit
+      (S := Localization.Away ((algebraMap R₀ R) r₀))
+      ((algebraMap R₀ R) r₀)).pow k
+  have hU0 : IsUnit ((algebraMap R₀ (Localization.Away r₀)) (r₀ ^ k)) := by
+    rw [map_pow]
+    exact (IsLocalization.Away.algebraMap_isUnit
+      (S := Localization.Away r₀) r₀).pow k
+  have hBαr : (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀)
+      ((algebraMap R₀ (Localization.Away r₀)) (r₀ ^ k)) =
+      (algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+        ((algebraMap R₀ R r₀) ^ k) := by
+    rw [(Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀).commutes,
+      IsScalarTower.algebraMap_apply R₀ R
+        (Localization.Away ((algebraMap R₀ R) r₀)), map_pow]
+  refine hUR.mul_right_cancel ?_
+  rw [mul_assoc, Ring.inverse_mul_cancel _ hUR, mul_one, ← hBαr, ← map_mul,
+    mul_assoc, Ring.inverse_mul_cancel _ hU0, mul_one,
+    (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀).commutes,
+    IsScalarTower.algebraMap_apply R₀ R
+      (Localization.Away ((algebraMap R₀ R) r₀))]
+
+/-- **Numerator matching identity (round 41 fallback OBJ A1, L1 step 7
+half (b)).** Given a clearing relation `algMap R₀ R m = (algMap r₀)^q * n`
+between `m : R₀`, `n : R` (i.e. multiplication by a power of `algMap r₀`
+brings the R-side numerator `n` into the image of `algMap R₀ R`), the two
+solved forms — with denominators `(algMap r₀)^{k+q}` and `(algMap r₀)^k`
+— agree in `Loc.Away (algMap r₀)`:
+`β_R (algMap R₀ R m) * Ring.inverse (β_R ((algMap r₀)^{k+q})) =
+ β_R n * Ring.inverse (β_R ((algMap r₀)^k))`,
+where `β_R := algebraMap R (Loc.Away (algMap r₀))`.
+
+This is the half-(b) cancellation underpinning the eventual
+`descent_numerator_lifts_to_R₀`: once the R-side numerator `n` is shown
+to lift to `R₀` after multiplication by `(algMap r₀)^q`, this lemma
+converts the round-39 R-side solved form
+`β_R n * Ring.inverse (β_R ((algMap r₀)^k))` into a descended form
+`β_R (algMap R₀ R m) * Ring.inverse (β_R ((algMap r₀)^{k+q}))`. The proof
+is a pure unit cancellation in `Loc.Away (algMap r₀)`, mirroring the
+round-40 `bridge_image_of_R₀_solved_form` template. -/
+private lemma _root_.Algebra.IsLocalIso.descent_numerator_match_identity
+    {R : Type u} [CommRing R] {R₀ : Type u} [CommRing R₀]
+    [Algebra R₀ R] (r₀ : R₀) (m : R₀) (n : R) (k q : ℕ)
+    (h : (algebraMap R₀ R) m = (algebraMap R₀ R) r₀ ^ q * n) :
+    (algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+        ((algebraMap R₀ R) m) *
+      Ring.inverse ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+        ((algebraMap R₀ R r₀) ^ (k + q))) =
+    (algebraMap R (Localization.Away ((algebraMap R₀ R) r₀))) n *
+      Ring.inverse ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+        ((algebraMap R₀ R r₀) ^ k)) := by
+  have hUk : IsUnit ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+      ((algebraMap R₀ R r₀) ^ k)) := by
+    rw [map_pow]
+    exact (IsLocalization.Away.algebraMap_isUnit
+      (S := Localization.Away ((algebraMap R₀ R) r₀))
+      ((algebraMap R₀ R) r₀)).pow k
+  have hUkq : IsUnit ((algebraMap R (Localization.Away ((algebraMap R₀ R) r₀)))
+      ((algebraMap R₀ R r₀) ^ (k + q))) := by
+    rw [map_pow]
+    exact (IsLocalization.Away.algebraMap_isUnit
+      (S := Localization.Away ((algebraMap R₀ R) r₀))
+      ((algebraMap R₀ R) r₀)).pow (k + q)
+  refine hUkq.mul_right_cancel ?_
+  rw [mul_assoc, Ring.inverse_mul_cancel _ hUkq, mul_one, mul_assoc,
+      pow_add, map_mul, ← mul_assoc (Ring.inverse _) _ _,
+      Ring.inverse_mul_cancel _ hUk, one_mul, ← map_mul, mul_comm n _, ← h]
+
+/-- **Option (iii) — `g`'s image in `Loc.Away r` is a unit (round 42).**
+Push `g : S` along the canonical localisation map `S → Loc.Away g`, then
+transport along the canonical `R`-algebra iso
+`IsLocalization.algEquiv : Loc.Away g ≃ₐ[R] Loc.Away r`
+arising from `hr : IsLocalization.Away r (Loc.Away g)`. The resulting element
+is a unit in `Loc.Away r`.
+
+This is the unit-witness building block for the round-42 half-(a) numerator
+lift inside `section_descends_to_R0`: the `algEqGR`-image of `g` underlies
+the explicit form of the constructed `secR`, so its unit status in
+`Loc.Away ((algebraMap R₀ R) r₀)` is the first hurdle for any clearing-power
+argument. -/
+private lemma _root_.Algebra.IsLocalIso.descent_algEqGR_image_g_isUnit
+    {R : Type u} [CommRing R] {S : Type u} [CommRing S] [Algebra R S]
+    (g : S) (r : R)
+    (hr : IsLocalization.Away r (Localization.Away g)) :
+    IsUnit ((IsLocalization.algEquiv (Submonoid.powers r)
+        (Localization.Away g) (Localization.Away r))
+      ((algebraMap S (Localization.Away g)) g)) := by
+  haveI := hr
+  exact (IsLocalization.Away.algebraMap_isUnit
+      (S := Localization.Away g) g).map
+    (IsLocalization.algEquiv (Submonoid.powers r)
+      (Localization.Away g) (Localization.Away r))
+
+/-- **Explicit form of the constructed descent section (round 43).**
+A parallel `noncomputable def` that builds the *same* composition
+exposed inside the body of `descent_section_at_R_inv_r`:
+`((algEqGR.toAlgHom.comp toLocG).restrictScalars R₀et).comp iota`,
+where `iota : S₀et →ₐ[R₀et] S` is `s ↦ e.symm (1 ⊗ s)`. This bypasses
+the `Nonempty.some` opacity of `descent_section_at_R_inv_r`. The
+defining-equation companion `descent_section_at_R_inv_r_explicit_apply`
+exposes the action on `s : S₀et`. -/
+noncomputable def _root_.Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit
+    {R : Type u} [CommRing R]
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r : R)
+    [hr : IsLocalization.Away r (Localization.Away g)] :
+    S₀et →ₐ[R₀et] Localization.Away r :=
+  letI : Algebra R₀et S :=
+    ((algebraMap R S).comp (algebraMap R₀et R)).toAlgebra
+  haveI : IsScalarTower R₀et R S := IsScalarTower.of_algebraMap_eq fun _ => rfl
+  haveI : IsScalarTower R₀et R (Localization.Away r) :=
+    IsScalarTower.of_algebraMap_eq fun _ => rfl
+  (((IsLocalization.algEquiv (Submonoid.powers r) (Localization.Away g)
+        (Localization.Away r)).toAlgHom.comp
+      (IsScalarTower.toAlgHom R S (Localization.Away g))).restrictScalars
+      R₀et).comp
+    ((e.symm.toAlgHom.restrictScalars R₀et).comp
+      (Algebra.TensorProduct.includeRight (R := R₀et) (A := R) (B := S₀et)))
+
+/-- **Apply formula for the explicit descent section.** -/
+@[simp]
+lemma _root_.Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit_apply
+    {R : Type u} [CommRing R]
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r : R)
+    [hr : IsLocalization.Away r (Localization.Away g)]
+    (s : S₀et) :
+    Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit e g r s =
+      (IsLocalization.algEquiv (Submonoid.powers r)
+          (Localization.Away g) (Localization.Away r))
+        ((algebraMap S (Localization.Away g))
+          (e.symm (Algebra.TensorProduct.includeRight
+            (R := R₀et) (A := R) (B := S₀et) s))) :=
+  rfl
+
+/-- **Natural map `ψ_R₀` (round 44).**
+The natural `R₀`-algebra map
+`R₀ ⊗[R₀et] S₀et →ₐ[R₀] Localization.Away (algebraMap R₀ R r₀)`
+built via `Algebra.TensorProduct.lift` from:
+* `Algebra.ofId R₀ (Loc.Away (algMap r₀))` on the `R₀` factor, and
+* `descent_section_at_R_inv_r_explicit e g (algMap r₀)` on the `S₀et` factor.
+
+This is the natural map that factors through `R ⊗[R₀et] S₀et → S →
+Loc.Away g → Loc.Away (algMap r₀)` (via `e.symm`, `IsScalarTower.toAlgHom`,
+`IsLocalization.algEquiv`). Used in `section_descends_to_R0` for the
+unit-witness step: `bridge ∘ φ = ψ` and `ψ(g₀)` will be shown to be a
+unit (round 45). -/
+noncomputable def _root_.Algebra.IsLocalIso.descent_psi_R₀
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀)
+    [hr : IsLocalization.Away ((algebraMap R₀ R) r₀) (Localization.Away g)] :
+    R₀ ⊗[R₀et] S₀et →ₐ[R₀] Localization.Away ((algebraMap R₀ R) r₀) :=
+  letI : IsScalarTower R₀et R₀ (Localization.Away ((algebraMap R₀ R) r₀)) :=
+    IsScalarTower.of_algebraMap_eq fun x => by
+      rw [IsScalarTower.algebraMap_apply R₀ R (Localization.Away _),
+          ← IsScalarTower.algebraMap_apply R₀et R₀ R,
+          ← IsScalarTower.algebraMap_apply R₀et R (Localization.Away _)]
+  Algebra.TensorProduct.lift
+    (Algebra.ofId R₀ (Localization.Away ((algebraMap R₀ R) r₀)))
+    (Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit e g
+      ((algebraMap R₀ R) r₀))
+    (fun _ _ => Commute.all _ _)
+
+/-- **Apply formula for `descent_psi_R₀` on simple tensors.** -/
+@[simp]
+lemma _root_.Algebra.IsLocalIso.descent_psi_R₀_tmul
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀)
+    [hr : IsLocalization.Away ((algebraMap R₀ R) r₀) (Localization.Away g)]
+    (r₀_elem : R₀) (s : S₀et) :
+    Algebra.IsLocalIso.descent_psi_R₀ e g r₀ (r₀_elem ⊗ₜ[R₀et] s) =
+      (algebraMap R₀ (Localization.Away ((algebraMap R₀ R) r₀))) r₀_elem *
+      Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit e g
+        ((algebraMap R₀ R) r₀) s :=
+  rfl
+
+/-- **Factorization of `ψ_R₀` through `S` (round 45).**
+The natural map `descent_psi_R₀ e g r₀` factors as
+`algEquiv ∘ (algebraMap S (Loc.Away g)) ∘ e.symm ∘ cancelBaseChange ((1 : R) ⊗ -)`.
+This identity is the hook that lets us evaluate `ψ_R₀` at `g₀`: using
+`hbridge_g : e.symm (cancelBaseChange ((1 : R) ⊗[R₀] g₀)) = g`, the
+RHS becomes `algEquiv ((algebraMap S (Loc.Away g)) g)`, whose unit-ness
+is `descent_algEqGR_image_g_isUnit`. -/
+lemma _root_.Algebra.IsLocalIso.descent_psi_R₀_eq_algEquiv_factor
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀)
+    [hr : IsLocalization.Away ((algebraMap R₀ R) r₀) (Localization.Away g)]
+    (x : R₀ ⊗[R₀et] S₀et) :
+    Algebra.IsLocalIso.descent_psi_R₀ e g r₀ x =
+      (IsLocalization.algEquiv (Submonoid.powers ((algebraMap R₀ R) r₀))
+          (Localization.Away g)
+          (Localization.Away ((algebraMap R₀ R) r₀)))
+        ((algebraMap S (Localization.Away g))
+          (e.symm (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+            ((1 : R) ⊗ₜ[R₀] x)))) := by
+  induction x with
+  | zero =>
+    rw [TensorProduct.tmul_zero, map_zero, map_zero, map_zero, map_zero, map_zero]
+  | add a b ha hb =>
+    rw [map_add, ha, hb, TensorProduct.tmul_add, map_add, map_add, map_add, map_add]
+  | tmul r s =>
+    have htmul : ((r : R₀) • (1 : R)) ⊗ₜ[R₀et] s
+                  = ((algebraMap R₀ R) r) • ((1 : R) ⊗ₜ[R₀et] s) := by
+      rw [← Algebra.algebraMap_eq_smul_one,
+          TensorProduct.tmul_eq_smul_one_tmul]
+    rw [Algebra.IsLocalIso.descent_psi_R₀_tmul,
+        Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit_apply,
+        Algebra.TensorProduct.includeRight_apply,
+        Algebra.TensorProduct.cancelBaseChange_tmul, htmul,
+        map_smul, Algebra.smul_def, map_mul, map_mul,
+        ← IsScalarTower.algebraMap_apply R S (Localization.Away g),
+        AlgEquiv.commutes,
+        ← IsScalarTower.algebraMap_apply R₀ R
+          (Localization.Away ((algebraMap R₀ R) r₀))]
+
+/-- **Unit witness for `ψ_R₀` at the bridge element `g₀` (round 46).**
+Given the bridge identity
+`hbridge_g : e.symm (cancelBaseChange ((1 : R) ⊗[R₀] g₀)) = g`, the natural
+map `descent_psi_R₀ e g r₀` sends `g₀` to a unit of
+`Localization.Away ((algebraMap R₀ R) r₀)`.
+
+This follows immediately from the round-45 factorization
+`descent_psi_R₀_eq_algEquiv_factor`: at `x = g₀`, the RHS reduces via
+`hbridge_g` to `algEquiv ((algebraMap S (Loc.Away g)) g)`, whose unit-ness
+is `descent_algEqGR_image_g_isUnit`.
+
+Consumed by `section_descends_to_R0` step L2: since `bridge ∘ φ = ψ` and
+`bridge` is injective (round 31), unit-ness of `ψ g₀` lifts to unit-ness
+of `φ g₀`. -/
+lemma _root_.Algebra.IsLocalIso.descent_psi_R₀_g₀_isUnit
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀)
+    [hr : IsLocalization.Away ((algebraMap R₀ R) r₀) (Localization.Away g)]
+    (g₀ : R₀ ⊗[R₀et] S₀et)
+    (hbridge_g : e.symm (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] g₀)) = g) :
+    IsUnit (Algebra.IsLocalIso.descent_psi_R₀ e g r₀ g₀) := by
+  rw [Algebra.IsLocalIso.descent_psi_R₀_eq_algEquiv_factor, hbridge_g]
+  exact Algebra.IsLocalIso.descent_algEqGR_image_g_isUnit g
+    ((algebraMap R₀ R) r₀) hr
+
+/-- **Bridge composition identity (round 47, L2 building block).**
+For any candidate `R₀et`-section `sec₀ : S₀et →ₐ[R₀et] Loc.Away r₀` whose
+post-composition with the bridge
+`algebraMap_localization_R₀_to_R r₀ : Loc.Away r₀ →ₐ[R₀] Loc.Away (algMap r₀)`
+matches `descent_section_at_R_inv_r_explicit e g (algMap r₀)`, the tensor lift
+`φ := Algebra.TensorProduct.lift (Algebra.ofId R₀ _) sec₀ _` satisfies
+`bridge ∘ φ = descent_psi_R₀ e g r₀`.
+
+Consumed by `section_descends_to_R0` step L2 (unit witness for `φ g₀`):
+combined with `descent_psi_R₀_g₀_isUnit` (round 46) and bridge injectivity
+(round 31), unit-ness of `ψ g₀ = bridge(φ g₀)` lifts to unit-ness of
+`φ g₀` in `Loc.Away r₀`. -/
+lemma _root_.Algebra.IsLocalIso.descent_bridge_comp_phi_eq_psi
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀)
+    [hr : IsLocalization.Away ((algebraMap R₀ R) r₀) (Localization.Away g)]
+    (sec₀ : S₀et →ₐ[R₀et] Localization.Away r₀)
+    (hconsistency : ∀ s : S₀et,
+      (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀) (sec₀ s) =
+        Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit e g
+          ((algebraMap R₀ R) r₀) s) :
+    (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀).comp
+        (Algebra.TensorProduct.lift
+          (Algebra.ofId R₀ (Localization.Away r₀)) sec₀
+          (fun _ _ => Commute.all _ _)) =
+      Algebra.IsLocalIso.descent_psi_R₀ e g r₀ := by
+  letI : IsScalarTower R₀et R₀ (Localization.Away ((algebraMap R₀ R) r₀)) :=
+    IsScalarTower.of_algebraMap_eq fun x => by
+      rw [IsScalarTower.algebraMap_apply R₀ R (Localization.Away _),
+          ← IsScalarTower.algebraMap_apply R₀et R₀ R,
+          ← IsScalarTower.algebraMap_apply R₀et R (Localization.Away _)]
+  refine Algebra.TensorProduct.ext' (fun r₀_elem s => ?_)
+  simp only [AlgHom.coe_comp, Function.comp_apply,
+    Algebra.TensorProduct.lift_tmul, map_mul,
+    AlgHom.commutes, hconsistency,
+    Algebra.IsLocalIso.descent_psi_R₀_tmul, Algebra.ofId_apply]
+
+/-- **Bridge-image unit witness (round 48, L2 building block).**
+For any candidate `R₀et`-section `sec₀ : S₀et →ₐ[R₀et] Loc.Away r₀` that is
+bridge-compatible with `descent_section_at_R_inv_r_explicit e g (algMap r₀)`
+(hypothesis `hconsistency`), the image of `g₀` under `bridge ∘ φ` is a unit
+in `Loc.Away (algMap r₀)`, where
+`φ := Algebra.TensorProduct.lift (Algebra.ofId R₀ _) sec₀ _`.
+
+This is the pointwise consequence of `descent_bridge_comp_phi_eq_psi`
+(round 47, AlgHom identity `bridge ∘ φ = ψ`) combined with
+`descent_psi_R₀_g₀_isUnit` (round 46, `IsUnit (ψ g₀)`).
+
+Consumed by `section_descends_to_R0` step L2: paired with bridge
+injectivity / lift-through-bridge infrastructure (round 49+) to lift this
+unit-ness back to `IsUnit (φ g₀)` in `Loc.Away r₀`. -/
+lemma _root_.Algebra.IsLocalIso.descent_bridge_phi_g₀_isUnit
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S] (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀)
+    [hr : IsLocalization.Away ((algebraMap R₀ R) r₀) (Localization.Away g)]
+    (g₀ : R₀ ⊗[R₀et] S₀et)
+    (hbridge_g : e.symm (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] g₀)) = g)
+    (sec₀ : S₀et →ₐ[R₀et] Localization.Away r₀)
+    (hconsistency : ∀ s : S₀et,
+      (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀) (sec₀ s) =
+        Algebra.IsLocalIso.descent_section_at_R_inv_r_explicit e g
+          ((algebraMap R₀ R) r₀) s) :
+    IsUnit
+      ((Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀)
+        ((Algebra.TensorProduct.lift
+            (Algebra.ofId R₀ (Localization.Away r₀)) sec₀
+            (fun _ _ => Commute.all _ _)) g₀)) := by
+  have hcomp := Algebra.IsLocalIso.descent_bridge_comp_phi_eq_psi
+    e g r₀ sec₀ hconsistency
+  have heq : (Algebra.IsLocalIso.algebraMap_localization_R₀_to_R r₀)
+      ((Algebra.TensorProduct.lift
+          (Algebra.ofId R₀ (Localization.Away r₀)) sec₀
+          (fun _ _ => Commute.all _ _)) g₀) =
+      Algebra.IsLocalIso.descent_psi_R₀ e g r₀ g₀ := by
+    rw [← AlgHom.comp_apply, hcomp]
+  rw [heq]
+  exact Algebra.IsLocalIso.descent_psi_R₀_g₀_isUnit e g r₀ g₀ hbridge_g
+
+/-- **Base-change injectivity A → B (round 49, L2 precursor).**
+Under `hval_inj : Function.Injective (algebraMap R₀ R)` and the standing
+hypothesis `[Algebra.Etale R₀et S₀et]` (whence `S₀et` is flat over `R₀et`,
+whence `A := R₀ ⊗[R₀et] S₀et` is flat over `R₀` by base-change of flatness),
+the natural map `A → B := R ⊗[R₀et] S₀et` realised as
+`a ↦ Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et ((1 : R) ⊗ₜ[R₀] a)`
+is injective.
+
+Proof: factor the map as `cancelBaseChange.toAlgHom ∘ includeRight`. The
+right inclusion `B →ₐ[R₀] R ⊗[R₀] B` is injective by
+`Algebra.TensorProduct.includeRight_injective` (using flatness of `B` over
+`R₀` and injectivity of `R₀ → R`); `cancelBaseChange` is an `AlgEquiv`,
+hence injective.
+
+Consumed by future rounds to descend polynomial identities (e.g.,
+`g₀^n = (algMap R₀ A r₀) * c₀`) from B back to A, which is the foundational
+step for the L2 lift `IsUnit (bridge x) → IsUnit x` in the
+`section_descends_to_R0` descent. -/
+lemma _root_.Algebra.IsLocalIso.descent_baseChange_R₀_to_R_injective
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    (hval_inj : Function.Injective (algebraMap R₀ R))
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    [Algebra.Etale R₀et S₀et] :
+    Function.Injective
+      (fun a : R₀ ⊗[R₀et] S₀et =>
+        Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+          ((1 : R) ⊗ₜ[R₀] a)) := by
+  have h₁ : Function.Injective
+      (Algebra.TensorProduct.includeRight :
+        R₀ ⊗[R₀et] S₀et →ₐ[R₀] R ⊗[R₀] (R₀ ⊗[R₀et] S₀et)) :=
+    Algebra.TensorProduct.includeRight_injective hval_inj
+  have h₂ : Function.Injective
+      (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et) :=
+    (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et).injective
+  intro x y hxy
+  exact h₁ (h₂ hxy)
+
+/-- **Polynomial identity descent (round 50, B → A).**
+Given the data of `section_descends_to_R0` — in particular the
+`R`-alg equiv `e : S ≃ₐ[R] R ⊗[R₀et] S₀et`, the witnesses
+`hcg : g^n = (algebraMap R S) ((algebraMap R₀ R) r₀) * cg`,
+`hbridge_g`, `hbridge_c` — descend the polynomial identity from `S`
+(equivalently from `B := R ⊗[R₀et] S₀et`) back to
+`A := R₀ ⊗[R₀et] S₀et`, producing
+  `g₀^n = (algebraMap R₀ A r₀) * c₀`  in `A`.
+
+This is the foundational descended identity for the L2 lift
+`IsUnit (bridge x) → IsUnit x`. Subsequent rounds will apply
+`φ : A →ₐ[R₀] Loc.Away r₀` to both sides to extract the unit witness
+of `φ g₀`. -/
+lemma _root_.Algebra.IsLocalIso.descent_g₀_pow_eq_at_R₀
+    {R : Type u} [CommRing R] {R₀ : Subalgebra ℤ R}
+    (hval_inj : Function.Injective (algebraMap R₀ R))
+    {R₀et : Type u} [CommRing R₀et] [Algebra R₀et R₀] [Algebra R₀et R]
+    [IsScalarTower R₀et R₀ R]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    [Algebra.Etale R₀et S₀et]
+    {S : Type u} [CommRing S] [Algebra R S]
+    (e : S ≃ₐ[R] R ⊗[R₀et] S₀et)
+    (g : S) (r₀ : R₀) (n : ℕ) (cg : S)
+    (hcg : g ^ n = (algebraMap R S) ((algebraMap R₀ R) r₀) * cg)
+    (g₀ c₀ : R₀ ⊗[R₀et] S₀et)
+    (hbridge_g : e.symm (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] g₀)) = g)
+    (hbridge_c : e.symm (Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] c₀)) = cg) :
+    g₀ ^ n = (algebraMap R₀ (R₀ ⊗[R₀et] S₀et)) r₀ * c₀ := by
+  refine Algebra.IsLocalIso.descent_baseChange_R₀_to_R_injective hval_inj
+    (R₀et := R₀et) (S₀et := S₀et) ?_
+  dsimp only
+  -- Push `e` through `hcg` to land the polynomial identity in `B`.
+  have hcg' : (e g) ^ n =
+      (algebraMap R (R ⊗[R₀et] S₀et)) ((algebraMap R₀ R) r₀) * e cg := by
+    have h := congrArg e hcg
+    rwa [map_pow, map_mul, AlgEquiv.commutes] at h
+  -- Identify the bridge data in the forward direction.
+  have hg : Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] g₀) = e g := by
+    rw [← hbridge_g, e.apply_symm_apply]
+  have hc : Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] c₀) = e cg := by
+    rw [← hbridge_c, e.apply_symm_apply]
+  -- Bridge identification: `cancelBaseChange (1 ⊗ algMap r₀) = algMap r₀` in `B`.
+  have hkey : Algebra.TensorProduct.cancelBaseChange R₀et R₀ R R S₀et
+      ((1 : R) ⊗ₜ[R₀] ((algebraMap R₀ (R₀ ⊗[R₀et] S₀et)) r₀))
+      = (algebraMap R (R ⊗[R₀et] S₀et)) ((algebraMap R₀ R) r₀) := by
+    rw [Algebra.TensorProduct.algebraMap_apply (R := R₀et) (S := R₀),
+        Algebra.TensorProduct.cancelBaseChange_tmul,
+        Algebra.TensorProduct.algebraMap_apply (R := R₀et) (S := R)]
+    simp [Algebra.smul_def]
+  -- Massage both sides of the goal into the `cancelBaseChange (1 ⊗ -)` form.
+  rw [show ((1 : R) ⊗ₜ[R₀] (g₀ ^ n) : R ⊗[R₀] (R₀ ⊗[R₀et] S₀et))
+        = ((1 : R) ⊗ₜ[R₀] g₀) ^ n by
+      rw [Algebra.TensorProduct.tmul_pow, one_pow]]
+  rw [show ((1 : R) ⊗ₜ[R₀]
+        ((algebraMap R₀ (R₀ ⊗[R₀et] S₀et)) r₀ * c₀)
+        : R ⊗[R₀] (R₀ ⊗[R₀et] S₀et))
+        = ((1 : R) ⊗ₜ[R₀] ((algebraMap R₀ (R₀ ⊗[R₀et] S₀et)) r₀))
+          * ((1 : R) ⊗ₜ[R₀] c₀) by
+      rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul]]
+  rw [map_pow, map_mul, hg, hc, hkey]
+  exact hcg'
+
+/-- **φ-image polynomial identity (round 51, L2 building block).**
+Push the descended polynomial identity
+`g₀ ^ n = (algebraMap R₀ A r₀) * c₀` in `A := R₀ ⊗[R₀et] S₀et` forward
+along any `R₀`-algebra hom `φ : A →ₐ[R₀] T`, producing
+`(φ g₀) ^ n = (algebraMap R₀ T) r₀ * (φ c₀)` in `T`.
+
+This is the φ-pushforward of the round-50 helper
+`descent_g₀_pow_eq_at_R₀`. Subsequent rounds will instantiate
+`T := Localization.Away r₀` and
+`φ := Algebra.TensorProduct.lift (Algebra.ofId R₀ _) sec₀ _` to extract
+the L2 unit-lift. -/
+lemma _root_.Algebra.IsLocalIso.descent_phi_g₀_pow_eq
+    {R₀et : Type u} [CommRing R₀et]
+    {R₀ : Type u} [CommRing R₀] [Algebra R₀et R₀]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    {T : Type u} [CommRing T] [Algebra R₀ T]
+    (φ : R₀ ⊗[R₀et] S₀et →ₐ[R₀] T)
+    (g₀ c₀ : R₀ ⊗[R₀et] S₀et) (r₀ : R₀) (n : ℕ)
+    (h : g₀ ^ n = (algebraMap R₀ (R₀ ⊗[R₀et] S₀et)) r₀ * c₀) :
+    (φ g₀) ^ n = (algebraMap R₀ T) r₀ * (φ c₀) := by
+  have := congrArg φ h
+  rwa [map_pow, map_mul, AlgHom.commutes] at this
+
+/-- **`c₀` becomes a unit in `Loc.Away g₀` (round 52, L2 building block).**
+Given the descended polynomial identity
+`g₀^n = (algebraMap R₀ A) r₀ * c₀` in `A := R₀ ⊗[R₀et] S₀et` (the
+output of `descent_g₀_pow_eq_at_R₀`), and the hypothesis `hunit_pow`
+(carried by `section_descends_to_R0`) that powers of `r₀` become units
+in `Loc.Away g₀` under `algebraMap R₀ → Loc.Away g₀`, the image of `c₀`
+in `Loc.Away g₀` is a unit.
+
+The argument: in `Loc.Away g₀`, the element `algMap g₀` is a unit (by
+the defining property of `Loc.Away g₀`), so `(algMap g₀)^n` is a unit.
+By the descended identity (applied via the algebra map),
+`(algMap g₀)^n = (algMap R₀ (Loc.Away g₀)) r₀ * algMap c₀`. The first
+factor on the RHS is a unit by `hunit_pow ⟨r₀, Submonoid.mem_powers _⟩`.
+Hence `algMap c₀` is the other factor of a unit and is itself a unit
+(via `Commute.all _ _ |>.isUnit_mul_iff`). -/
+lemma _root_.Algebra.IsLocalIso.descent_c₀_isUnit_at_LocAway_g₀
+    {R₀et : Type u} [CommRing R₀et]
+    {R₀ : Type u} [CommRing R₀] [Algebra R₀et R₀]
+    {S₀et : Type u} [CommRing S₀et] [Algebra R₀et S₀et]
+    (g₀ c₀ : R₀ ⊗[R₀et] S₀et) (r₀ : R₀) (n : ℕ)
+    (h : g₀ ^ n = (algebraMap R₀ (R₀ ⊗[R₀et] S₀et)) r₀ * c₀)
+    (hunit_pow : ∀ y : Submonoid.powers r₀,
+      IsUnit ((algebraMap R₀ (Localization.Away g₀)) y)) :
+    IsUnit (algebraMap (R₀ ⊗[R₀et] S₀et) (Localization.Away g₀) c₀) := by
+  have h' := congrArg (algebraMap (R₀ ⊗[R₀et] S₀et) (Localization.Away g₀)) h
+  rw [map_pow, map_mul,
+    ← IsScalarTower.algebraMap_apply R₀ (R₀ ⊗[R₀et] S₀et)] at h'
+  have h_unit_g₀ : IsUnit
+      (algebraMap (R₀ ⊗[R₀et] S₀et) (Localization.Away g₀) g₀) :=
+    IsLocalization.Away.algebraMap_isUnit (S := Localization.Away g₀) g₀
+  have h_unit_LHS :
+      IsUnit ((algebraMap (R₀ ⊗[R₀et] S₀et) (Localization.Away g₀) g₀) ^ n) :=
+    h_unit_g₀.pow n
+  rw [h'] at h_unit_LHS
+  have h_unit_r₀ : IsUnit ((algebraMap R₀ (Localization.Away g₀)) r₀) :=
+    hunit_pow ⟨r₀, Submonoid.mem_powers _⟩
+  obtain ⟨u, hu⟩ := h_unit_r₀
+  rw [← hu, Units.isUnit_units_mul] at h_unit_LHS
+  exact h_unit_LHS
+
 /-- **Section descent helper (round 26).** Given an étale `R₀et`-algebra section
 `secR : S₀et →ₐ[R₀et] Loc.Away ((algebraMap R₀ R) r₀)` at the `R`-level
 (produced by `descent_section_at_R_inv_r` from `e : S ≃ R ⊗[R₀et] S₀et`,

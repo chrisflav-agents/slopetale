@@ -496,6 +496,205 @@ end
 
 variable {R : Type u} [CommRing R]
 
+/-- Blueprint `thm:ind-etale-strictly-henselian-localization-isom` (Stacks 04GJ):
+if `A` is a strictly Henselian local ring and `A → B` is an ind-étale ring map, then
+for every maximal ideal `n` of `B` lying over the maximal ideal of `A`, the local ring
+hom `A → B_n` is an isomorphism. This is the structural helper isolated from
+`bijectiveOnStalks_of_indEtale_wStrictlyLocal`'s maximal-case branch. -/
+private lemma bijective_localRingHom_of_indEtale_isStrictlyHenselian
+    {A B : Type u} [CommRing A] [CommRing B]
+    [Algebra A B] [Algebra.IndEtale A B]
+    (n : Ideal B) [n.IsMaximal]
+    (_hn_comap_max : (n.comap (algebraMap A B)).IsMaximal)
+    (_hSH : IsStrictlyHenselianLocalRing
+      (Localization.AtPrime (n.comap (algebraMap A B)))) :
+    Function.Bijective
+      (Localization.localRingHom (n.comap (algebraMap A B)) n (algebraMap A B) rfl) := by
+  -- Blueprint sketch (Stacks 04GJ): write `B = colim_i B_i` as a filtered colimit of
+  -- étale `A`-algebras. Then `B_n = colim_i (B_i)_{n ∩ B_i}` since localization
+  -- commutes with filtered colimits. By Stacks 04GG
+  -- (`thm:etale-over-strictly-henselian-localization-isom`), each `(B_i)_{n_i} ≅ A`,
+  -- so the colimit `B_n` is also isomorphic to `A`, i.e., `A → B_n` is bijective.
+  -- The étale-localization piece is missing from Mathlib; once it lands as a helper
+  -- this proof reduces to identifying the colimit cocone of constant `A` diagram.
+  sorry
+
+/-- Descent helper: bijectivity of the localized map `R_{n.comap f} → S_n` descends to
+bijectivity at any smaller prime `p ≤ n` of `S`. Sketch (Mathlib-style): use that
+`Localization.AtPrime p = (S_n)_{p · S_n}` and `Localization.AtPrime (p.comap f) =
+(R_{n.comap f})_{(p.comap f) · R_{n.comap f}}` via
+`IsLocalization.localizationLocalizationAtPrimeIsoLocalization`; then bijectivity of
+`g_n : R_{n.comap f} → S_n` localizes to bijectivity of `g_p : R_{p.comap f} → S_p`. -/
+private lemma bijective_localRingHom_descend
+    {R S : Type u} [CommRing R] [CommRing S] (f : R →+* S)
+    {n : Ideal S} [n.IsPrime] {p : Ideal S} [p.IsPrime] (hpn : p ≤ n)
+    (hbij : Function.Bijective (Localization.localRingHom (n.comap f) n f rfl)) :
+    Function.Bijective (Localization.localRingHom (p.comap f) p f rfl) := by
+  -- Strategy: equip `Localization.AtPrime p` with the R-algebra structure via `f`,
+  -- and show it is also a localization of R at `(p.comap f).primeCompl` (using the
+  -- bijectivity of `g_n`). Then both `Localization.AtPrime (p.comap f)` and
+  -- `Localization.AtPrime p` are R-algebra localizations of R at the same submonoid,
+  -- so the canonical map between them (which is `g_p`) is bijective.
+  have hpcomap : p.comap f ≤ n.comap f := Ideal.comap_mono hpn
+  -- Key auxiliary fact derived from surjectivity of `g_n`: for every `s : S`, there
+  -- exist `t : R` and `v : R` with `v ∉ n.comap f` and a witness `w ∉ n` such that
+  -- `w * s * f v = w * f t`. This is just unpacking that `(algebraMap S Sn) s` is in
+  -- the image of `g_n`.
+  have aux : ∀ (s : S), ∃ (t : R) (v : R) (_ : v ∉ n.comap f)
+      (w : S) (_ : w ∉ n), w * s * f v = w * f t := by
+    intro s
+    obtain ⟨y, hy⟩ := hbij.surjective (Localization.mk s 1)
+    induction y using Localization.induction_on with
+    | H r =>
+      obtain ⟨t, v, hv⟩ := r
+      rw [Localization.localRingHom_mk] at hy
+      rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists] at hy
+      obtain ⟨⟨w, hw⟩, hw_eq⟩ := hy
+      refine ⟨t, v, hv, w, hw, ?_⟩
+      -- hw_eq : ↑(⟨f v, _⟩ : n.primeCompl) * (↑(⟨1, _⟩ : n.primeCompl) * s) =
+      --         ↑(⟨1, _⟩) * (↑(⟨f v, _⟩) * f t)  -- wait, need to recheck
+      -- Actually: mk_eq_mk_iff for mk (f t) ⟨f v, _⟩ = mk s ⟨1, _⟩ gives
+      -- ∃ c, c * (1 * (f t)) = c * ((f v) * s), i.e., c * f t = c * f v * s
+      -- After simp: simplify to w · s · f v = w · f t.
+      simp only [Submonoid.coe_one, one_mul] at hw_eq
+      linear_combination -hw_eq
+  -- New R-algebra structure on Sp via f.
+  letI algR_Sp : Algebra R (Localization.AtPrime p) :=
+    ((algebraMap S (Localization.AtPrime p)).comp f).toAlgebra
+  have algMap_eq : (algebraMap R (Localization.AtPrime p) : R →+* _) =
+      (algebraMap S (Localization.AtPrime p)).comp f := rfl
+  -- The local ring hom commutes with the algebra structures.
+  have hcomm : (Localization.localRingHom (p.comap f) p f rfl).comp
+      (algebraMap R (Localization.AtPrime (p.comap f))) =
+      (algebraMap R (Localization.AtPrime p)) := by
+    ext r
+    simp [algMap_eq, Localization.localRingHom_to_map]
+  -- Establish IsLocalization (p.comap f).primeCompl (Localization.AtPrime p) with the
+  -- new algebra structure.
+  have isLoc : IsLocalization (p.comap f).primeCompl (Localization.AtPrime p) := by
+    refine ⟨⟨?_, ?_, ?_⟩⟩
+    · -- map_units
+      rintro ⟨m, hm⟩
+      show IsUnit ((algebraMap S (Localization.AtPrime p)).comp f m)
+      simp only [RingHom.coe_comp, Function.comp_apply]
+      exact IsLocalization.map_units (Localization.AtPrime p) (⟨f m, hm⟩ : p.primeCompl)
+    · -- surj
+      intro z
+      induction z using Localization.induction_on with
+      | H r =>
+        obtain ⟨s, u, hu⟩ := r
+        -- aux for s: w * s * f v = w * f t, with t ∈ R, v ∉ n.comap f, w ∉ n
+        obtain ⟨t, v, hv, w, hw, hw_eq⟩ := aux s
+        -- aux for u: w' * u * f v' = w' * f t', with t' ∈ R, v' ∉ n.comap f, w' ∉ n
+        obtain ⟨t', v', hv', w', hw', hw'_eq⟩ := aux u
+        -- We have v ∉ n.comap f ⇒ v ∉ p.comap f
+        have hv_p : v ∉ p.comap f := fun h => hv (hpcomap h)
+        -- t' ∉ p.comap f: from hw'_eq with all entries on RHS in p.primeCompl
+        have hw_p : w ∉ p := fun h => hw (hpn h)
+        have hw'_p : w' ∉ p := fun h => hw' (hpn h)
+        have hfv_p : f v ∉ p := fun h => hv_p h
+        have hfv'_p : f v' ∉ p := fun h => hv' (Ideal.mem_comap.mpr (hpn h))
+        have hp_prime : p.IsPrime := inferInstance
+        have hpcf_prime : (p.comap f).IsPrime := inferInstance
+        have ht'_p : t' ∉ p.comap f := by
+          intro hft'
+          have : f t' ∈ p := hft'
+          have hmem : w' * f t' ∈ p := Ideal.mul_mem_left _ _ this
+          rw [← hw'_eq] at hmem
+          -- w' * u * f v' ∈ p, but all factors ∉ p
+          have h1 : w' * u ∉ p := fun h => (hp_prime.mem_or_mem h).elim hw'_p hu
+          exact ((hp_prime.mem_or_mem hmem).elim h1 hfv'_p)
+        -- Construct (r, m): r = t · v', m = v · t'
+        have hm : v * t' ∉ p.comap f := fun h =>
+          ((hpcf_prime.mem_or_mem h).elim hv_p ht'_p)
+        refine ⟨⟨t * v', ⟨v * t', hm⟩⟩, ?_⟩
+        -- Goal: mk s ⟨u, hu⟩ * algebraMap R Sp (v * t') = algebraMap R Sp (t * v')
+        -- algebraMap R Sp x = mk (f x) 1
+        simp only [algMap_eq, RingHom.coe_comp, Function.comp_apply, map_mul]
+        -- Goal: Localization.mk s ⟨u, hu⟩ * (mk (f v) 1 * mk (f t') 1) = mk (f t) 1 * mk (f v') 1
+        -- (in Localization.AtPrime p)
+        rw [show (algebraMap S (Localization.AtPrime p)) (f v) = Localization.mk (f v) 1 from rfl,
+            show (algebraMap S (Localization.AtPrime p)) (f t') = Localization.mk (f t') 1 from rfl,
+            show (algebraMap S (Localization.AtPrime p)) (f t) = Localization.mk (f t) 1 from rfl,
+            show (algebraMap S (Localization.AtPrime p)) (f v') = Localization.mk (f v') 1 from rfl]
+        rw [Localization.mk_mul, Localization.mk_mul, Localization.mk_mul]
+        rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists]
+        refine ⟨⟨w * w', p.primeCompl.mul_mem hw_p hw'_p⟩, ?_⟩
+        -- Simplify the submonoid coercions, then use hw_eq, hw'_eq.
+        simp only [OneMemClass.coe_one, one_mul, mul_one]
+        linear_combination (w' * f t') * hw_eq - (w * f t) * hw'_eq
+    · -- exists_of_eq
+      intro x y heq
+      -- heq : algebraMap R Sp x = algebraMap R Sp y, i.e., mk (f x) 1 = mk (f y) 1 in Sp
+      -- So ∃ w ∉ p, w * f x = w * f y
+      rw [algMap_eq] at heq
+      simp only [RingHom.coe_comp, Function.comp_apply] at heq
+      have heq' : (algebraMap S (Localization.AtPrime p)) (f x) =
+          (algebraMap S (Localization.AtPrime p)) (f y) := heq
+      rw [IsLocalization.eq_iff_exists p.primeCompl] at heq'
+      obtain ⟨⟨w, hw⟩, hw_eq⟩ := heq'
+      -- aux for w
+      obtain ⟨t_w, v_w, hv_w, u_w, hu_w, hu_w_eq⟩ := aux w
+      -- t_w ∉ p.comap f via primality
+      have hw_p : w ∉ p := hw
+      have hv_w_p : v_w ∉ p.comap f := fun h => hv_w (hpcomap h)
+      have hu_w_p : u_w ∉ p := fun h => hu_w (hpn h)
+      have hfv_w_p : f v_w ∉ p := fun h => hv_w_p h
+      have hp_prime : p.IsPrime := inferInstance
+      have hpcf_prime : (p.comap f).IsPrime := inferInstance
+      have ht_w_p : t_w ∉ p.comap f := by
+        intro hftw
+        have hft_w_p : f t_w ∈ p := hftw
+        have hmem : u_w * f t_w ∈ p := Ideal.mul_mem_left _ _ hft_w_p
+        rw [← hu_w_eq] at hmem
+        have h1 : u_w * w ∉ p := fun h => (hp_prime.mem_or_mem h).elim hu_w_p hw_p
+        exact ((hp_prime.mem_or_mem hmem).elim h1 hfv_w_p)
+      -- From hw_eq: w * f x = w * f y in S, with w ∉ p
+      -- Multiply by u_w * f v_w
+      have key : u_w * f v_w * (w * f x) = u_w * f v_w * (w * f y) := by
+        rw [hw_eq]
+      -- Use hu_w_eq: u_w * w * f v_w = u_w * f t_w
+      have key2 : u_w * f t_w * f x = u_w * f t_w * f y := by
+        have lhs : u_w * f v_w * (w * f x) = u_w * f t_w * f x := by
+          have := hu_w_eq  -- u_w * w * f v_w = u_w * f t_w
+          ring_nf; ring_nf at this; linear_combination f x * this
+        have rhs : u_w * f v_w * (w * f y) = u_w * f t_w * f y := by
+          have := hu_w_eq
+          ring_nf; ring_nf at this; linear_combination f y * this
+        rw [← lhs, ← rhs, key]
+      -- So u_w * f(t_w * x) = u_w * f(t_w * y)
+      have key3 : u_w * f (t_w * x) = u_w * f (t_w * y) := by
+        simp only [map_mul]; linear_combination key2
+      -- This means mk (f(t_w * x)) 1 = mk (f(t_w * y)) 1 in Sn
+      have hSn : (algebraMap S (Localization.AtPrime n)) (f (t_w * x)) =
+          (algebraMap S (Localization.AtPrime n)) (f (t_w * y)) := by
+        rw [IsLocalization.eq_iff_exists n.primeCompl]
+        exact ⟨⟨u_w, hu_w⟩, key3⟩
+      -- This equals g_n (mk (t_w * x) 1) = g_n (mk (t_w * y) 1) in Sn
+      have hg_n_inj : (algebraMap R (Localization.AtPrime (n.comap f))) (t_w * x) =
+          (algebraMap R (Localization.AtPrime (n.comap f))) (t_w * y) := by
+        apply hbij.injective
+        have h1 := Localization.localRingHom_to_map (I := n.comap f) n f rfl (t_w * x)
+        have h2 := Localization.localRingHom_to_map (I := n.comap f) n f rfl (t_w * y)
+        rw [h1, h2]
+        exact hSn
+      -- So ∃ m ∈ (n.comap f).primeCompl, m * (t_w * x) = m * (t_w * y)
+      rw [IsLocalization.eq_iff_exists (n.comap f).primeCompl] at hg_n_inj
+      obtain ⟨⟨m, hm⟩, hm_eq⟩ := hg_n_inj
+      -- Combine m and t_w: m * t_w ∈ (p.comap f).primeCompl
+      have hm_p : m ∉ p.comap f := fun h => hm (hpcomap h)
+      refine ⟨⟨m * t_w, ?_⟩, ?_⟩
+      · -- m * t_w ∉ p.comap f
+        intro h
+        exact (hpcf_prime.mem_or_mem h).elim hm_p ht_w_p
+      · -- (m * t_w) * x = (m * t_w) * y
+        show (m * t_w : R) * x = (m * t_w : R) * y
+        linear_combination hm_eq
+  -- Apply IsLocalization.bijective.
+  exact IsLocalization.bijective (M := (p.comap f).primeCompl)
+    (S := Localization.AtPrime (p.comap f))
+    (Localization.localRingHom (p.comap f) p f rfl) hcomm
+
 /--
 Let `R` be a w-contractible ring and `I` an ideal of `R` cutting out the set `X^c` of closed
 points in `Spec R`. Then every faithfully flat ind-étale map `R →+* S` with `S` w-local and
@@ -521,7 +720,89 @@ private lemma bijectiveOnStalks_of_indEtale_wStrictlyLocal [IsWStrictlyLocalRing
   -- and hence an isomorphism (thm:ind-etale-strictly-henselian-localization-isom).
   -- For non-maximal primes q, BijectiveOnStalks follows by passing through the
   -- unique closed point that q specializes to (using w-local structure).
-  sorry
+  intro p hp
+  by_cases hp_max : p.IsMaximal
+  · -- ---------- Maximal case ----------
+    -- (p.comap (algebraMap R S)) is a maximal ideal of R, by `hI`/`hS`.
+    let p_sp : PrimeSpectrum S := ⟨p, hp⟩
+    have hp_in_clS : p_sp ∈ closedPoints (PrimeSpectrum S) := by
+      rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal]
+      exact hp_max
+    have hp_in_VIS : p_sp ∈ zeroLocus (I.map (algebraMap R S) : Set S) := by
+      rw [hS]; exact hp_in_clS
+    have hI_sub : I ≤ p.comap (algebraMap R S) := by
+      have h₁ : I.map (algebraMap R S) ≤ p := by
+        rw [PrimeSpectrum.mem_zeroLocus] at hp_in_VIS
+        rwa [← SetLike.coe_subset_coe]
+      exact Ideal.map_le_iff_le_comap.mp h₁
+    haveI hcomap_prime : (p.comap (algebraMap R S)).IsPrime := Ideal.IsPrime.comap _
+    have hcomap_in_VI : (⟨p.comap (algebraMap R S), hcomap_prime⟩ : PrimeSpectrum R)
+        ∈ zeroLocus (I : Set R) := by
+      rw [PrimeSpectrum.mem_zeroLocus]
+      intro x hxI
+      exact hI_sub hxI
+    haveI hcomap_max : (p.comap (algebraMap R S)).IsMaximal := by
+      have := hI ▸ hcomap_in_VI
+      rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal] at this
+      exact this
+    -- R is w-strictly-local, so the localization R_(p.comap _) is strictly Henselian.
+    haveI hSH : IsStrictlyHenselianLocalRing
+        (Localization.AtPrime (p.comap (algebraMap R S))) :=
+      IsWStrictlyLocalRing.isStrictlyHenselianLocalRing_localization
+        (p.comap (algebraMap R S))
+    -- Deep sub-goal (blueprint `thm:ind-etale-strictly-henselian-localization-isom`,
+    -- Stacks 04GJ → 0BSK): for a strictly Henselian local source `A` and an ind-étale
+    -- `A`-algebra `B` with a maximal prime `n` lying over the maximal ideal of `A`,
+    -- the canonical map `A → B_n` is an isomorphism. To apply it here, base change
+    -- the ind-étale map `R → S` along `R → R_(p.comap _)` (Stacks 0BSH, formalized
+    -- as `Algebra.IndEtale.isStableUnderBaseChange`/`RingHom.IndEtale.isStableUnderBaseChange`)
+    -- to obtain that `Localization.AtPrime p` is ind-étale over
+    -- `Localization.AtPrime (p.comap (algebraMap R S))`; then conclude.
+    -- The missing piece is the named "isomorphism" lemma; the bijectivity of
+    -- `Localization.localRingHom` follows once that lemma is in scope.
+    exact bijective_localRingHom_of_indEtale_isStrictlyHenselian p hcomap_max hSH
+  · -- ---------- Non-maximal case ----------
+    -- Reduce to the maximal specialization. In the w-local space `PrimeSpectrum S`,
+    -- every prime `p` specializes to a unique closed point `n`; we then apply the
+    -- maximal-case helper at `n` and the descent helper to transport bijectivity from
+    -- `n` to `p`.
+    let p_sp : PrimeSpectrum S := ⟨p, hp⟩
+    obtain ⟨n_sp, hn_cl, hpn_sp⟩ := exists_isClosed_specializes p_sp
+    -- `hpn_sp : p_sp ⤳ n_sp`, i.e., `p ≤ n_sp.asIdeal` as ideals of `S`.
+    set n : Ideal S := n_sp.asIdeal with hn_def
+    have hn_prime : n.IsPrime := n_sp.isPrime
+    have hn_max : n.IsMaximal :=
+      (PrimeSpectrum.isClosed_singleton_iff_isMaximal n_sp).mp hn_cl
+    have hpn_le : p ≤ n := (PrimeSpectrum.le_iff_specializes p_sp n_sp).mpr hpn_sp
+    -- Now show `n.comap _` is maximal, mirroring the maximal-case argument.
+    have hn_in_clS : n_sp ∈ closedPoints (PrimeSpectrum S) :=
+      mem_closedPoints_iff.mpr hn_cl
+    have hn_in_VIS : n_sp ∈ zeroLocus (I.map (algebraMap R S) : Set S) := by
+      rw [hS]; exact hn_in_clS
+    have hI_sub_n : I ≤ n.comap (algebraMap R S) := by
+      have h₁ : I.map (algebraMap R S) ≤ n := by
+        rw [PrimeSpectrum.mem_zeroLocus] at hn_in_VIS
+        rwa [← SetLike.coe_subset_coe]
+      exact Ideal.map_le_iff_le_comap.mp h₁
+    haveI hn_comap_prime : (n.comap (algebraMap R S)).IsPrime := Ideal.IsPrime.comap _
+    have hn_comap_in_VI : (⟨n.comap (algebraMap R S), hn_comap_prime⟩ : PrimeSpectrum R)
+        ∈ zeroLocus (I : Set R) := by
+      rw [PrimeSpectrum.mem_zeroLocus]
+      intro x hxI
+      exact hI_sub_n hxI
+    haveI hn_comap_max : (n.comap (algebraMap R S)).IsMaximal := by
+      have := hI ▸ hn_comap_in_VI
+      rw [mem_closedPoints_iff, PrimeSpectrum.isClosed_singleton_iff_isMaximal] at this
+      exact this
+    haveI hSH_n : IsStrictlyHenselianLocalRing
+        (Localization.AtPrime (n.comap (algebraMap R S))) :=
+      IsWStrictlyLocalRing.isStrictlyHenselianLocalRing_localization _
+    -- Bijectivity at `n` from the maximal-case helper.
+    have hbij_n : Function.Bijective
+        (Localization.localRingHom (n.comap (algebraMap R S)) n (algebraMap R S) rfl) :=
+      bijective_localRingHom_of_indEtale_isStrictlyHenselian n hn_comap_max hSH_n
+    -- Descend bijectivity from `n` to `p`.
+    exact bijective_localRingHom_descend (algebraMap R S) hpn_le hbij_n
 
 -- If R is w-local with extremally disconnected pi_0(Spec R) and R -> S is faithfully flat,
 -- bijective on stalks, with S w-local and matching closed points, then R -> S has a retraction.
