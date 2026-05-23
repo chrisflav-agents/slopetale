@@ -20,11 +20,9 @@ The proof goes via the local input \label{weakly-etale-over-sh}.
     A filtered colimit of local rings along local homomorphisms is local.
     \label{lemma:colimit-local}
     \lean{CommRingCat.FilteredColimits.isLocalRing_of_isColimit}
-    \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
     Let $R = \colim_i R_i$ with $R_i$ local rings and $R_i \to R_j$ a local ring map.
     Suppose $x, y \in R_i$ are non-units. Since $R_i$ is local, their sum is a not a unit.
     If the image of $x + y$ in $\colim_i R_i$ is a unit, their exists a $j$ such that the image of $x + y$ is a
@@ -107,7 +105,6 @@ define the pro-étale site of a scheme, we use the notion of weakly étale ring 
     A ring homorphism $f \colon R \to S$ is \emph{weakly étale} if $S$ is weakly étale as an $R$-algebra.
     \label{def:weakly-etale-algebra}
     \lean{Algebra.WeaklyEtale}
-    \leanok
 \end{definition}
 
 Historically, the property weakly étale is studied under the name of \emph{absolutely flat}. 
@@ -118,7 +115,6 @@ of this property.
     \label{def:absolutely-flat}
     A ring $A$ is called \emph{absolutely flat} if every $A$-module is flat over $A$. 
     \lean{Ring.AbsolutelyFlat, Ring.AbsolutelyFlat.instFlat}
-    \leanok
 \end{definition}
 
 \begin{lemma}
@@ -141,11 +137,9 @@ of this property.
     A field is absolutely flat.
     \uses{def:absolutely-flat}
     \lean{Ring.AbsolutelyFlat.of_field, Ring.AbsolutelyFlat.of_isField}
-    \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
     Omitted.
 \end{proof}
 
@@ -153,12 +147,10 @@ of this property.
     \uses{def:weakly-etale-algebra}
     \label{lem:weakly-etale-comp}
     \lean{RingHom.WeaklyEtale.comp, Algebra.WeaklyEtale.trans}
-    \leanok
     If $A \to B$ and $B \to C$ are weakly étale, then $A \to C$ is weakly étale.
 \end{lemma}
 
 \begin{proof}
-    \leanok
     Omitted, see \stacksproject{092J}.
 \end{proof}
 
@@ -181,11 +173,9 @@ of this property.
     If $N$ is flat as a $A$-module, then $N$ is flat as a $B$-module.
     \label{lemma:weakly-etale-flat}
     \lean{Module.Flat.of_flat_lmul'_of_flat}
-    \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
     First proof:
 
     If $N'$ is a second $B$-module, then
@@ -564,7 +554,6 @@ suffices for our purposes.
     \end{enumerate}
     \uses{def:weakly-etale-algebra, def:ind-etale}
     \lean{Algebra.WeaklyEtale.indEtale_field, Algebra.WeaklyEtale.etale_of_fg}
-    \leanok
 \end{theorem}
 
 \begin{proof}
@@ -625,7 +614,6 @@ suffices for our purposes.
     Then $A \otimes_k A$ is a local $k$ algebra of dimension zero.
     \lean{Algebra.isLocalRing_tensorProduct_of_krullDimLE_zero,
       Algebra.krullDimLE_zero_tensorProduct_of_krullDimLE_zero}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -694,7 +682,7 @@ suffices for our purposes.
 
 \begin{proof}
     \uses{lem:ring-epi-tfae}
-    By \Cref{em:ring-epi-tfae}, the map $B \to B \otimes_A B$, which is a base change of $A \to B$,
+    By \Cref{lem:ring-epi-tfae}, the map $B \to B \otimes_A B$, which is a base change of $A \to B$,
     is isomorphism. So is $A \to B$ by faithfully flatness.
 \end{proof}
 
@@ -861,7 +849,6 @@ suffices for our purposes.
     ind-Zariski map $B \to B'$ such that $A \to B'$ is ind-Zariski.
     \label{prop:bijective-on-stalks-ind-zariski}
     \lean{Algebra.BijectiveOnStalks.exists_indZariski, RingHom.BijectiveOnStalks.exists_indZariski}
-    \leanok
 \end{proposition}
 
 \begin{proof}
@@ -879,7 +866,6 @@ suffices for our purposes.
     $S \to T$ such that the composition $R \to T$ is ind-étale.
     \label{thm:weakly-etale-ind-etale}
     \lean{RingHom.WeaklyEtale.exists_indEtale_comp, Algebra.WeaklyEtale.exists_indEtale}
-    \leanok
 \end{theorem}
 
 \begin{proof}

@@ -447,6 +447,191 @@ private lemma Algebra.Etale.exists_explicit_ff_etale_product_cover_of_prime_over
         show qE = PrimeSpectrum.comap (Pi.evalRingHom _ i) qLoc from rfl,
         ← PrimeSpectrum.comap_comp_apply, heval, hqLoc]
 
+/-- **Section-construction core (no residue compatibility) for
+`lemma:retractions-strictly-henselian`** (Blueprint `local-structure.tex` L1701–1740).
+
+This is the residue-free analogue of `exists_residue_compatible_section_of_retraction`.
+Given an étale `A_m`-algebra `S`, a descent witness `S ≃ A_m ⊗[A_f] S'` along
+`f ∉ m`, and any prime `q ⊂ S'` lying over `m` in `A`, the retraction hypothesis
+produces a section `σ : S →ₐ[A_m] A_m`. No residue-field map `g : S → κ(m)` is
+required; the prime `q` plays the role formerly played by `ker g`.
+
+The E-branch of the local-ring case-split remains a sanctioned typed sorry (per
+iter-020 Decision 1), shared with the wrapper helper. -/
+private lemma exists_section_of_retraction_at_prime
+    {A : Type u} [CommRing A]
+    (hret : ∀ (B : Type u) [CommRing B] [Algebra A B] [Algebra.Etale A B]
+      [Module.FaithfullyFlat A B], ∃ σ : B →ₐ[A] A, True)
+    (m : Ideal A) [m.IsMaximal]
+    (S : Type u) [CommRing S] [Algebra (Localization.AtPrime m) S]
+    [Algebra.Etale (Localization.AtPrime m) S]
+    (f : A) (_hf : f ∉ m)
+    (S' : Type u) [CommRing S'] [Algebra (Localization.Away f) S']
+    [Algebra.Etale (Localization.Away f) S']
+    [Algebra (Localization.Away f) (Localization.AtPrime m)]
+    [IsScalarTower A (Localization.Away f) (Localization.AtPrime m)]
+    [Algebra (Localization.Away f) S]
+    [IsScalarTower (Localization.Away f) (Localization.AtPrime m) S]
+    (iso : S ≃ₐ[Localization.AtPrime m]
+            TensorProduct (Localization.Away f) (Localization.AtPrime m) S')
+    (q : Ideal S') (hq_prime : q.IsPrime)
+    (hq_over_m : q.comap (((algebraMap (Localization.Away f) S').comp
+      (algebraMap A (Localization.Away f))) : A →+* S') = m) :
+    ∃ _σ : S →ₐ[Localization.AtPrime m] Localization.AtPrime m, True := by
+  -- Mirror of the C-branch chain in `exists_residue_compatible_section_of_retraction`,
+  -- but driven by the supplied `q` rather than by `ker g`.
+  -- Step (a) — A-algebra structure on S' via A → A_f → S'.
+  letI algAS' : Algebra A S' :=
+    ((algebraMap (Localization.Away f) S').comp
+      (algebraMap A (Localization.Away f))).toAlgebra
+  haveI istAAfS' : IsScalarTower A (Localization.Away f) S' :=
+    IsScalarTower.of_algebraMap_eq' rfl
+  haveI hEtaleAAf : Algebra.Etale A (Localization.Away f) :=
+    Algebra.Etale.of_isLocalizationAway f
+  haveI hEtaleAS' : Algebra.Etale A S' :=
+    Algebra.Etale.comp A (Localization.Away f) S'
+  -- The supplied `hq_over_m` is exactly `q.comap (algebraMap A S') = m`
+  -- because the composite ring hom in `hq_over_m` equals `algebraMap A S'`
+  -- by the `algAS'` toAlgebra definition.
+  have hq_over_m' : q.comap (algebraMap A S' : A →+* S') = m := hq_over_m
+  haveI hq_prime' : q.IsPrime := hq_prime
+  haveI hq_liesOver : q.LiesOver m := ⟨hq_over_m'.symm⟩
+  -- ====================================================================
+  -- Step (b) onward — copy of the prime-avoidance + cover + assembly chain.
+  -- ====================================================================
+  have hfin_primes : (m.primesOver S').Finite :=
+    Algebra.Etale.finite_primesOver S' m
+  classical
+  let primeSet : Finset (Ideal S') := hfin_primes.toFinset.erase q
+  have hnotle : ∀ q' ∈ primeSet, ¬ q' ≤ q := by
+    haveI hFiberEtale : Algebra.Etale m.ResidueField (m.Fiber S') :=
+      Algebra.Etale.baseChange A S' m.ResidueField
+    haveI hFiberFinite : Module.Finite m.ResidueField (m.Fiber S') := by
+      obtain ⟨I, hfin, Ai, hField, hAlg, e, hprod⟩ :=
+        (Algebra.Etale.iff_exists_algEquiv_prod m.ResidueField (m.Fiber S')).mp hFiberEtale
+      haveI : Finite I := hfin
+      letI : ∀ i, Field (Ai i) := hField
+      letI : ∀ i, Algebra m.ResidueField (Ai i) := hAlg
+      haveI : ∀ i, Module.Finite m.ResidueField (Ai i) := fun i => (hprod i).1
+      haveI : Module.Finite m.ResidueField (∀ i, Ai i) := Module.Finite.pi
+      exact Module.Finite.of_surjective e.symm.toLinearMap e.symm.surjective
+    haveI hFiberArt : IsArtinianRing (m.Fiber S') :=
+      (Module.finite_iff_isArtinianRing m.ResidueField _).mp hFiberFinite
+    haveI hmPrime : m.IsPrime := ‹m.IsMaximal›.isPrime
+    let φ := PrimeSpectrum.primesOverOrderIsoFiber A S' m
+    have hmax : ∀ {p : Ideal S'}, (hp : p.IsPrime) → p.LiesOver m → p.IsMaximal := by
+      intro p hp_prime hp_liesOver
+      have hp_mem : p ∈ m.primesOver S' := ⟨hp_prime, hp_liesOver⟩
+      let pFib : PrimeSpectrum (m.Fiber S') := φ ⟨p, hp_mem⟩
+      haveI hpFib_max : pFib.asIdeal.IsMaximal :=
+        IsArtinianRing.isMaximal_of_isPrime pFib.asIdeal
+      refine ⟨⟨hp_prime.ne_top, ?_⟩⟩
+      intro J hJ_lt
+      by_contra hJ_top
+      obtain ⟨qmax, hqmax_max, hqmax_le⟩ := Ideal.exists_le_maximal J hJ_top
+      have hp_lt_qmax : p < qmax := lt_of_lt_of_le hJ_lt hqmax_le
+      have hqmax_prime : qmax.IsPrime := hqmax_max.isPrime
+      have hcomap_le : m ≤ qmax.comap (algebraMap A S') := by
+        have heq : m = qmax.comap (algebraMap A S') ⊓ m :=
+          le_antisymm
+            (le_inf
+              (hp_liesOver.over ▸ Ideal.comap_mono hp_lt_qmax.le : m ≤ Ideal.under A qmax) le_rfl)
+            inf_le_right
+        exact heq ▸ inf_le_left
+      have hcomap_prime : (qmax.comap (algebraMap A S')).IsPrime := hqmax_prime.comap _
+      have hcomap_ne_top : qmax.comap (algebraMap A S') ≠ ⊤ := hcomap_prime.ne_top
+      have hcomap_eq : qmax.comap (algebraMap A S') = m :=
+        (‹m.IsMaximal›.eq_of_le hcomap_ne_top hcomap_le).symm
+      have hqmax_liesOver : qmax.LiesOver m := ⟨hcomap_eq.symm⟩
+      have hqmax_mem : qmax ∈ m.primesOver S' := ⟨hqmax_prime, hqmax_liesOver⟩
+      have hφ_lt : φ ⟨p, hp_mem⟩ < φ ⟨qmax, hqmax_mem⟩ := by
+        apply φ.lt_iff_lt.mpr
+        exact (Subtype.mk_lt_mk).mpr hp_lt_qmax
+      have : pFib < φ ⟨qmax, hqmax_mem⟩ := hφ_lt
+      have h_not_top : pFib.asIdeal < (φ ⟨qmax, hqmax_mem⟩).asIdeal := this
+      have heq : pFib.asIdeal = (φ ⟨qmax, hqmax_mem⟩).asIdeal :=
+        hpFib_max.eq_of_le (φ ⟨qmax, hqmax_mem⟩).isPrime.ne_top h_not_top.le
+      exact absurd heq h_not_top.ne
+    have hq_max : q.IsMaximal := hmax hq_prime hq_liesOver
+    intro q' hq'
+    have hq'_ne : q' ≠ q := (Finset.mem_erase.mp hq').1
+    have hq'_mem : q' ∈ m.primesOver S' :=
+      hfin_primes.mem_toFinset.mp (Finset.mem_erase.mp hq').2
+    obtain ⟨hq'_prime, hq'_liesOver⟩ := hq'_mem
+    have hq'_max : q'.IsMaximal := hmax hq'_prime hq'_liesOver
+    intro hle
+    exact hq'_ne (hq'_max.eq_of_le hq_max.ne_top hle)
+  obtain ⟨g₁, hg₁_notmem_q, hg₁_mem_all⟩ :=
+    exists_mem_finset_inf_notMem_of_isPrime (f := id) (s := primeSet) (q := q) hnotle
+  haveI hEtaleS'C : Algebra.Etale S' (Localization.Away g₁) :=
+    Algebra.Etale.of_isLocalizationAway (R := S') (A := Localization.Away g₁) g₁
+  haveI hEtaleAC : Algebra.Etale A (Localization.Away g₁) :=
+    Algebra.Etale.comp A S' (Localization.Away g₁)
+  let C : Type u := Localization.Away g₁
+  have hCm : ∃ p : Ideal C, p.IsPrime ∧ p.comap (algebraMap A C) = m := by
+    have hDisj : Disjoint ((Submonoid.powers g₁ : Submonoid S') : Set S') (q : Set S') := by
+      rw [Set.disjoint_iff]
+      rintro x ⟨⟨n, rfl⟩, hxq⟩
+      exact hg₁_notmem_q (hq_prime.mem_of_pow_mem n hxq)
+    let p : Ideal C := Ideal.map (algebraMap S' C) q
+    refine ⟨p, ?_, ?_⟩
+    · exact IsLocalization.isPrime_of_isPrime_disjoint
+        (Submonoid.powers g₁) C q hq_prime hDisj
+    · have hcomap_S' : Ideal.comap (algebraMap S' C) p = q :=
+        IsLocalization.under_map_of_isPrime_disjoint
+          (Submonoid.powers g₁) C hq_prime hDisj
+      haveI istASC' : IsScalarTower A S' C := inferInstance
+      have hAC_factor : (algebraMap A C : A →+* C) =
+          (algebraMap S' C).comp (algebraMap A S') :=
+        IsScalarTower.algebraMap_eq A S' C
+      have hcomap_eq :
+          Ideal.comap (algebraMap A C) p =
+            Ideal.comap (algebraMap A S') (Ideal.comap (algebraMap S' C) p) := by
+        rw [hAC_factor, ← Ideal.comap_comap]
+      rw [hcomap_eq, hcomap_S', hq_over_m']
+  obtain ⟨E, _instERing, _instEAlg, _instEEtale, hEtaleCE, hFFCE⟩ :=
+    Algebra.Etale.exists_explicit_ff_etale_product_cover_of_prime_over m C hCm
+  obtain ⟨σ', _⟩ := hret (C × E)
+  let σ_m : C × E →ₐ[A] Localization.AtPrime m :=
+    (IsScalarTower.toAlgHom A A (Localization.AtPrime m)).comp σ'
+  rcases AlgHom.exists_section_of_isLocalRing σ_m with ⟨h_inl, _hfact⟩ | ⟨h_inr, _hfact⟩
+  · -- C-branch: build σ : S →ₐ[A_m] A_m via Algebra.TensorProduct.lift.
+    let σ_C : C →ₐ[A] Localization.AtPrime m := σ_m.compFstSection h_inl
+    let σ_S'_ring : S' →+* Localization.AtPrime m :=
+      σ_C.toRingHom.comp (algebraMap S' C)
+    have hAfLinear : σ_S'_ring.comp (algebraMap (Localization.Away f) S') =
+        (algebraMap (Localization.Away f) (Localization.AtPrime m) :
+          Localization.Away f →+* Localization.AtPrime m) := by
+      refine IsLocalization.ringHom_ext (Submonoid.powers f) ?_
+      ext x
+      show σ_C ((algebraMap S' C) ((algebraMap (Localization.Away f) S')
+          ((algebraMap A (Localization.Away f)) x))) =
+        algebraMap (Localization.Away f) (Localization.AtPrime m)
+          ((algebraMap A (Localization.Away f)) x)
+      rw [← IsScalarTower.algebraMap_apply A (Localization.Away f) S' x,
+        ← IsScalarTower.algebraMap_apply A S' C x, σ_C.commutes x,
+        ← IsScalarTower.algebraMap_apply A (Localization.Away f)
+          (Localization.AtPrime m) x]
+    let σ_S'_alg : S' →ₐ[Localization.Away f] Localization.AtPrime m :=
+      { toFun := σ_S'_ring
+        map_one' := σ_S'_ring.map_one
+        map_mul' := σ_S'_ring.map_mul
+        map_zero' := σ_S'_ring.map_zero
+        map_add' := σ_S'_ring.map_add
+        commutes' := fun z => RingHom.congr_fun hAfLinear z }
+    haveI istAfAmAm : IsScalarTower (Localization.Away f)
+        (Localization.AtPrime m) (Localization.AtPrime m) := IsScalarTower.right
+    let σ_tensor :
+        TensorProduct (Localization.Away f) (Localization.AtPrime m) S'
+          →ₐ[Localization.AtPrime m] Localization.AtPrime m :=
+      Algebra.TensorProduct.lift (AlgHom.id _ _) σ_S'_alg (fun _ _ => mul_comm _ _)
+    let σ_final : S →ₐ[Localization.AtPrime m] Localization.AtPrime m :=
+      σ_tensor.comp iso.toAlgHom
+    exact ⟨σ_final, trivial⟩
+  · -- E-branch: sanctioned typed sorry (per iter-020 Decision 1; duplicate of
+    -- the wrapper's E-branch sorry).
+    sorry
+
 /-- **Core content of lemma:retractions-strictly-henselian** (Blueprint
 `local-structure.tex` L1701–1740).
 
@@ -1147,6 +1332,97 @@ private lemma exists_residue_compatible_section_of_retraction
   · -- E-branch: sanctioned typed sorry (per iter-020 Decision 1).
     sorry
 
+/-- For `R` a local ring and `B` a module-finite `R`-algebra, the image of the
+maximal ideal of `R` in `B` is contained in the Jacobson radical of `B`.
+
+Standard consequence of going-up: every maximal ideal of `B` contracts to a maximal
+of `R`, which must be the unique maximal of the local ring `R`. -/
+private lemma maximalIdeal_map_le_ringJacobson_of_finite
+    {R B : Type*} [CommRing R] [CommRing B] [IsLocalRing R]
+    [Algebra R B] [Module.Finite R B] :
+    (IsLocalRing.maximalIdeal R).map (algebraMap R B) ≤ Ring.jacobson B := by
+  haveI : Algebra.IsIntegral R B := Algebra.IsIntegral.of_finite R B
+  have hf_integral : (algebraMap R B).IsIntegral :=
+    algebraMap_isIntegral_iff.mpr inferInstance
+  rw [Ring.jacobson_eq_sInf_isMaximal]
+  refine le_sInf fun Q hQ => ?_
+  haveI : Q.IsMaximal := hQ
+  have hcomap_max : (Q.comap (algebraMap R B)).IsMaximal :=
+    Ideal.isMaximal_comap_of_isIntegral_of_isMaximal' (algebraMap R B) hf_integral Q
+  have hcomap_eq : Q.comap (algebraMap R B) = IsLocalRing.maximalIdeal R :=
+    (IsLocalRing.isMaximal_iff R).mp hcomap_max
+  rw [← hcomap_eq]
+  exact Ideal.map_comap_le
+
+/-- If `R` is a local ring and `ftilde : Polynomial R` is a monic polynomial whose mod-`m`
+image in `Polynomial (R ⧸ m)` is separable, then `ftilde.derivative` is a unit modulo
+`ftilde` in `AdjoinRoot ftilde`.
+
+Proof outline: Bezout in `Polynomial (R ⧸ m)` gives `a₀ * f + b₀ * f' = 1`. Lift to
+`aLift, bLift : Polynomial R`. In `B := AdjoinRoot ftilde`, the image of
+`aLift * ftilde + bLift * ftilde'` equals `[bLift] * [ftilde']` (since `[ftilde] = 0`),
+and differs from `1` by an element of `m·B`, which is contained in the Jacobson
+radical of `B` (B is module-finite over local R). Hence `[bLift] * [ftilde']` is a
+unit, so `[ftilde']` is a unit. -/
+private theorem isUnit_adjoinRoot_derivative_of_separable
+    {R : Type*} [CommRing R] [IsLocalRing R]
+    {ftilde : Polynomial R} (hftilde_monic : ftilde.Monic)
+    (hf_sep : (ftilde.map
+      (Ideal.Quotient.mk (IsLocalRing.maximalIdeal R))).Separable) :
+    IsUnit (AdjoinRoot.mk ftilde ftilde.derivative) := by
+  haveI hB_finite : Module.Finite R (AdjoinRoot ftilde) := hftilde_monic.finite_adjoinRoot
+  -- Step 1: Bezout in (R/m)[X].
+  rw [Polynomial.separable_def'] at hf_sep
+  obtain ⟨a₀, b₀, hab⟩ := hf_sep
+  rw [Polynomial.derivative_map] at hab
+  -- Step 2: Lift a₀, b₀ to Polynomial R.
+  obtain ⟨aLift, haLift⟩ :=
+    Polynomial.map_surjective _ Ideal.Quotient.mk_surjective a₀
+  obtain ⟨bLift, hbLift⟩ :=
+    Polynomial.map_surjective _ Ideal.Quotient.mk_surjective b₀
+  -- Step 3: r := aLift * ftilde + bLift * ftilde.derivative - 1 lies in m.map C.
+  set r : Polynomial R := aLift * ftilde + bLift * ftilde.derivative - 1
+  have hr_map_zero : Polynomial.mapRingHom
+      (Ideal.Quotient.mk (IsLocalRing.maximalIdeal R)) r = 0 := by
+    show (aLift * ftilde + bLift * ftilde.derivative - 1).map _ = 0
+    rw [Polynomial.map_sub, Polynomial.map_add, Polynomial.map_mul, Polynomial.map_mul,
+        Polynomial.map_one, haLift, hbLift, hab, sub_self]
+  have hker_eq : RingHom.ker (Polynomial.mapRingHom
+      (Ideal.Quotient.mk (IsLocalRing.maximalIdeal R))) =
+      (IsLocalRing.maximalIdeal R).map (Polynomial.C : R →+* Polynomial R) := by
+    rw [Polynomial.ker_mapRingHom, Ideal.mk_ker]
+  have hr_in_mapC :
+      r ∈ (IsLocalRing.maximalIdeal R).map (Polynomial.C : R →+* Polynomial R) := by
+    rw [← hker_eq]; exact hr_map_zero
+  -- Step 4: mk ftilde r ∈ m.map (algebraMap R B).
+  have h_mapC_pushforward :
+      ((IsLocalRing.maximalIdeal R).map (Polynomial.C : R →+* Polynomial R)).map
+        (AdjoinRoot.mk ftilde) =
+      (IsLocalRing.maximalIdeal R).map (algebraMap R (AdjoinRoot ftilde)) := by
+    rw [Ideal.map_map]; rfl
+  have h_mkr_in : (AdjoinRoot.mk ftilde) r ∈
+      (IsLocalRing.maximalIdeal R).map (algebraMap R (AdjoinRoot ftilde)) := by
+    rw [← h_mapC_pushforward]
+    exact Ideal.mem_map_of_mem _ hr_in_mapC
+  -- Step 5: mk ftilde r = mk bLift * mk ftilde.derivative - 1.
+  have h_mkr_expand : (AdjoinRoot.mk ftilde) r =
+      AdjoinRoot.mk ftilde bLift * AdjoinRoot.mk ftilde ftilde.derivative - 1 := by
+    show (AdjoinRoot.mk ftilde)
+        (aLift * ftilde + bLift * ftilde.derivative - 1) = _
+    rw [map_sub, map_add, map_mul, map_mul, AdjoinRoot.mk_self, mul_zero, zero_add, map_one]
+  rw [h_mkr_expand] at h_mkr_in
+  -- Step 6: m.map (algebraMap R B) ⊆ Jacobson B by Nakayama.
+  have h_in_jac :
+      AdjoinRoot.mk ftilde bLift * AdjoinRoot.mk ftilde ftilde.derivative - 1 ∈
+      Ring.jacobson (AdjoinRoot ftilde) :=
+    maximalIdeal_map_le_ringJacobson_of_finite h_mkr_in
+  rw [← Ideal.jacobson_bot] at h_in_jac
+  -- Step 7: Apply `isUnit_of_sub_one_mem_jacobson_bot` and extract unit on the right factor.
+  have hunit_mul :
+      IsUnit (AdjoinRoot.mk ftilde bLift * AdjoinRoot.mk ftilde ftilde.derivative) :=
+    Ideal.isUnit_of_sub_one_mem_jacobson_bot _ h_in_jac
+  exact isUnit_of_mul_isUnit_right hunit_mul
+
 /-- **lemma:retractions-strictly-henselian** (Blueprint): If every faithfully flat etale ring map
 `A -> B` has a retraction, then every local ring `A_m` at a maximal ideal is strictly Henselian.
 
@@ -1222,7 +1498,264 @@ private lemma isStrictlyHenselianLocalRing_of_exists_retraction
   -- Note: `hftilde_monic, hftilde_map` are the polynomial lifts; using them keeps the lift
   -- explicitly visible in the proof skeleton for future iterations.
   have _hftilde_data : ftilde.Monic ∧ ftilde.map (Ideal.Quotient.mk I) = f := ⟨hftilde_monic, hftilde_map⟩
-  sorry
+  -- ====================================================================
+  -- Step A.1: `B := AdjoinRoot ftilde` is a free `R`-module (`ftilde` monic).
+  -- ====================================================================
+  haveI hB_free : Module.Free R (AdjoinRoot ftilde) := hftilde_monic.free_adjoinRoot
+  -- ====================================================================
+  -- Step A.2: assemble an R-algebra section `σ : AdjoinRoot ftilde →ₐ[R] R`
+  -- via the descent + cover + retraction architecture mirroring the C-branch
+  -- chain in `exists_residue_compatible_section_of_retraction`
+  -- (lines ~498–842 of this file).
+  --
+  -- Outline (single sorry below):
+  --
+  -- (1) Étale instance `Algebra.Etale R (AdjoinRoot ftilde)`. By separability of
+  --     `f` over `κ(m) = R/I`, the Bezout identity `a f + b f' = 1` in `(R/I)[X]`
+  --     lifts to `ã ftilde + b̃ ftilde' = 1 + δ` with `δ ∈ I·R[X]`. Reducing
+  --     modulo `ftilde` in `B`, the image of `b̃ · ftilde'` differs from `1` by
+  --     an element of `I·B`; by Nakayama (`R` local, `B` finite free over `R`),
+  --     `ftilde.derivative` is a unit in `B`. Hence
+  --     `B ≃ (R[X]/ftilde)[1/ftilde']`, the `StandardEtalePair` ring, étale over
+  --     `R = A_m` by `Algebra.instEtaleOfIsStandardEtale`.
+  --
+  -- (2) Descend `B` to an étale `A_f`-algebra `B'` via
+  --     `Algebra.Etale.exists_descent_along_localizationAtPrime`, exactly as in
+  --     Step (1) of the C-branch helper.
+  --
+  -- (3) Pick a prime `q ⊂ B'` lying over `m ⊂ A`. The IsSepClosed case diverges
+  --     from the HenselianLocalRing case here: there is no canonical residue
+  --     map `B → κ(m)` (the reduction `B/IB = κ(m)[X]/(f)` is a proper
+  --     extension when `deg f ≥ 2`). Any prime over `m·A_f` suffices for the
+  --     remainder of the construction. Existence: `B` is faithfully flat over
+  --     `A_m` (free of rank `≥ 1` since `f` is monic of degree `≥ 1`), hence
+  --     `Spec B → Spec A_m` is surjective; pull back a prime of `B` over
+  --     `max(A_m)` through the descent iso to obtain `q ⊂ B'` over `m·A_f`.
+  --
+  -- (4) Prime avoidance, cover assembly, retraction, local-ring case-split,
+  --     `Algebra.TensorProduct.lift`, and section extraction proceed exactly
+  --     as in the C-branch — skipping the residue-compatibility checks (which
+  --     are vacuous here since no `g : B → κ(m)` is in play).
+  --
+  -- The single substantive sorry below encapsulates Steps (1)–(4). A future
+  -- iteration should refactor `exists_residue_compatible_section_of_retraction`
+  -- to expose its section-construction core independently of the residue map,
+  -- which would let this branch reuse the existing 200-LOC chain directly.
+  obtain ⟨σ, _⟩ : ∃ σ : AdjoinRoot ftilde →ₐ[R] R, True := by
+    -- Step A.2(a): Algebra.Etale R (AdjoinRoot ftilde). The separability of f
+    -- in (R/I)[X] lifts via Nakayama to make ftilde.derivative a unit in B; the
+    -- standard-etale-pair B[1/ftilde'] = B then witnesses étaleness over R.
+    haveI hB_etale : Algebra.Etale R (AdjoinRoot ftilde) := by
+      -- Express the separability of `f` in the form expected by the helper.
+      have hf_sep' : (ftilde.map
+          (Ideal.Quotient.mk (IsLocalRing.maximalIdeal R))).Separable := by
+        rw [hftilde_map]; exact hf_sep
+      -- ftilde.derivative is a unit in `AdjoinRoot ftilde` (Nakayama lift).
+      have huni : IsUnit (AdjoinRoot.mk ftilde ftilde.derivative) :=
+        isUnit_adjoinRoot_derivative_of_separable hftilde_monic hf_sep'
+      -- Build the `StandardEtalePair` with `g := ftilde.derivative`.
+      let P : StandardEtalePair R :=
+        { f := ftilde
+          monic_f := hftilde_monic
+          g := ftilde.derivative
+          cond := ⟨1, 0, 1, by ring⟩ }
+      -- `AdjoinRoot.root ftilde` has the standard-etale "HasMap" property w.r.t. `P`.
+      have hroot_hasMap : P.HasMap (AdjoinRoot.root ftilde) := by
+        refine ⟨?_, ?_⟩
+        · show Polynomial.aeval (AdjoinRoot.root ftilde) ftilde = 0
+          rw [AdjoinRoot.aeval_eq, AdjoinRoot.mk_self]
+        · show IsUnit (Polynomial.aeval (AdjoinRoot.root ftilde) ftilde.derivative)
+          rw [AdjoinRoot.aeval_eq]
+          exact huni
+      -- Build the round-trip R-algebra equivalence directly.
+      let ψ : P.Ring →ₐ[R] AdjoinRoot ftilde := P.lift (AdjoinRoot.root ftilde) hroot_hasMap
+      let φ : AdjoinRoot ftilde →ₐ[R] P.Ring :=
+        AdjoinRoot.liftAlgHom ftilde (Algebra.ofId R P.Ring) P.X P.hasMap_X.1
+      let e : AdjoinRoot ftilde ≃ₐ[R] P.Ring := AlgEquiv.ofAlgHom φ ψ
+        (by
+          -- φ.comp ψ = AlgHom.id : check on P.X
+          ext
+          show φ (ψ P.X) = P.X
+          rw [show ψ P.X = AdjoinRoot.root ftilde from P.lift_X _ _]
+          show AdjoinRoot.liftAlgHom ftilde (Algebra.ofId R P.Ring) P.X
+              P.hasMap_X.1 (AdjoinRoot.root ftilde) = P.X
+          rw [AdjoinRoot.liftAlgHom_root])
+        (by
+          -- ψ.comp φ = AlgHom.id : check on AdjoinRoot.root ftilde
+          ext
+          show ψ (φ (AdjoinRoot.root ftilde)) = AdjoinRoot.root ftilde
+          rw [show φ (AdjoinRoot.root ftilde) = P.X from
+                AdjoinRoot.liftAlgHom_root _ _ _ _]
+          exact P.lift_X _ _)
+      -- Transfer `Algebra.Etale` from `P.Ring` via the priority-low instance.
+      exact Algebra.Etale.of_equiv e.symm
+    -- Step A.2(b): descend B = AdjoinRoot ftilde to an étale A_{f₀}-algebra B'
+    -- via the descent helper.
+    obtain ⟨f₀, hf₀, B', _instB'Ring, _instB'Alg, _instB'Etale,
+            _instAfAm, _instRAfAm, _instAfB, _instTower, ⟨iso'⟩⟩ :=
+      Algebra.Etale.exists_descent_along_localizationAtPrime m (AdjoinRoot ftilde)
+    -- Step A.2(c): equip B' with an A-algebra structure via A → A_{f₀} → B'.
+    letI algAB' : Algebra A B' :=
+      ((algebraMap (Localization.Away f₀) B').comp
+        (algebraMap A (Localization.Away f₀))).toAlgebra
+    haveI istAB' : IsScalarTower A (Localization.Away f₀) B' :=
+      IsScalarTower.of_algebraMap_eq' rfl
+    haveI hEtaleAAf₀ : Algebra.Etale A (Localization.Away f₀) :=
+      Algebra.Etale.of_isLocalizationAway f₀
+    haveI hEtaleAB' : Algebra.Etale A B' :=
+      Algebra.Etale.comp A (Localization.Away f₀) B'
+    -- Step A.2(d): produce a prime q ⊂ B' lying over m ⊂ A.
+    -- Strategy: B = AdjoinRoot ftilde is faithfully flat over R = A_m (free of
+    -- positive rank since ftilde is monic of positive degree). Hence
+    -- Spec(B) → Spec(R) is surjective and we can pick P ⊂ B over max(R).
+    -- Transport P through iso' to a prime of A_m ⊗_{A_{f₀}} B', then comap
+    -- through includeRight to obtain q ⊂ B'. The comap-over-A is m by the
+    -- scalar-tower chain.
+    have hq_exists : ∃ q : Ideal B', q.IsPrime ∧
+        q.comap (((algebraMap (Localization.Away f₀) B').comp
+          (algebraMap A (Localization.Away f₀))) : A →+* B') = m := by
+      -- (i) B = AdjoinRoot ftilde is faithfully flat over R.
+      -- Since ftilde is monic and f is irreducible over R/I, ftilde has
+      -- positive degree, hence is not a unit in R[X]; so the principal ideal
+      -- ⟨ftilde⟩ is proper and AdjoinRoot ftilde is nontrivial. Combined with
+      -- the free instance, Nontrivial + Free ⇒ FaithfullyFlat.
+      -- Show Nontrivial (AdjoinRoot ftilde) ⇒ inferInstance closes FFlat.
+      haveI hB_nontrivial : Nontrivial (AdjoinRoot ftilde) := by
+        refine Ideal.Quotient.nontrivial_iff.mpr ?_
+        intro hspan
+        -- ⟨ftilde⟩ = ⊤ ⇒ ftilde is a unit in R[X].
+        have hunit : IsUnit ftilde := Ideal.span_singleton_eq_top.mp hspan
+        -- Then ftilde.map (Quotient.mk I) = f is a unit in (R/I)[X],
+        -- contradicting irreducibility of f.
+        have hfunit : IsUnit f := by
+          rw [← hftilde_map]
+          exact hunit.map (Polynomial.mapRingHom (Ideal.Quotient.mk I))
+        exact hf_irr.not_isUnit hfunit
+      haveI hB_FF : Module.FaithfullyFlat R (AdjoinRoot ftilde) := inferInstance
+      -- (ii) Spec(B) → Spec(R) is surjective; pick P over max(R).
+      have hSurj : Function.Surjective (PrimeSpectrum.comap
+          (algebraMap R (AdjoinRoot ftilde))) :=
+        PrimeSpectrum.comap_surjective_of_faithfullyFlat
+      obtain ⟨Pspec, hPspec⟩ := hSurj ⟨IsLocalRing.maximalIdeal R,
+        (IsLocalRing.maximalIdeal.isMaximal R).isPrime⟩
+      -- (iii) Pull P through iso' to a prime of the tensor product, then
+      -- through includeRight to a prime of B'.
+      let Pp : Ideal (TensorProduct (Localization.Away f₀)
+          (Localization.AtPrime m) B') :=
+        Pspec.asIdeal.comap iso'.symm.toAlgHom.toRingHom
+      haveI hPp_prime : Pp.IsPrime := Pspec.isPrime.comap _
+      let q : Ideal B' := Pp.comap
+        (Algebra.TensorProduct.includeRight
+          (R := Localization.Away f₀) (A := Localization.AtPrime m)
+          (B := B')).toRingHom
+      refine ⟨q, Ideal.IsPrime.comap _, ?_⟩
+      -- Show q.comap (algMap A_{f₀} B' ∘ algMap A A_{f₀}) = m.
+      -- The composite ring hom A → B' factors as
+      --   A → A_{f₀} → B', which equals A → A_{f₀} → A_m → B' via _instRAfAm
+      --   (since iso' is A_m-linear and B = AdjoinRoot ftilde is an A_m-alg).
+      -- Tracing through the comap chain reduces to m being the comap of max(R)
+      -- via algebraMap A R = algebraMap A (Loc.AtPrime m).
+      have hPspec_asIdeal : Pspec.asIdeal.comap (algebraMap R (AdjoinRoot ftilde)) =
+          IsLocalRing.maximalIdeal R := by
+        have := congrArg PrimeSpectrum.asIdeal hPspec
+        simpa [PrimeSpectrum.comap_asIdeal] using this
+      ext x
+      simp only [Ideal.mem_comap, RingHom.coe_comp, Function.comp_apply, q, Pp]
+      -- Step 1: includeRight ∘ algMap (Loc.Away f₀) B' = includeLeftRingHom ∘ algMap (Loc.Away f₀) R.
+      have hswap :
+          (Algebra.TensorProduct.includeRight (R := Localization.Away f₀)
+              (A := Localization.AtPrime m) (B := B'))
+            ((algebraMap (Localization.Away f₀) B')
+              ((algebraMap A (Localization.Away f₀)) x)) =
+          Algebra.TensorProduct.includeLeftRingHom
+            ((algebraMap (Localization.Away f₀) (Localization.AtPrime m))
+              ((algebraMap A (Localization.Away f₀)) x)) := by
+        have h := (Algebra.TensorProduct.includeLeftRingHom_comp_algebraMap
+          (R := Localization.Away f₀) (A := Localization.AtPrime m) (B := B')).symm
+        exact congr_arg (fun (φ : (Localization.Away f₀) →+* _) =>
+          φ ((algebraMap A (Localization.Away f₀)) x)) h
+      rw [show (Algebra.TensorProduct.includeRight (R := Localization.Away f₀)
+              (A := Localization.AtPrime m) (B := B')).toRingHom
+            ((algebraMap (Localization.Away f₀) B')
+              ((algebraMap A (Localization.Away f₀)) x))
+          = (Algebra.TensorProduct.includeRight (R := Localization.Away f₀)
+              (A := Localization.AtPrime m) (B := B'))
+            ((algebraMap (Localization.Away f₀) B')
+              ((algebraMap A (Localization.Away f₀)) x)) from rfl,
+        hswap]
+      -- Step 2: iso'.symm.commutes — iso'.symm (includeLeftRingHom y) = algMap R B y for y : R.
+      have hcomm_iso' :
+          iso'.symm.toAlgHom.toRingHom
+            (Algebra.TensorProduct.includeLeftRingHom
+              ((algebraMap (Localization.Away f₀) (Localization.AtPrime m))
+                ((algebraMap A (Localization.Away f₀)) x))) =
+          algebraMap (Localization.AtPrime m) (AdjoinRoot ftilde)
+            ((algebraMap (Localization.Away f₀) (Localization.AtPrime m))
+              ((algebraMap A (Localization.Away f₀)) x)) :=
+        AlgEquiv.commutes iso'.symm _
+      rw [hcomm_iso']
+      -- Step 3: IsScalarTower A (Loc.Away f₀) (Loc.AtPrime m) — algMap composition.
+      have hscalar : (algebraMap (Localization.Away f₀) (Localization.AtPrime m))
+            ((algebraMap A (Localization.Away f₀)) x) =
+          algebraMap A (Localization.AtPrime m) x := by
+        exact (IsScalarTower.algebraMap_apply A (Localization.Away f₀)
+          (Localization.AtPrime m) x).symm
+      rw [hscalar]
+      -- Step 4: reduce to Pspec.asIdeal.comap (algMap R (AdjoinRoot ftilde)) = max R,
+      -- and max R .comap (algMap A R) = m.
+      have step4 : algebraMap (Localization.AtPrime m) (AdjoinRoot ftilde)
+            (algebraMap A (Localization.AtPrime m) x) ∈ Pspec.asIdeal ↔
+          x ∈ (IsLocalRing.maximalIdeal (Localization.AtPrime m)).comap
+            (algebraMap A (Localization.AtPrime m)) := by
+        have h1 : algebraMap (Localization.AtPrime m) (AdjoinRoot ftilde)
+              (algebraMap A (Localization.AtPrime m) x) ∈ Pspec.asIdeal ↔
+            algebraMap A (Localization.AtPrime m) x ∈ Pspec.asIdeal.comap
+              (algebraMap (Localization.AtPrime m) (AdjoinRoot ftilde)) := Iff.rfl
+        rw [h1, hPspec_asIdeal]
+        rfl
+      rw [step4]
+      have hcomap_max : Ideal.comap (algebraMap A (Localization.AtPrime m))
+          (IsLocalRing.maximalIdeal (Localization.AtPrime m)) = m :=
+        IsLocalization.AtPrime.comap_maximalIdeal
+          (R := A) (S := Localization.AtPrime m) (I := m)
+      rw [show (IsLocalRing.maximalIdeal (Localization.AtPrime m)).comap
+            (algebraMap A (Localization.AtPrime m)) = m from hcomap_max]
+    obtain ⟨q, hq_prime, hq_over_m⟩ := hq_exists
+    -- Step A.2(e): invoke the new core helper.
+    exact exists_section_of_retraction_at_prime hret m (AdjoinRoot ftilde)
+        f₀ hf₀ B' iso' q hq_prime hq_over_m
+  -- ====================================================================
+  -- Step A.3: read off the root of `f` in `κ(m) = R/I`.
+  --
+  -- `σ (AdjoinRoot.root ftilde)` is a root of `ftilde` in `R` (because `σ` is
+  -- an `R`-algebra hom from `B = R[X]/ftilde` and `(root ftilde)` is a root of
+  -- `ftilde` in `B`). Reducing modulo `I` and using `hftilde_map`, the residue
+  -- is a root of `f` in `R/I`.
+  -- ====================================================================
+  refine ⟨Ideal.Quotient.mk I (σ (AdjoinRoot.root ftilde)), ?_⟩
+  -- It suffices to show `ftilde.eval (σ (root ftilde)) = 0` in `R`; then push through `Q.mk I`.
+  have hx_root : ftilde.eval (σ (AdjoinRoot.root ftilde)) = 0 := by
+    -- `aeval (σ (root ftilde)) ftilde = σ (aeval (root ftilde) ftilde) = σ (mk ftilde ftilde) = 0`.
+    have h1 : Polynomial.aeval (σ (AdjoinRoot.root ftilde)) ftilde =
+        σ (Polynomial.aeval (AdjoinRoot.root ftilde) ftilde) :=
+      Polynomial.aeval_algHom_apply σ (AdjoinRoot.root ftilde) ftilde
+    have h2 : Polynomial.aeval (AdjoinRoot.root ftilde) ftilde =
+        (0 : AdjoinRoot ftilde) := by
+      rw [AdjoinRoot.aeval_eq, AdjoinRoot.mk_self]
+    have h3 : Polynomial.aeval (σ (AdjoinRoot.root ftilde)) ftilde =
+        Polynomial.eval (σ (AdjoinRoot.root ftilde)) ftilde := by
+      rw [show (Polynomial.aeval (σ (AdjoinRoot.root ftilde)) : Polynomial R → R) =
+            Polynomial.eval (σ (AdjoinRoot.root ftilde)) from
+          Polynomial.coe_aeval_eq_eval (σ (AdjoinRoot.root ftilde))]
+    rw [← h3, h1, h2, map_zero]
+  -- Now push `ftilde.eval _ = 0` through `Q.mk I` to obtain `f.eval _ = 0`.
+  show Polynomial.eval (Ideal.Quotient.mk I (σ (AdjoinRoot.root ftilde))) f = 0
+  -- Use `Polynomial.eval_map_apply` directly: `(p.map φ).eval (φ x) = φ (p.eval x)`.
+  have hmap : Polynomial.eval (Ideal.Quotient.mk I (σ (AdjoinRoot.root ftilde))) f =
+      Ideal.Quotient.mk I (ftilde.eval (σ (AdjoinRoot.root ftilde))) := by
+    conv_lhs => rw [← hftilde_map]
+    exact Polynomial.eval_map_apply (p := ftilde) (Ideal.Quotient.mk I) _
+  rw [hmap, hx_root, map_zero]
 
 /-- **cor:strictly-henselian-etale-contraction** (Blueprint): For any maximal ideal `m` of
 `IndEtaleContraction A`, the localization `(IndEtaleContraction A)_m` is strictly Henselian.
