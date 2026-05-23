@@ -56,11 +56,98 @@ filtered colimit of étale R-algebras. -/
 private lemma of_indEtale_etale (A : Type u) [CommRing A] [Algebra R A] [Algebra S A]
     [IsScalarTower R S A] [Algebra.IndEtale R S] [Algebra.Etale S A] :
     Algebra.IndEtale R A := by
-  -- Uses PreIndSpreads to descend S → A to a finite level S_j → A',
-  -- then forms pushouts along the filtered colimit diagram for S to recover A as a
-  -- filtered colimit of étale R-algebras.
-  -- The full proof has type coercion issues in CommRingCat; left as sorry.
-  sorry
+  -- The composition of an ind-étale and an étale map is ind-étale.
+  -- The proof mirrors `Algebra.IndZariski.of_indZariski_localIso`: use the colimit
+  -- presentation of `R → S`, descend the étale map `S → A` to a finite stage via
+  -- `PreIndSpreads`, and assemble a refined diagram on `Under j₀` whose colimit is `A`.
+  rw [iff_ind_etale, CommAlgCat.etale_eq,
+    ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty]
+  -- Morphism-level colimit presentation of `R → S` with étale stages.
+  have hRS : MorphismProperty.ind.{u} CommRingCat.etale
+      (CommRingCat.ofHom (algebraMap R S)) := by
+    have h : Algebra.IndEtale R S := inferInstance
+    rwa [iff_ind_etale, CommAlgCat.etale_eq,
+      ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty] at h
+  obtain ⟨J, _, _, D, sR, tS, htS, hRS_data⟩ := hRS
+  -- `S → A` is étale.
+  have hSA : CommRingCat.etale (CommRingCat.ofHom (algebraMap S A)) := by
+    show (algebraMap S A).Etale
+    rw [RingHom.etale_algebraMap]
+    infer_instance
+  -- Descend `S → A` to a finite stage `j₀` via a pushout square.
+  obtain ⟨j₀, T', f', g, hpush, hf'⟩ :=
+    MorphismProperty.PreIndSpreads.exists_isPushout (P := CommRingCat.etale) htS
+      (CommRingCat.ofHom (algebraMap S A)) hSA
+  -- Refined diagram `D' : Under j₀ → CommRingCat` whose colimit is `A`.
+  let D' : Under j₀ ⥤ CommRingCat.{u} :=
+    (Under.post D ⋙ Under.pushout f') ⋙ Under.forget _
+  let c'₀ : Cocone D' :=
+    (Under.pushout f' ⋙ Under.forget _).mapCocone ((Cocone.mk _ tS).underPost j₀)
+  let c' : Cocone D' := c'₀.extend hpush.isoPushout.inv
+  let hc' : IsColimit c' :=
+    IsColimit.extendIso _ (isColimitOfPreserves _ (htS.underPost j₀))
+  -- Natural transformation `R → D'`.
+  let s' : (Functor.const (Under j₀)).obj (CommRingCat.of R) ⟶ D' :=
+    { app := fun k => sR.app k.right ≫ pushout.inl (D.map k.hom) f'
+      naturality := fun k l a => by
+        have hnat := sR.naturality a.right
+        simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.id_comp] at hnat
+        show 𝟙 _ ≫ sR.app l.right ≫ pushout.inl (D.map l.hom) f' =
+          (sR.app k.right ≫ pushout.inl (D.map k.hom) f') ≫ _
+        rw [Category.id_comp, Category.assoc]
+        dsimp [D', Under.post, Under.pushout]
+        rw [pushout.inl_desc, ← Category.assoc, ← hnat] }
+  refine ⟨Under j₀, inferInstance, inferInstance, D', s', c'.ι, hc', fun k => ⟨?_, ?_⟩⟩
+  · -- `s'.app k` is étale: composition of an étale stage with the pushout of an étale map.
+    have h1 : CommRingCat.etale (sR.app k.right) := (hRS_data k.right).1
+    have h2 : CommRingCat.etale (pushout.inl (D.map k.hom) f') :=
+      CommRingCat.etale.pushout_inl _ _ hf'
+    exact CommRingCat.etale.comp_mem _ _ h1 h2
+  · -- `s'.app k ≫ c'.ι.app k = ofHom (algebraMap R A)`.
+    have hassoc : sR.app k.right ≫ tS.app k.right = CommRingCat.ofHom (algebraMap R S) :=
+      (hRS_data k.right).2
+    show (sR.app k.right ≫ pushout.inl (D.map k.hom) f') ≫ c'.ι.app k =
+      CommRingCat.ofHom (algebraMap R A)
+    have hkey : pushout.inl (D.map k.hom) f' ≫ c'₀.ι.app k =
+        tS.app k.right ≫ pushout.inl ((Cocone.mk (CommRingCat.of S) tS).ι.app j₀) f' := by
+      dsimp only [c'₀, Functor.mapCocone_ι_app, Cocone.underPost_ι_app, Functor.comp_map,
+        Under.forget_map, Under.pushout_map, Under.post_obj, Under.mk_hom, Under.homMk_right,
+        Cocone.underPost_pt]
+      exact pushout.inl_desc _ _ _
+    have hc'_def : c'.ι.app k = c'₀.ι.app k ≫ hpush.isoPushout.inv := rfl
+    have hkey' : pushout.inl (D.map k.hom) f' ≫ c'₀.ι.app k ≫ hpush.isoPushout.inv =
+        tS.app k.right ≫
+          pushout.inl ((Cocone.mk (CommRingCat.of S) tS).ι.app j₀) f' ≫
+            hpush.isoPushout.inv := by
+      have := congrArg (· ≫ hpush.isoPushout.inv) hkey
+      simp only [Category.assoc] at this
+      exact this
+    have hcomp : pushout.inl (D.map k.hom) f' ≫ c'.ι.app k =
+        tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) := by
+      rw [hc'_def]
+      have hinl_inv := hpush.inl_isoPushout_inv
+      calc pushout.inl (D.map k.hom) f' ≫ c'₀.ι.app k ≫ hpush.isoPushout.inv
+          = tS.app k.right ≫
+              pushout.inl ((Cocone.mk (CommRingCat.of S) tS).ι.app j₀) f' ≫
+                hpush.isoPushout.inv := hkey'
+        _ = tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) :=
+            congrArg (tS.app k.right ≫ ·) hinl_inv
+    have step1 : (sR.app k.right ≫ pushout.inl (D.map k.hom) f') ≫ c'.ι.app k =
+        sR.app k.right ≫ pushout.inl (D.map k.hom) f' ≫ c'.ι.app k := Category.assoc _ _ _
+    have step2 : sR.app k.right ≫ pushout.inl (D.map k.hom) f' ≫ c'.ι.app k =
+        sR.app k.right ≫ tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) :=
+      congrArg (sR.app k.right ≫ ·) hcomp
+    have step3 : sR.app k.right ≫ tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) =
+        (sR.app k.right ≫ tS.app k.right) ≫ CommRingCat.ofHom (algebraMap S A) :=
+      (Category.assoc _ _ _).symm
+    have step4 : (sR.app k.right ≫ tS.app k.right) ≫ CommRingCat.ofHom (algebraMap S A) =
+        CommRingCat.ofHom (algebraMap R S) ≫ CommRingCat.ofHom (algebraMap S A) :=
+      congrArg (· ≫ CommRingCat.ofHom (algebraMap S A)) hassoc
+    have step5 : CommRingCat.ofHom (algebraMap R S) ≫ CommRingCat.ofHom (algebraMap S A) =
+        CommRingCat.ofHom (algebraMap R A) := by
+      ext x
+      exact (IsScalarTower.algebraMap_apply R S A x).symm
+    exact step1.trans (step2.trans (step3.trans (step4.trans step5)))
 
 lemma trans (T : Type u) [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
     [Algebra.IndEtale R S] [Algebra.IndEtale S T] :
@@ -343,8 +430,47 @@ instance isSeparable_residueField [Algebra.IndEtale R S] (p : Ideal R) (q : Idea
     [q.LiesOver p] [p.IsPrime] [q.IsPrime]
     [Algebra (Localization.AtPrime p) (Localization.AtPrime q)]
     [Localization.AtPrime.IsLiesOverAlgebra p q] :
-    Algebra.IsSeparable p.ResidueField q.ResidueField :=
-  sorry
+    Algebra.IsSeparable p.ResidueField q.ResidueField := by
+  -- Blueprint approach: every element of `q.ResidueField` lifts (modulo a non-zero divisor)
+  -- to the image of some `s : S`. Such an image is separable over `p.ResidueField`: build
+  -- it via a finite étale `R`-subalgebra in the colimit presentation of `S`, base-change to
+  -- `p.ResidueField`, and apply `isSeparable_of_etale_to_local`. The general element is then
+  -- a ratio of two such separable images, which lies in the separable closure.
+  obtain ⟨ι, hcat, hfilt, P, hP⟩ := IndEtale.exists_colimitPresentation (R := R) (S := S)
+  letI := hcat; letI := hfilt
+  -- Step 1: every image of `s : S` in `q.ResidueField` is separable over `p.ResidueField`.
+  have key : ∀ s : S, IsSeparable p.ResidueField (algebraMap S q.ResidueField s) := by
+    intro s
+    have hcolim : IsColimit ((forget (CommAlgCat.{u} R)).mapCocone P.cocone) :=
+      isColimitOfPreserves (forget (CommAlgCat.{u} R)) P.isColimit
+    obtain ⟨i, sᵢ, hsᵢ⟩ := Types.jointly_surjective_of_isColimit hcolim s
+    haveI hetale : Algebra.Etale R (P.diag.obj i) := hP i
+    haveI : Algebra.Etale p.ResidueField (TensorProduct R p.ResidueField (P.diag.obj i)) :=
+      Algebra.Etale.baseChange R (P.diag.obj i) p.ResidueField
+    -- R-algebra hom `P.diag.obj i → q.ResidueField`.
+    let φR : P.diag.obj i →ₐ[R] q.ResidueField :=
+      (IsScalarTower.toAlgHom R S q.ResidueField).comp (P.ι.app i).hom
+    -- `p.ResidueField`-algebra hom from the base change to `q.ResidueField`.
+    let φ : TensorProduct R p.ResidueField (P.diag.obj i) →ₐ[p.ResidueField] q.ResidueField :=
+      Algebra.TensorProduct.lift (Algebra.ofId p.ResidueField q.ResidueField) φR
+        (fun _ _ => Commute.all _ _)
+    have hφ : φ ((1 : p.ResidueField) ⊗ₜ[R] sᵢ) = algebraMap S q.ResidueField s := by
+      simp only [φ, Algebra.TensorProduct.lift_tmul, map_one, one_mul, φR, AlgHom.comp_apply,
+        IsScalarTower.coe_toAlgHom']
+      exact congrArg (algebraMap S q.ResidueField) hsᵢ
+    rw [← hφ]
+    exact isSeparable_of_etale_to_local p.ResidueField _ q.ResidueField φ _
+  -- Step 2: separable elements form a subfield, and every element of `q.ResidueField`
+  -- is a quotient of two such separable images.
+  refine ⟨fun y => ?_⟩
+  rw [← mem_separableClosure_iff (F := p.ResidueField) (E := q.ResidueField)]
+  obtain ⟨x, m, hm, hxm⟩ := IsFractionRing.div_surjective (A := S ⧸ q) y
+  obtain ⟨x, rfl⟩ := Ideal.Quotient.mk_surjective x
+  obtain ⟨m, rfl⟩ := Ideal.Quotient.mk_surjective m
+  rw [← hxm, Ideal.algebraMap_quotient_residueField_mk,
+    Ideal.algebraMap_quotient_residueField_mk]
+  exact div_mem (mem_separableClosure_iff.mpr (key x))
+    (mem_separableClosure_iff.mpr (key m))
 
 end Algebra.IndEtale
 

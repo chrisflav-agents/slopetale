@@ -27,6 +27,7 @@ import Proetale.Algebra.WeaklyEtaleField
 import Proetale.Basic
 import Proetale.FromPi1.Etale
 import Proetale.Mathlib.Algebra.Algebra.Pi
+import Proetale.Mathlib.Algebra.Algebra.Prod
 import Proetale.Mathlib.Algebra.Category.AlgCat.FilteredColimits
 import Proetale.Mathlib.Algebra.Category.CommAlgCat.Basic
 import Proetale.Mathlib.Algebra.Category.CommAlgCat.Limits
@@ -75,6 +76,8 @@ import Proetale.Mathlib.CategoryTheory.Sites.Precoverage
 import Proetale.Mathlib.CategoryTheory.Sites.Sieves
 import Proetale.Mathlib.Order.BooleanAlgebra.Set
 import Proetale.Mathlib.RingTheory.Etale.IndSpreads
+import Proetale.Mathlib.RingTheory.Etale.Prod
+import Proetale.Mathlib.RingTheory.Etale.StrictlyHenselian
 import Proetale.Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
 import Proetale.Mathlib.RingTheory.Flat.FilteredColimit
 import Proetale.Mathlib.RingTheory.Henselian
@@ -85,6 +88,9 @@ import Proetale.Mathlib.RingTheory.RingHom.OpenImmersion
 import Proetale.Mathlib.RingTheory.Spectrum.Prime.RingHom
 import Proetale.Mathlib.RingTheory.Spectrum.Prime.Topology
 import Proetale.Mathlib.RingTheory.TensorProduct.Maps
+import Proetale.Mathlib.RingTheory.WeaklyEtale.FieldExtension
+import Proetale.Mathlib.RingTheory.WeaklyEtale.Pi
+import Proetale.Mathlib.RingTheory.WeaklyEtale.Subalgebra
 import Proetale.Mathlib.Topology.Category.TopCat.Limits.Pullbacks
 import Proetale.Mathlib.Topology.Connected.TotallyDisconnected
 import Proetale.Mathlib.Topology.Constructions

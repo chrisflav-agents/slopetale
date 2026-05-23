@@ -441,6 +441,10 @@ Given a prime ideal `m` of a commutative ring `R` and an étale algebra `B` over
 `Localization.Away f`-algebra `B'` such that `B` is isomorphic (as an
 `Localization.AtPrime m`-algebra) to the base change `Localization.AtPrime m ⊗_{Localization.Away f} B'`.
 
+The existential also exposes the canonical `IsScalarTower R (Localization.Away f)
+(Localization.AtPrime m)` instance witnessing that the produced
+`Localization.Away f → Localization.AtPrime m` map factors `R → Localization.AtPrime m`.
+
 This is the central étale-descent lemma needed to formalize the blueprint argument
 `lemma:retractions-strictly-henselian` for `WStrictLocalization` (Stacks 00U6
 applied to the filtered colimit `Localization.AtPrime m = colim_{f ∉ m} Localization.Away f`). -/
@@ -452,6 +456,7 @@ lemma exists_descent_along_localizationAtPrime
       (_ : Algebra (Localization.Away f) B')
       (_ : Algebra.Etale (Localization.Away f) B')
       (_ : Algebra (Localization.Away f) (Localization.AtPrime m))
+      (_ : IsScalarTower R (Localization.Away f) (Localization.AtPrime m))
       (_ : Algebra (Localization.Away f) B)
       (_ : IsScalarTower (Localization.Away f) (Localization.AtPrime m) B),
       Nonempty (B ≃ₐ[Localization.AtPrime m]
@@ -814,7 +819,7 @@ lemma exists_descent_along_localizationAtPrime
     · show backward.comp (tmap.comp eq_iso.symm.toAlgHom) = AlgHom.id _ _
       rw [← AlgHom.comp_assoc, h_bt]
       exact AlgEquiv.comp_symm eq_iso
-  refine ⟨f, hf, B'', inferInstance, inferInstance, h_etale, algAfAm, algAfB,
-    istAf_Am_B, eq_iso'⟩
+  refine ⟨f, hf, B'', inferInstance, inferInstance, h_etale, algAfAm, istR_Af_Am,
+    algAfB, istAf_Am_B, eq_iso'⟩
 
 end Algebra.Etale
