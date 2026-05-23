@@ -1,9 +1,12 @@
+import Proetale.Algebra.Bijective
 import Proetale.Algebra.Contraction.Covers
 import Proetale.Algebra.Contraction.IndContraction
 import Proetale.Algebra.Etale
 import Proetale.Algebra.FaithfullyFlat
 import Proetale.Algebra.FilteredLocalColimit
+import Proetale.Algebra.HenselianLocalRing
 import Proetale.Algebra.Ind
+import Proetale.Algebra.IndBijectiveOnStalks
 import Proetale.Algebra.IndEtale
 import Proetale.Algebra.IndWeaklyEtale
 import Proetale.Algebra.IndZariski
@@ -20,6 +23,7 @@ import Proetale.Algebra.WLocalization.IndZariskiAux
 import Proetale.Algebra.WStrictLocalization
 import Proetale.Algebra.WeakDimension
 import Proetale.Algebra.WeaklyEtale
+import Proetale.Algebra.WeaklyEtaleField
 import Proetale.Basic
 import Proetale.FromPi1.Etale
 import Proetale.Mathlib.Algebra.Algebra.Pi

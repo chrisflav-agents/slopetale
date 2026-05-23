@@ -20,52 +20,17 @@ class Ring.AbsolutelyFlat (R : Type*) [CommRing R] where
 class Ring.WeakDimensionLEOne (R : Type*) [CommRing R] where
   flat_of_fg (I : Ideal R) : I.FG → Module.Flat R I
 
--- Follows from `Ideal.exists_eq_mul_of_pure` in mathlib
+/-- If `f : R →+* S` is a surjective flat ring map and `f x = 0`, then there exists `y : R`
+such that `f y = 1` and `y * x = 0`. This expresses that the kernel of a surjective flat
+map is pure. -/
 lemma exists_eq_mul_of_surjective_flat {R S : Type*} [CommRing R] [CommRing S]
     (f : R →+* S) (hf : f.Flat) (hsurj : Function.Surjective f)
     (x : R) (hx : f x = 0) : ∃ y : R, f y = 1 ∧ y * x = 0 := by
-  letI : Algebra R S := f.toAlgebra
-  haveI hSflat : Module.Flat R S := hf
-  -- Build a linear equivalence `R ⧸ ker f ≃ₗ[R] S` to transfer flatness.
-  let g : R ⧸ RingHom.ker f →ₗ[R] S :=
-    { toFun := Ideal.Quotient.lift (RingHom.ker f) f fun _ h => h
-      map_add' := fun a b => by
-        induction a using Quotient.inductionOn' with
-        | h a =>
-          induction b using Quotient.inductionOn' with
-          | h b =>
-            show Ideal.Quotient.lift _ f _ (Ideal.Quotient.mk _ (a + b)) =
-              Ideal.Quotient.lift _ f _ (Ideal.Quotient.mk _ a) +
-                Ideal.Quotient.lift _ f _ (Ideal.Quotient.mk _ b)
-            rw [Ideal.Quotient.lift_mk, Ideal.Quotient.lift_mk, Ideal.Quotient.lift_mk,
-              map_add]
-      map_smul' := fun r a => by
-        induction a using Quotient.inductionOn' with
-        | h a =>
-          show Ideal.Quotient.lift _ f _ (r • Ideal.Quotient.mk _ a) =
-            r • (Ideal.Quotient.lift _ f _ (Ideal.Quotient.mk _ a))
-          rw [show (r • Ideal.Quotient.mk (RingHom.ker f) a : R ⧸ RingHom.ker f) =
-              Ideal.Quotient.mk _ (r • a) from rfl,
-            Ideal.Quotient.lift_mk, Ideal.Quotient.lift_mk]
-          show f (r * a) = (algebraMap R S r) * f a
-          rw [map_mul]
-          rfl }
-  have hg_inj : Function.Injective g := by
-    rw [injective_iff_map_eq_zero]
-    intro a ha
-    induction a using Quotient.inductionOn' with
-    | h a =>
-      show Ideal.Quotient.mk _ a = 0
-      rw [Ideal.Quotient.eq_zero_iff_mem]
-      exact ha
-  have hg_surj : Function.Surjective g := by
-    intro s
-    obtain ⟨r, rfl⟩ := hsurj s
-    exact ⟨Ideal.Quotient.mk _ r, rfl⟩
-  haveI hpure : (RingHom.ker f).Pure :=
-    Module.Flat.of_linearEquiv (LinearEquiv.ofBijective g ⟨hg_inj, hg_surj⟩)
-  have hxker : x ∈ RingHom.ker f := hx
-  obtain ⟨z, hzker, hxz⟩ := Ideal.exists_eq_mul_of_pure hxker
+  algebraize [f]
+  have e : (R ⧸ RingHom.ker f) ≃ₐ[R] S :=
+    AlgEquiv.ofRingEquiv (f := f.quotientKerEquivOfSurjective hsurj) fun _ ↦ rfl
+  have : (RingHom.ker f).Pure := Module.Flat.of_linearEquiv e.toLinearEquiv
+  obtain ⟨z, hzker, hxz⟩ := Ideal.exists_eq_mul_of_pure (show x ∈ RingHom.ker f from hx)
   refine ⟨1 - z, ?_, ?_⟩
   · rw [map_sub, map_one, RingHom.mem_ker.mp hzker, sub_zero]
   · rw [sub_mul, one_mul, mul_comm, ← hxz, sub_self]
@@ -85,33 +50,46 @@ lemma exists_eq_mul_of_surjective_flat' {R S ι : Type*} [CommRing R] [CommRing 
 
 namespace Ring.WeakDimensionLEOne
 
-variable (R : Type*) [CommRing R]
+variable (R : Type*) [CommRing R] {S : Type*} [CommRing S] [Algebra R S]
 
-/-- If `R` is of weak dimension `≤ 1` if any submodule of a flat module is flat. -/
+/-- If `R` is of weak dimension `≤ 1`, then any submodule of a flat module is flat. -/
 lemma flat_submodule [Ring.WeakDimensionLEOne R] {M : Type*} [AddCommGroup M] [Module R M]
     (N : Submodule R M) [Module.Flat R M] :
     Module.Flat R N := by
   rw [Module.Flat.iff_lTensor_injective]
   intro I hI
-  haveI hIflat : Module.Flat R I := Ring.WeakDimensionLEOne.flat_of_fg I hI
-  -- Composition `(lTensor M I.subtype) ∘ (rTensor I N.subtype) : N ⊗ I → M ⊗ I → M ⊗ R`
-  -- equals `(rTensor R N.subtype) ∘ (lTensor N I.subtype) : N ⊗ I → N ⊗ R → M ⊗ R`.
-  -- Both factors of the first composition are injective (M flat and I flat).
-  -- Hence the composition is injective, which forces `lTensor N I.subtype` to be injective.
-  have h1 : Function.Injective
-      ((LinearMap.lTensor M I.subtype) ∘ (LinearMap.rTensor I N.subtype)) :=
-    Function.Injective.comp
-      ((Module.Flat.iff_lTensor_injective.mp inferInstance) hI)
-      (Module.Flat.rTensor_preserves_injective_linearMap N.subtype N.injective_subtype)
-  have hnat : ⇑((LinearMap.lTensor M I.subtype) ∘ₗ (LinearMap.rTensor I N.subtype)) =
-              ⇑((LinearMap.rTensor R N.subtype) ∘ₗ (LinearMap.lTensor N I.subtype)) := by
-    congr 1
-    ext n i
-    simp
-  simp only [LinearMap.coe_comp] at hnat
-  have h2 : Function.Injective
-      (⇑(LinearMap.rTensor R N.subtype) ∘ ⇑(LinearMap.lTensor N I.subtype)) := hnat ▸ h1
-  exact h2.of_comp
+  have : Module.Flat R I := Ring.WeakDimensionLEOne.flat_of_fg I hI
+  have h : Function.Injective (⇑(I.subtype.lTensor M) ∘ ⇑(N.subtype.rTensor I)) :=
+    (Module.Flat.lTensor_preserves_injective_linearMap _ I.injective_subtype).comp
+      (Module.Flat.rTensor_preserves_injective_linearMap _ N.injective_subtype)
+  have hnat : ⇑(I.subtype.lTensor M) ∘ ⇑(N.subtype.rTensor I) =
+      ⇑(N.subtype.rTensor R) ∘ ⇑(I.subtype.lTensor N) := by
+    rw [← LinearMap.coe_comp, LinearMap.lTensor_comp_rTensor,
+      ← LinearMap.rTensor_comp_lTensor, LinearMap.coe_comp]
+  exact (hnat ▸ h).of_comp
+
+lemma flat_ideal [Ring.WeakDimensionLEOne R] (I : Ideal R) :
+    Module.Flat R I :=
+  flat_submodule _ _
+
+/-- If `R` is of weak dimension `≤ 1` and `S` is weakly étale over `R`, then the same holds for
+`S`. -/
+lemma of_weaklyEtale [Ring.WeakDimensionLEOne R] [Algebra.WeaklyEtale R S] :
+    Ring.WeakDimensionLEOne S :=
+  sorry
+
+/-- The product of valuation rings is of weak dimension `≤ 1`. -/
+lemma pi_of_isValuationRing {ι : Type*} (R : ι → Type*) [∀ i, CommRing (R i)]
+    [∀ i, IsDomain (R i)] [∀ i, ValuationRing (R i)] :
+    WeakDimensionLEOne (Π i, R i) :=
+  sorry
+
+/-- If `R` is of weak dimension `≤ 1`, it is integrally closed in any flat extension `S` such
+that `R → S` is an epi. -/
+lemma isIntegrallyClosedIn_of_isEpi [WeakDimensionLEOne R] [Module.Flat R S] [FaithfulSMul R S]
+    [Algebra.IsEpi R S] :
+    IsIntegrallyClosedIn R S :=
+  sorry
 
 end Ring.WeakDimensionLEOne
 
