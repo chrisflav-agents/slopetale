@@ -265,36 +265,6 @@ namespace CategoryTheory.MorphismProperty
 
 open CategoryTheory Limits
 
-/-- `RingHom.IsLocalIso` is stable under base change (in the ring-hom sense): if `R → T`
-is a local iso, the base change `S → S ⊗[R] T` is also a local iso. -/
-lemma _root_.RingHom.IsLocalIso.isStableUnderBaseChange :
-    RingHom.IsStableUnderBaseChange (fun {_ _} _ _ f => f.IsLocalIso) := by
-  refine RingHom.IsStableUnderBaseChange.mk RingHom.IsLocalIso.respectsIso ?_
-  intro R S T _ _ _ _ _ hRT
-  rw [RingHom.isLocalIso_algebraMap] at hRT ⊢
-  letI : Algebra.IsLocalIso R T := hRT
-  exact Algebra.IsLocalIso.baseChange S
-
-/-- The morphism property `RingHom.IsLocalIso` is stable under cobase change.
-
-Strategy: convert the pushout square in `CommRingCat` to an `Algebra.IsPushout`,
-then use `Algebra.IsLocalIso.baseChange` to transport the local iso structure
-through the iso `A' ⊗[A] B ≃ B'`. -/
-instance isLocalIso_isStableUnderCobaseChange :
-    (RingHom.toMorphismProperty RingHom.IsLocalIso).IsStableUnderCobaseChange := by
-  rw [show (RingHom.toMorphismProperty RingHom.IsLocalIso) =
-      RingHom.toMorphismProperty (fun {_ _} _ _ f => f.IsLocalIso) from rfl,
-    RingHom.isStableUnderCobaseChange_toMorphismProperty_iff]
-  exact RingHom.IsLocalIso.isStableUnderBaseChange
-
-/-- The morphism property `RingHom.IsLocalIso` is stable under composition. This
-follows from `Algebra.IsLocalIso.trans`. -/
-instance isLocalIso_isStableUnderComposition :
-    (RingHom.toMorphismProperty RingHom.IsLocalIso).IsStableUnderComposition where
-  comp_mem f g hf hg := by
-    show (g.hom.comp f.hom).IsLocalIso
-    exact hg.comp hf
-
 /-- Helper for the descent of a partition of unity from `S` to `S₀`. Given an `R`-algebra
 iso `e : S ≃ₐ[R] R ⊗[R₀et] S₀et`, an injective inclusion `R₀ → R` of an `R₀et`-subalgebra
 of `R`, and a flat `R₀et`-module `S₀et`, the map `x ↦ e.symm (cancelBaseChange (1 ⊗ x))`
