@@ -1,0 +1,255 @@
+\chapter{Henselian pair for étale algebras over henselian local rings}
+
+This chapter formalises the headline statement underpinning the
+Stacks~04GG / 09XK ``Henselian pair'' fragment used throughout
+\S3 (étale-over-strictly-henselian) of the project: for $A$ a
+henselian local ring and $B$ a \emph{finite} étale $A$-algebra,
+the pair $(B, \mathfrak m \cdot B)$ is a Henselian ring.
+
+The Mathlib class \texttt{HenselianRing R I} (where $I$ is an
+explicit ideal of $R$, asserting $I \subseteq \mathrm{jacobson}\,R$
+and the Hensel-lift property for monic polynomials with simple
+roots mod $I$) is exactly the predicate of a Henselian pair in
+the sense of \cite[Tag~09XD]{stacks}. We therefore do not introduce
+a new \texttt{HenselianPair} class; the headline statement is
+phrased as a \texttt{HenselianRing} instance.
+
+\emph{Why the finiteness hypothesis is essential.} The iter-053
+prover identified that omitting \texttt{[Module.Finite A B]}
+makes the statement mathematically false: Mathlib's class
+\texttt{Algebra.Etale} (= \texttt{FormallyEtale + FinitePresentation})
+admits localisations via
+\texttt{Algebra.Etale.of\_isLocalizationAway}, so for any
+$r \in \mathfrak m$ the étale algebra $B := A[1/r]$ has
+$\mathfrak m \cdot B = \langle 1 \rangle$ (since $r$ becomes a
+unit), violating $\mathfrak m \cdot B \subseteq
+\mathrm{jacobson}\,B$. Concrete witness:
+$A = \mathbb{Z}_p$, $r = p$, $B = \mathbb{Q}_p$. The localisation
+$B = A[1/r]$ is not \texttt{Module.Finite} over $A$ in general
+($\mathbb{Q}_p$ has uncountable $\mathbb{Z}_p$-dimension), so the
+finiteness hypothesis excludes the counterexample family. The
+corrected hypothesis matches the standard Stacks formulation.
+
+\section{Headline statement}
+
+\begin{theorem}\leanok
+[Stacks 04GG / 09XK; henselian-pair fragment]
+\label{thm:henselianRing-map-maximalIdeal}
+\lean{Algebra.Etale.henselianRing_map_maximalIdeal}
+Let $A$ be a henselian local ring with maximal ideal $\mathfrak m$,
+and let $B$ be a finite étale $A$-algebra (i.e.\ an étale
+$A$-algebra that is also finite as an $A$-module). Set
+$\mathfrak m \cdot B$ to be the image ideal of $\mathfrak m$
+under $A \to B$. Then $(B, \mathfrak m \cdot B)$ is a Henselian
+pair, i.e.\
+\[
+  \mathfrak m \cdot B \subseteq \mathrm{jacobson}\,B
+\]
+and for every monic $f \in B[Y]$ together with $a_0 \in B$ such
+that $f(a_0) \in \mathfrak m \cdot B$ and $f'(a_0)$ is a unit
+in $B / \mathfrak m \cdot B$, there exists $a \in B$ with
+$f(a) = 0$ and $a - a_0 \in \mathfrak m \cdot B$.
+\end{theorem}
+
+The statement is decomposed in Lean as the two \texttt{HenselianRing}
+field witnesses: \texttt{jac} (Jacobson-radical containment) and
+\texttt{is\_henselian} (Hensel lift).
+
+\section{Jacobson containment}
+
+\begin{lemma}[Jacobson containment]
+\label{lem:henselianPair-jac}
+Let $A$ be a henselian local ring with maximal ideal $\mathfrak m$
+and $B$ a finite étale $A$-algebra. Then
+$\mathfrak m \cdot B \subseteq \mathrm{jacobson}\,B$.
+\end{lemma}
+
+\begin{proof}
+The proof reduces to the standard ``integral $+$ local base''
+argument that, in a finite extension of a local ring, every
+maximal of the extension contracts to the unique maximal of the
+base.
+
+Let $\mathfrak n \subset B$ be any maximal ideal and set
+$\mathfrak p := \mathfrak n \cap A$. Since $B$ is finite over
+$A$ as an $A$-module, the structure map $A \to B$ is integral
+(\texttt{Algebra.IsIntegral.of\_finite}). Integral going-up
+(Stacks~00GU, Mathlib's
+\texttt{Ideal.isMaximal\_comap\_of\_isIntegral\_of\_isMaximal})
+forces $\mathfrak p$ to be maximal in $A$. Since $A$ is local,
+$\mathfrak p = \mathfrak m$, hence $\mathfrak m \subseteq
+\mathfrak n \cap A$, which by
+\texttt{Ideal.map\_le\_iff\_le\_comap} gives
+$\mathfrak m \cdot B \subseteq \mathfrak n$. Since $\mathfrak n$
+was arbitrary,
+$\mathfrak m \cdot B \subseteq \bigcap_{\mathfrak n}
+\mathfrak n = \mathrm{jacobson}\,B$, which is
+\texttt{Ideal.jacobson} $\bot$ via
+\texttt{Ring.jacobson\_eq\_sInf\_isMaximal} and
+\texttt{Ideal.jacobson\_bot}.
+\end{proof}
+
+The Mathlib hooks confirmed available (iter-054 plan survey):
+
+\begin{itemize}
+\item \texttt{Algebra.IsIntegral.of\_finite}: gives integrality
+  from \texttt{Module.Finite A B}.
+\item \texttt{Ideal.isMaximal\_comap\_of\_isIntegral\_of\_isMaximal}
+  in \texttt{Mathlib/RingTheory/Ideal/GoingUp.lean}: the going-up
+  step turning ``$\mathfrak n$ maximal in $B$'' into
+  ``$\mathfrak n \cap A$ maximal in $A$''.
+\item \texttt{IsLocalRing.eq\_maximalIdeal} (or equivalent):
+  uniqueness of the maximal ideal in $A$.
+\item \texttt{Ideal.map\_le\_iff\_le\_comap}: standard adjunction.
+\item \texttt{Ring.jacobson\_eq\_sInf\_isMaximal} +
+  \texttt{Ideal.jacobson\_bot}: glue the per-maximal containment
+  into the Jacobson statement.
+\end{itemize}
+
+\section{Hensel lift via residue-product reduction}
+
+\begin{lemma}[Stacks 0DXB; Hensel lift for étale algebras]
+\label{lem:henselianPair-is-henselian}
+Under the hypotheses of \cref{thm:henselianRing-map-maximalIdeal},
+let $f \in B[Y]$ be monic and $a_0 \in B$ such that
+$f(a_0) \in \mathfrak m \cdot B$ and the image of $f'(a_0)$ in
+$B / \mathfrak m \cdot B$ is a unit. Then there exists $a \in B$
+with $f(a) = 0$ and $a - a_0 \in \mathfrak m \cdot B$.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The Stacks~0DXB recipe splits into three stages.
+
+\emph{Stage 1 (residue projection).} By
+\cref{thm:henselianRing-map-maximalIdeal}'s base change setup,
+$B / \mathfrak m B$ is étale over $k := A / \mathfrak m$. By the
+structure theorem \cite[Tag~00U7]{stacks} (Mathlib:
+\texttt{Algebra.Etale.iff\_exists\_algEquiv\_prod}), there exists
+a finite index set $I$ and finite separable field extensions
+$\{k_i\}_{i \in I}$ of $k$ together with an isomorphism
+$\mathrm{eqv} : B / \mathfrak m B \xrightarrow{\sim} \prod_{i \in I} k_i$.
+
+\emph{Stage 2 (Newton iteration).} The hypothesis that
+$f'(a_0)$ is a unit mod $\mathfrak m B$, combined with
+\cref{lem:henselianPair-jac} ($\mathfrak m B \subseteq
+\mathrm{jacobson}\,B$), implies $f'(a_0)$ is already a unit in
+$B$ (Nakayama). Define recursively
+\[
+  a_{n+1} := a_n - \frac{f(a_n)}{f'(a_n)}.
+\]
+A standard computation shows $f(a_{n+1}) \in (\mathfrak m B)^{2^{n+1}}$
+and $a_{n+1} - a_n \in (\mathfrak m B)^{2^n}$.
+
+\emph{Stage 3 (convergence).} The sequence $\{a_n\}$ is Cauchy
+in the $\mathfrak m B$-adic topology. To conclude that the limit
+$a \in B$ exists and is a true root of $f$, we use that $B$ is
+$\mathfrak m B$-adically separated and complete. Separation follows
+from $\mathfrak m B \subseteq \mathrm{jacobson}\,B$ and the
+Krull intersection theorem applied to each connected component;
+completeness follows from $A$'s henselian-local property together
+with the étale-product structure of each $B / \mathfrak m^n B$
+(itself obtained by inductively Hensel-lifting the
+\cref{thm:henselianRing-map-maximalIdeal}-instance from $A / \mathfrak m^n$
+to $A / \mathfrak m^{n+1}$, which is the standard étale-lifting
+recipe \cite[Tag~04D1]{stacks}).
+
+The limit $a := \lim_n a_n$ then satisfies $f(a) = 0$ and
+$a - a_0 = \lim_n (a_n - a_0) \in \mathfrak m B$.
+\end{proof}
+
+\emph{Mathlib-formalisation note.} The Stage~2 Newton iteration is
+the same calculation underlying \texttt{HenselianLocalRing} (Mathlib's
+\texttt{Mathlib/RingTheory/Henselian.lean}); the Stage~3 convergence
+argument is the non-trivial generalisation from local rings to
+henselian pairs. A cleaner alternative proof, more amenable to
+direct Lean formalisation, uses the
+infinitesimal-lifting characterisation of étale algebras
+(\texttt{Algebra.FormallySmooth.exists\_algHom\_of\_isNilpotent}):
+given the residue-product decomposition $B / \mathfrak m B \simeq
+\prod k_i$, the lifts of $a_0$ to each $B / (\mathfrak m B)^n$ are
+constructed inductively via the infinitesimal lift, and the
+inverse limit is an element of $B$ because $B$ is itself
+$\mathfrak m B$-adically separated.
+
+\section{Downstream consumers}
+
+\Cref{thm:henselianRing-map-maximalIdeal} feeds the following
+in-scope sorries (all currently typed sorries gated on this
+instance). \emph{However}, because the corrected hypothesis
+requires \texttt{Module.Finite A B}, the consumers in
+\texttt{StrictlyHenselian.lean} and
+\texttt{HenselianIdempotentLift.lean} — which currently work
+with a general étale $B$ — will need a localisation step before
+applying the instance. Specifically, for each maximal $\mathfrak
+n$ of $B$ contracting to $\mathfrak m$, Stacks~04GG gives that
+the localisation $B_{\mathfrak n}$ is finite étale over $A$;
+applying \cref{thm:henselianRing-map-maximalIdeal} to
+$B_{\mathfrak n}$ then gives the Henselian-pair property at
+each fibre. Gluing the per-fibre lifts via the
+orthogonal-idempotent decomposition closes the consumer.
+
+\begin{itemize}
+\item \texttt{Proetale/Mathlib/RingTheory/Etale/HenselianIdempotentLift.lean}
+  (\texttt{exists\_completeOrthogonalIdempotents\_lift\_of\_henselian},
+  L160): for each $i$, the naive lift $e_0 i$ lives in $B$; the
+  Hensel-lifting of $X^2 - X$ at $e_0 i$ is performed in the
+  finite-étale localisation $B_{\mathfrak n_i}$ at the
+  corresponding maximal (where $B_{\mathfrak n_i}$ \emph{is}
+  finite over $A$ by Stacks~04GG); the lifted idempotents in
+  $B_{\mathfrak n_i}$ then patch back into idempotents in $B$
+  via the residue-decomposition isomorphism. The derivative
+  $2 e_0 i - 1$ is a unit mod $\mathfrak m B$ since under
+  $\mathrm{eqv}$ it maps to $2 \cdot \pi_i - 1$ whose
+  $i$-coordinate is $1$ and other coordinates are $-1$, all
+  units.
+\item \texttt{Proetale/Mathlib/RingTheory/Etale/StrictlyHenselian.lean}
+  L682 (\texttt{exists\_idempotent\_lift\_isolating\_at\_maximal}'s
+  horizontal-killing residual): the Stacks~04GH local-ness of each
+  idempotent factor $B / (1 - e_{\mathrm{Lift}} i) B$ becomes
+  available once the idempotents are true idempotents in $B$ —
+  obtained by the same localise-then-glue pattern as above.
+\item \texttt{StrictlyHenselian.lean} L1767 (\texttt{h\_polylift}
+  inside \texttt{surjective\_standardEtalePair\_lift\_of\_etale}'s
+  \S5 Gap A): the localisation $B_b = B[1/b]$ at the isolated
+  idempotent is by construction a localisation at a single
+  fibre, and so finite étale over $A$ at that fibre by
+  Stacks~04GG; \cref{thm:henselianRing-map-maximalIdeal} then
+  applies directly to $(B_b, \mathfrak m \cdot B_b)$.
+\item \texttt{StrictlyHenselian.lean} L1814 (\S5 Gap B
+  étale-Hensel-Nakayama close): same setting as L1767; the
+  Hensel-lift in the finite-étale $B_b$ absorbs the $\mathfrak
+  m B_b$-residual into a true algebra-image element of $B_b$.
+\end{itemize}
+
+The four consumer-wiring steps each split into (a) showing
+\texttt{Module.Finite A B'} for the localised / fibre-restricted
+$B'$, and (b) applying \cref{thm:henselianRing-map-maximalIdeal}.
+Step (a) is the genuinely new piece introduced by the iter-053
+counterexample finding; it requires the Mathlib infrastructure
+\texttt{Algebra.Etale.localisation\_finite\_at\_maximal} or
+equivalent (Stacks 04GG localised form). The iter-055+ planner
+should scope this as a separate Mathlib helper before assigning
+the wiring lanes.
+
+\section{Implementation status}
+
+\begin{itemize}
+\item iter-052: opened the file
+  \texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean}
+  with the headline instance signature in place (typed
+  structural sorries).
+\item iter-053: prover identified that the planner-authored
+  signature is mathematically false (counterexample via
+  \texttt{Algebra.Etale.of\_isLocalizationAway}); recorded the
+  finding in \texttt{task\_results/}.
+\item iter-054 plan: dispatched the \texttt{refactor} subagent
+  (slug \texttt{amend-henselianpair-sig}) to add
+  \texttt{[Module.Finite A B]} to the signature; the Lean file
+  is now mathematically sound. This chapter restated to match.
+\item iter-054 prover: targets closing \texttt{jac} sorry-free
+  per the mechanical integral-going-up recipe above.
+\item iter-055+: closes \texttt{is\_henselian} (substantive
+  Stacks~0DXB Newton iteration), then wires both fields into
+  the four \S3-cluster consumers via the localise-then-glue
+  pattern.
+\end{itemize}

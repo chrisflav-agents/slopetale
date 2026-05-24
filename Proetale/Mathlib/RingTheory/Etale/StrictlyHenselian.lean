@@ -14,7 +14,9 @@ import Mathlib.RingTheory.Ideal.Over
 import Mathlib.RingTheory.Ideal.Quotient.Operations
 import Mathlib.RingTheory.LocalRing.ResidueField.Basic
 import Mathlib.RingTheory.LocalRing.ResidueField.Ideal
+import Proetale.Mathlib.RingTheory.Etale.HenselianIdempotentLift
 import Proetale.Mathlib.RingTheory.Henselian
+import Proetale.Mathlib.RingTheory.Localization.AtIdempotent
 
 /-!
 # Étale algebras over strictly Henselian local rings
@@ -528,33 +530,45 @@ an index `i_n`; the orthogonal idempotent `Pi.single i_n 1 ∈ ∏ k_i` lifts to
 `B → B/mB`. The lift is idempotent mod `mB` and projects to `1` in the
 `n`-factor (hence `e ∉ n`).
 
+**iter-046 strengthening.** The fourth conjunct
+`∀ p, p.IsPrime → ¬(m·B ≤ p) → e ∈ p` is the horizontal-killing
+clause: `e` is forced to vanish on every prime of `B` not lying above
+`m`. Without it, the iter-045 helper `m_map_le_jacobson_of_etale_isolating`
+is unsound (counterexample: `A = Z_(p)`, `B = Z_(p) × Q`,
+`n = (p) × Q`, `e = 1 = (1,1)`; the horizontal max `Z_(p) × 0` is not
+above `m` and `e` survives in it). With the strengthening, the
+`m_map_le_jacobson_…` body closes via a pull-back chase. The new
+conjunct is left as a separate typed sorry — the rigorous proof needs
+Hensel lifting of idempotents over an étale-over-henselian-local
+algebra (Stacks 0DXB fragment).
+
 Left as a typed sorry — the explicit `i_n` extraction via the bijection
 `{primes of B over m} ↔ I` is the residual structural gap; the rest of Stacks
 00U7 (Step 5 vanishing, Step 8 surjectivity) is consumed downstream. -/
 private lemma exists_idempotent_lift_isolating_at_maximal
-    {A B : Type u} [CommRing A] [IsLocalRing A]
+    {A B : Type u} [CommRing A] [HenselianLocalRing A]
     [CommRing B] [Algebra A B] [Algebra.Etale A B]
     (n : Ideal B) [n.IsMaximal]
     (_h : n.comap (algebraMap A B) = IsLocalRing.maximalIdeal A) :
     ∃ e : B, e ∉ n ∧
       (e * e - e) ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B) ∧
       (∀ x : B, x ∈ n →
-        e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B)) := by
+        e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B)) ∧
+      (∀ p : Ideal B, p.IsPrime →
+        ¬((IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤ p) →
+        e ∈ p) := by
   classical
   -- `mB := m · B ≤ n` (from `n.comap = m`).
   have hmB_le_n :
       ((IsLocalRing.maximalIdeal A).map (algebraMap A B) : Ideal B) ≤ n :=
     Ideal.map_le_iff_le_comap.mpr _h.ge
-  -- Step 1. `Bk := (A/m) ⊗[A] B`. By `iff_exists_algEquiv_prod`,
-  -- `Bk ≃ ∀ i, kI i` for some finite family of field extensions of `A/m`.
-  haveI hBkEt : Algebra.Etale (IsLocalRing.ResidueField A)
-      (TensorProduct A (IsLocalRing.ResidueField A) B) :=
-    Algebra.Etale.baseChange A B (IsLocalRing.ResidueField A)
-  obtain ⟨I, hIfin, kI, hKfield, hKalg, eqv, _hKsep⟩ :=
-    (Algebra.Etale.iff_exists_algEquiv_prod (K := IsLocalRing.ResidueField A)
-      (A := TensorProduct A (IsLocalRing.ResidueField A) B)).mp inferInstance
-  letI : Finite I := hIfin
-  letI : Fintype I := Fintype.ofFinite I
+  -- Step 1 (iter-048 refactor). Destructure the new Hensel-idempotent-lift
+  -- helper to obtain the residue decomposition `Bk ≃ ∀ i, kI i` together
+  -- with a TRUE complete orthogonal idempotent system `eLift : I → B`
+  -- lifting `{Pi.single i 1}_i`.
+  obtain ⟨I, hIfin, _hIdec, kI, hKfield, hKalg, eqv, eLift, hCop, hLift⟩ :=
+    Algebra.Etale.exists_completeOrthogonalIdempotents_lift_of_henselian A B
+  letI : Fintype I := hIfin
   letI : ∀ i, Field (kI i) := hKfield
   letI : ∀ i, Algebra (IsLocalRing.ResidueField A) (kI i) := hKalg
   -- Step 2. The `A`-algebra map `inj : B → Bk` is surjective
@@ -597,89 +611,151 @@ private lemma exists_idempotent_lift_isolating_at_maximal
           B ⧸ ((IsLocalRing.maximalIdeal A).map (algebraMap A B))) = 0 :=
         (Ideal.Quotient.eq_zero_iff_mem).mpr hx
       rw [← hφπ, h2, map_zero]
-  -- Step 4. Per-index lifts: for each `i ∈ I`, lift `eqv.symm (Pi.single i 1)`
-  -- to `f i ∈ B` via the surjection `inj`.
-  choose f hf using fun i : I => hinj_surj (eqv.symm (Pi.single i 1))
-  -- Each `f i` is idempotent modulo `mB`.
-  have h_fi_idem : ∀ i, (f i) * (f i) - (f i) ∈
-      ((IsLocalRing.maximalIdeal A).map (algebraMap A B) : Ideal B) := by
-    intro i
-    rw [← hker]
-    rw [map_sub, map_mul, hf i]
-    have hidem : eqv.symm (Pi.single i (1 : kI i)) *
-        eqv.symm (Pi.single i (1 : kI i)) =
-          eqv.symm (Pi.single i (1 : kI i)) := by
-      rw [← map_mul, ← Pi.single_mul, one_mul]
-    rw [hidem, sub_self]
-  -- Telescoping sum: `1 - Σ_i f i ∈ mB`.
-  have h_sum_one : ((1 : B) - ∑ i, f i) ∈
-      ((IsLocalRing.maximalIdeal A).map (algebraMap A B) : Ideal B) := by
-    rw [← hker]
-    rw [map_sub, map_sum, map_one]
-    have hSP : (∑ i, eqv.symm (Pi.single i (1 : kI i))) = (1 : _) := by
-      rw [← map_sum]
-      have : ∑ i : I, Pi.single i (1 : kI i) = (1 : ∀ i, kI i) := by
-        ext j
-        rw [Finset.sum_apply]
-        simp
-      rw [this, map_one]
-    simp_rw [hf]
-    rw [hSP, sub_self]
-  -- Step 5. Pick `i_n` with `f i_n ∉ n`. If all `f i ∈ n`, then
-  -- `Σ f i ∈ n`, hence `1 = (1 - Σ f i) + Σ f i ∈ mB + n ⊆ n`, contradiction.
-  have hex : ∃ i, f i ∉ n := by
+  -- Step 4. Pick `i_n` with `eLift i_n ∉ n`. If all `eLift i ∈ n`, then
+  -- `1 = Σ eLift i ∈ n`, contradiction.
+  have hex : ∃ i, eLift i ∉ n := by
     by_contra hall_neg
-    have hall_neg : ∀ i, f i ∈ n := fun i => by
-      by_contra hf_i; exact hall_neg ⟨i, hf_i⟩
-    have hsum_in : ∑ i, f i ∈ n := n.sum_mem fun i _ => hall_neg i
-    have h_diff_in : ((1 : B) - ∑ i, f i) ∈ n := hmB_le_n h_sum_one
-    have h1mem : (1 : B) ∈ n := by
-      have hadd : (1 : B) - (∑ i, f i) + (∑ i, f i) ∈ n :=
-        n.add_mem h_diff_in hsum_in
-      simpa using hadd
+    have hall_neg : ∀ i, eLift i ∈ n := fun i => by
+      by_contra he_i; exact hall_neg ⟨i, he_i⟩
+    have hsum_in : ∑ i, eLift i ∈ n := n.sum_mem fun i _ => hall_neg i
+    have h1mem : (1 : B) ∈ n := by rw [← hCop.complete]; exact hsum_in
     exact ‹n.IsMaximal›.ne_top ((Ideal.eq_top_iff_one n).mpr h1mem)
   obtain ⟨i_n, hi_n⟩ := hex
-  refine ⟨f i_n, hi_n, h_fi_idem i_n, ?_⟩
-  -- Isolation: for `x ∈ n`, `f i_n * x ∈ m · B`.
-  -- Proof: compute `eqv (inj (f i_n * x)) = Pi.single i_n ((eqv (inj x)) i_n)`,
-  -- then show `(eqv (inj x)) i_n = 0` by contradiction. If the component were
-  -- nonzero (hence a unit in the field `kI i_n`), we could lift its inverse to
-  -- a witness `v ∈ B` whose product with `f i_n * x` reproduces `f i_n` modulo
-  -- `m · B`, forcing `f i_n ∈ n` and contradicting `hi_n`.
-  intro x hx
-  rw [← hker]
-  -- Compute `eqv (inj (f i_n * x)) = Pi.single i_n ((eqv (inj x)) i_n)`.
-  have hcomp : eqv (inj (f i_n * x)) = Pi.single i_n ((eqv (inj x)) i_n) := by
-    rw [map_mul (inj : B →ₐ[A] _), map_mul (eqv : _ ≃ₐ[_] _), hf i_n,
-      AlgEquiv.apply_symm_apply, ← Pi.single_mul_left, one_mul]
-  -- Show `(eqv (inj x)) i_n = 0`.
-  have h_zero : (eqv (inj x)) i_n = 0 := by
-    by_contra hne
-    have hu_unit : IsUnit ((eqv (inj x)) i_n) := isUnit_iff_ne_zero.mpr hne
-    obtain ⟨u_inv, hu_inv⟩ := hu_unit.exists_left_inv
-    obtain ⟨v, hv⟩ := hinj_surj (eqv.symm (Pi.single i_n u_inv))
-    -- `eqv (inj (v * (f i_n * x))) = Pi.single i_n 1`.
-    have hcomp2 : eqv (inj (v * (f i_n * x))) = Pi.single i_n 1 := by
-      rw [map_mul (inj : B →ₐ[A] _), map_mul (eqv : _ ≃ₐ[_] _), hv,
-        AlgEquiv.apply_symm_apply, hcomp, ← Pi.single_mul, hu_inv]
-    -- Hence `inj (v * (f i_n * x)) = inj (f i_n)`.
-    have h_eq_inj : inj (v * (f i_n * x)) = inj (f i_n) := by
-      apply (eqv : _ ≃ₐ[_] _).injective
-      rw [hcomp2, hf i_n, AlgEquiv.apply_symm_apply]
-    -- So `v * (f i_n * x) - f i_n ∈ m · B ⊆ n`.
-    have h_diff_in_mB : v * (f i_n * x) - f i_n ∈
-        ((IsLocalRing.maximalIdeal A).map (algebraMap A B) : Ideal B) := by
-      rw [← hker, map_sub, h_eq_inj, sub_self]
-    have h_diff_in_n : v * (f i_n * x) - f i_n ∈ n := hmB_le_n h_diff_in_mB
-    -- And `v * (f i_n * x) ∈ n` since `x ∈ n`.
-    have h_prod_in_n : v * (f i_n * x) ∈ n :=
-      n.mul_mem_left _ (n.mul_mem_left _ hx)
-    -- Therefore `f i_n ∈ n`, contradicting `hi_n`.
-    apply hi_n
-    have hdiff := n.sub_mem h_prod_in_n h_diff_in_n
-    simpa using hdiff
-  apply (eqv : _ ≃ₐ[_] _).injective
-  rw [hcomp, h_zero, Pi.single_zero, map_zero]
+  refine ⟨eLift i_n, hi_n, ?_, ?_, ?_⟩
+  · -- Idempotent conjunct: `eLift i_n * eLift i_n - eLift i_n ∈ m · B`.
+    -- Since `eLift i_n` is a true idempotent, the difference is zero.
+    have : eLift i_n * eLift i_n - eLift i_n = 0 := by
+      rw [(hCop.idem i_n).eq, sub_self]
+    rw [this]; exact Submodule.zero_mem _
+  · -- Isolation: for `x ∈ n`, `eLift i_n * x ∈ m · B`.
+    intro x hx
+    rw [← hker]
+    -- `eqv (inj (eLift i_n * x)) = Pi.single i_n ((eqv (inj x)) i_n)`.
+    have hcomp : eqv (inj (eLift i_n * x)) = Pi.single i_n ((eqv (inj x)) i_n) := by
+      rw [map_mul (inj : B →ₐ[A] _), map_mul (eqv : _ ≃ₐ[_] _), hLift i_n,
+        ← Pi.single_mul_left, one_mul]
+    -- Show `(eqv (inj x)) i_n = 0`.
+    have h_zero : (eqv (inj x)) i_n = 0 := by
+      by_contra hne
+      have hu_unit : IsUnit ((eqv (inj x)) i_n) := isUnit_iff_ne_zero.mpr hne
+      obtain ⟨u_inv, hu_inv⟩ := hu_unit.exists_left_inv
+      obtain ⟨v, hv⟩ := hinj_surj (eqv.symm (Pi.single i_n u_inv))
+      have hcomp2 : eqv (inj (v * (eLift i_n * x))) = Pi.single i_n 1 := by
+        rw [map_mul (inj : B →ₐ[A] _), map_mul (eqv : _ ≃ₐ[_] _), hv,
+          AlgEquiv.apply_symm_apply, hcomp, ← Pi.single_mul, hu_inv]
+      have h_eq_inj : inj (v * (eLift i_n * x)) = inj (eLift i_n) := by
+        apply (eqv : _ ≃ₐ[_] _).injective
+        rw [hcomp2, hLift i_n]
+      have h_diff_in_mB : v * (eLift i_n * x) - eLift i_n ∈
+          ((IsLocalRing.maximalIdeal A).map (algebraMap A B) : Ideal B) := by
+        rw [← hker, map_sub, h_eq_inj, sub_self]
+      have h_diff_in_n : v * (eLift i_n * x) - eLift i_n ∈ n := hmB_le_n h_diff_in_mB
+      have h_prod_in_n : v * (eLift i_n * x) ∈ n :=
+        n.mul_mem_left _ (n.mul_mem_left _ hx)
+      apply hi_n
+      have hdiff := n.sub_mem h_prod_in_n h_diff_in_n
+      simpa using hdiff
+    apply (eqv : _ ≃ₐ[_] _).injective
+    rw [hcomp, h_zero, Pi.single_zero, map_zero]
+  · -- Horizontal-killing conjunct (iter-046). For any prime `p` of `B` not
+    -- containing `m · B`, show `eLift i_n ∈ p`.
+    --
+    -- iter-048 status: the naive lift `f i_n` of the previous body has been
+    -- replaced by the TRUE orthogonal idempotent `eLift i_n` from the
+    -- new Hensel-idempotent-lift helper. This gives genuine orthogonality
+    -- `eLift i_n * eLift j = 0` for `j ≠ i_n` (via `hCop.ortho`) and
+    -- completeness `Σ eLift i = 1` (via `hCop.complete`).
+    --
+    -- The remaining gap: deriving `eLift i_n ∈ p` from orthogonality
+    -- requires showing that each factor `B / (1 - eLift i_n) · B` is
+    -- **local** with maximal ideal `m · B / (1 - eLift i_n) · B`. This
+    -- local-ness is the substantive content of Stacks 0DXB beyond the
+    -- bare idempotent lift, and is not derivable from
+    -- `CompleteOrthogonalIdempotents` alone. The iter-048 directive's
+    -- sketch ("Build a residue map `B/p ↠ k_{i_n}`") implicitly assumes
+    -- this local-ness — without it, the would-be residue map fails to
+    -- factor through `B/p`.
+    --
+    -- Pending the étale-local-decomposition Mathlib API (Stacks 04GH
+    -- product-decomposition form) or an extension of the new helper's
+    -- conclusion to bundle horizontal-killing alongside orthogonality.
+    sorry
+
+/-- **iter-045 shared helper.** For `A` henselian local + `B` étale over `A` + `n`
+maximal over `m = maximalIdeal A`, in any localization `Bb = B[1/b]` where the
+witness `b` factors through an `n`-isolating idempotent `e` (i.e. `e ∣ b` with
+`e` satisfying the conclusion of `exists_idempotent_lift_isolating_at_maximal`),
+the extension `m·Bb` is contained in the Jacobson radical of `Bb`.
+
+This is the **shared structural fact** behind both `aeval_f_eq_zero_in_localizationAway_of_etale`
+(conclusion (iii)) and `surjective_standardEtalePair_lift_of_etale` (the §5
+Nakayama body). The proof would go: every maximal ideal `q` of `Bb` pulls back
+to a prime `p` of `B` not containing `b`. Since `e ∣ b`, `e ∉ p`. The
+`e`-isolation `_he_isolate` then forces `p ⊆ n`: for any `x ∈ p`, either
+`e ∈ p` (excluded) or `x ∈ n` (after multiplying both sides by `e` and using
+that `e · x ∈ m·B ⊆ n`). So `p ⊆ n`, hence `p = n` if `p` is itself maximal
+over `m`; otherwise `p` corresponds to a non-`m`-prime of `B` and the
+contradiction with `q` maximal comes from the étale-going-up that forces
+`m ⊆ p` (using `A` local + `Algebra.Etale.iff_exists_algEquiv_prod` + étale
+goes up).
+
+**iter-046 fix.** Added hypothesis `_he_horizontal`: `e` lies in every
+prime of `B` not above `m`. With this, the body closes via a maximal-
+ideal pull-back chase: any maximal `q ⊆ Bb` pulls back to a prime
+`p ⊆ B` with `b ∉ p`; since `e ∣ b`, `e ∉ p`; contrapositive of
+`_he_horizontal` then forces `m·B ⊆ p`, hence `m·Bb ⊆ q`. -/
+private lemma m_map_le_jacobson_of_etale_isolating
+    {A B : Type u} [CommRing A] [HenselianLocalRing A]
+    [CommRing B] [Algebra A B] [Algebra.Etale A B]
+    (n : Ideal B) [n.IsMaximal]
+    (_h : n.comap (algebraMap A B) = IsLocalRing.maximalIdeal A)
+    (e : B)
+    (_he_idem : (e * e - e) ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B))
+    (_he_notmem : e ∉ n)
+    (_he_isolate : ∀ x : B, x ∈ n →
+      e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B))
+    (_he_horizontal : ∀ p : Ideal B, p.IsPrime →
+      ¬((IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤ p) →
+      e ∈ p)
+    (b : B) (_hb_n : b ∉ n) (_he_div_b : e ∣ b)
+    (Bb : Type u) [CommRing Bb] [Algebra B Bb]
+    [IsLocalization.Away b Bb] [Algebra A Bb] [IsScalarTower A B Bb] :
+    ((IsLocalRing.maximalIdeal A).map (algebraMap A Bb) : Ideal Bb) ≤
+      Ideal.jacobson (⊥ : Ideal Bb) := by
+  -- Goal: m·Bb ≤ jacobson ⊥. Show m·Bb ≤ q for every maximal q ⊆ Bb.
+  rw [Ideal.jacobson]
+  refine le_sInf ?_
+  rintro q ⟨_, hq_max⟩
+  -- Let p be the pull-back of q under algebraMap B Bb.
+  set p : Ideal B := q.comap (algebraMap B Bb) with hp_def
+  have hp_prime : p.IsPrime := hq_max.isPrime.comap _
+  -- algebraMap B Bb sends b to a unit; hence b ∉ p.
+  have hbU : IsUnit (algebraMap B Bb b) := IsLocalization.Away.algebraMap_isUnit b
+  have hq_ne_top : q ≠ ⊤ := hq_max.ne_top
+  have hb_notin_p : b ∉ p := by
+    intro hbmem
+    -- hbmem : algebraMap B Bb b ∈ q
+    apply hq_ne_top
+    exact Ideal.eq_top_of_isUnit_mem _ hbmem hbU
+  -- e ∣ b ⇒ e ∉ p (else b = e·c ∈ p).
+  obtain ⟨c, hbec⟩ := _he_div_b
+  have he_notin_p : e ∉ p := by
+    intro he
+    apply hb_notin_p
+    rw [hbec]
+    exact p.mul_mem_right c he
+  -- Contrapositive of _he_horizontal: e ∉ p ⇒ m·B ⊆ p.
+  have hmB_le_p :
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A B) : Ideal B) ≤ p := by
+    by_contra hle
+    exact he_notin_p (_he_horizontal p hp_prime hle)
+  -- Rewrite m·Bb = (m·B).map(algebraMap B Bb).
+  have hmap_eq :
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A Bb) : Ideal Bb) =
+        ((IsLocalRing.maximalIdeal A).map (algebraMap A B)).map (algebraMap B Bb) := by
+    rw [Ideal.map_map, ← IsScalarTower.algebraMap_eq A B Bb]
+  rw [hmap_eq]
+  exact Ideal.map_le_iff_le_comap.mpr hmB_le_p
 
 /-- **Stacks 04GF analogue (iter-039).** If `A` is a Henselian local ring,
 `C` is étale over `A`, and `q ⊆ C` is a maximal ideal lying over
@@ -762,7 +838,10 @@ private lemma aeval_f_eq_zero_in_localizationAway_of_etale
       (e * e - e) ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B))
     (_he_notmem : e ∉ n)
     (_he_isolate : ∀ x : B, x ∈ n →
-      e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B)) :
+      e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B))
+    (_he_horizontal : ∀ p : Ideal B, p.IsPrime →
+      ¬((IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤ p) →
+      e ∈ p) :
     ∃ s_B : B, s_B ∉ n ∧
       ∀ (Bb : Type u) [CommRing Bb] [Algebra B Bb]
         [IsLocalization.Away
@@ -1293,13 +1372,39 @@ private lemma aeval_f_eq_zero_in_localizationAway_of_etale
             (Polynomial.eval β (f.derivative.map (algebraMap A B))) + δ := by
       rw [h_aeval_eq_eval, ← h_eval_β_lift, δ_def]; ring
     rw [h_aeval_decomp]
-    -- Residual sub-sorry (Acceptable-partial): `IsUnit (v + δ)` with `v` a unit
-    -- and `δ ∈ m.map (algebraMap A Bb)`. The classical proof needs
-    -- `m.map (algebraMap A Bb) ⊆ Jacobson Bb`, which holds in a local ring but
-    -- not in our `Bb` (a Zariski localization, generally not local). See the
-    -- iter-044 directive Step (e).6 for the route options (α / β / γ).
-    exact (sorry : IsUnit (algebraMap B Bb
-      (Polynomial.eval β (f.derivative.map (algebraMap A B))) + δ))
+    -- iter-045 close (iii): apply the shared Jacobson-containment helper
+    -- `m_map_le_jacobson_of_etale_isolating`. With `v + δ` where `v` is a unit
+    -- and `δ ∈ Jacobson Bb`, factor `v + δ = v * (1 + δ * v⁻¹)`; the second
+    -- factor is a unit by `Ideal.mem_jacobson_bot` (since `δ * v⁻¹ ∈ Jacobson`).
+    have hb_outer_notmem : efβ * (s_B * t_B) ∉ n := by
+      intro hmem
+      rcases ‹n.IsMaximal›.isPrime.mem_or_mem hmem with h1 | h2
+      · exact hb_notmem₀ h1
+      rcases ‹n.IsMaximal›.isPrime.mem_or_mem h2 with h2a | h2b
+      · exact hs_B_notmem h2a
+      · exact ht_B_notmem h2b
+    have he_div_b : e ∣ (efβ * (s_B * t_B)) := by
+      show e ∣
+        (e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * (s_B * t_B))
+      rw [mul_assoc]; exact dvd_mul_right _ _
+    have h_jacob :
+        ((IsLocalRing.maximalIdeal A).map (algebraMap A Bb) : Ideal Bb) ≤
+          Ideal.jacobson (⊥ : Ideal Bb) :=
+      m_map_le_jacobson_of_etale_isolating n _h e _he_idem _he_notmem _he_isolate
+        _he_horizontal (efβ * (s_B * t_B)) hb_outer_notmem he_div_b Bb
+    have h_δ_jacob : δ ∈ Ideal.jacobson (⊥ : Ideal Bb) := h_jacob h_δ_in_m
+    obtain ⟨u, hu⟩ := hfdβ_unit_Bb
+    let vinv : Bb := (u⁻¹ : Bbˣ).val
+    have hv_mul_inv : (u : Bb) * vinv = 1 := u.mul_inv
+    have h_one_plus : IsUnit (δ * vinv + 1) :=
+      (Ideal.mem_jacobson_bot.mp h_δ_jacob) _
+    have h_eq :
+        algebraMap B Bb (Polynomial.eval β (f.derivative.map (algebraMap A B))) + δ =
+          (u : Bb) * (δ * vinv + 1) := by
+      rw [← hu]
+      linear_combination -δ * hv_mul_inv
+    rw [h_eq]
+    exact u.isUnit.mul h_one_plus
 
 /-- **Helper B.3.a.i (sub-helper, Steps 1–6).** With `b := e · f'(β)` (the
 blueprint's choice, repaired from the iter-034 unsound `b := f'(β)`), the
@@ -1328,6 +1433,9 @@ private lemma exists_etale_witness_for_standardEtalePair
       (e * e - e) ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B) ∧
       (∀ x : B, x ∈ n →
         e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B)) ∧
+      (∀ p : Ideal B, p.IsPrime →
+        ¬((IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤ p) →
+        e ∈ p) ∧
       (e * Polynomial.eval β (f.derivative.map (algebraMap A B))) ∉ n ∧
       ∃ s_B : B, s_B ∉ n ∧
       ∀ (Bb : Type u) [CommRing Bb] [Algebra B Bb]
@@ -1339,15 +1447,16 @@ private lemma exists_etale_witness_for_standardEtalePair
             (IsLocalRing.maximalIdeal A).map (algebraMap A Bb) ∧
           Polynomial.aeval β' f = 0 ∧
           IsUnit (Polynomial.aeval β' f.derivative) := by
-  -- Step 1. Extract the strengthened idempotent lift.
-  obtain ⟨e, he_notmem, he_idem, he_isolate⟩ :=
+  -- Step 1. Extract the strengthened idempotent lift (iter-046: 5-tuple).
+  obtain ⟨e, he_notmem, he_idem, he_isolate, he_horizontal⟩ :=
     exists_idempotent_lift_isolating_at_maximal (A := A) (B := B) n h
   -- Step 2 (iter-042). Extract the §3 outer existential: `∃ s_B ∈ B \ n` plus
   -- the per-`Bb` Hensel descent in any `Bb [Away (e * f'(β) * s_B) Bb]`.
   obtain ⟨s_B, hs_B_notmem, hwit⟩ :=
     aeval_f_eq_zero_in_localizationAway_of_etale (A := A) (B := B)
-      n h β f hf hfβ hfdβ e he_idem he_notmem he_isolate
-  refine ⟨e, he_notmem, he_idem, he_isolate, ?_, s_B, hs_B_notmem, fun Bb _ _ _ _ _ => ?_⟩
+      n h β f hf hfβ hfdβ e he_idem he_notmem he_isolate he_horizontal
+  refine ⟨e, he_notmem, he_idem, he_isolate, he_horizontal, ?_,
+    s_B, hs_B_notmem, fun Bb _ _ _ _ _ => ?_⟩
   · -- `e * f'(β) ∉ n`: both factors are outside the prime `n`.
     intro hmem
     rcases (‹n.IsMaximal›.isPrime.mem_or_mem hmem) with h1 | h1
@@ -1361,12 +1470,16 @@ private lemma exists_etale_witness_for_standardEtalePair
 `algebraMap B Bb β` (the image of `_P.X`) and all of `algebraMap A Bb`.
 Modulo `m · Bb`, the image surjects onto `Bb / m · Bb` (since the
 projection to the `i₀`-factor of `Bk = B/mB` is generated by the image of
-`β` and `A/m`, by primitive-element data). Nakayama for the local ring
-`Bb` then forces the image to be all of `Bb`.
+`β` and `A/m`, by primitive-element data). Nakayama (using the
+iter-045 Jacobson-containment hypothesis `_h_m_jacob`, derived by the
+caller via `m_map_le_jacobson_of_etale_isolating`) then forces the image
+to be all of `Bb`.
 
-Left as a typed sorry — this is the Nakayama-closing step. Decomposed as
-a separate lemma so the main `exists_localization_surjective_standardEtale`
-body reduces to a 4-line assembly. -/
+iter-045 REFACTOR: signature gains the `_h_m_jacob` hypothesis (single
+additional hypothesis, authorized by the iter-045 directive). The body
+remains a typed `sorry` — the substantive residual is now the
+primitive-element-on-`Bb/m·Bb` step (`image(ψ) + m·Bb = ⊤`), conjoined
+with `_h_m_jacob` via `Submodule.le_of_le_smul_of_le_jacobson_bot`. -/
 private lemma surjective_standardEtalePair_lift_of_etale
     {A B : Type u} [CommRing A] [HenselianLocalRing A]
     [CommRing B] [Algebra A B] [Algebra.Etale A B]
@@ -1380,6 +1493,9 @@ private lemma surjective_standardEtalePair_lift_of_etale
     (_he_notmem : e ∉ n)
     (_he_isolate : ∀ x : B, x ∈ n →
       e * x ∈ (IsLocalRing.maximalIdeal A).map (algebraMap A B))
+    (_he_horizontal : ∀ p : Ideal B, p.IsPrime →
+      ¬((IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤ p) →
+      e ∈ p)
     (_s_B : B)
     (Bb : Type u) [CommRing Bb] [Algebra B Bb]
     [IsLocalization.Away
@@ -1389,8 +1505,312 @@ private lemma surjective_standardEtalePair_lift_of_etale
     (_hβ'_lift : β' - algebraMap B Bb β ∈
       (IsLocalRing.maximalIdeal A).map (algebraMap A Bb))
     (ψ : (standardEtalePairOfMonic f hf).Ring →ₐ[A] Bb)
-    (_hψ_X : ψ (standardEtalePairOfMonic f hf).X = β') :
-    Function.Surjective ψ :=
+    (_hψ_X : ψ (standardEtalePairOfMonic f hf).X = β')
+    (_h_m_jacob :
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A Bb) : Ideal Bb) ≤
+        Ideal.jacobson (⊥ : Ideal Bb)) :
+    Function.Surjective ψ := by
+  -- iter-045 partial: route through `AlgHom.range_eq_top`, then focus the
+  -- residual sorry on the primitive-element step
+  -- `⊤ ≤ ψ.range.toSubmodule ⊔ (m·Bb) • ⊤` (as A-submodules of `Bb`).
+  --
+  -- With that step in place, the Nakayama close uses
+  -- `Submodule.le_of_le_smul_of_le_jacobson_bot` (`R := Bb`, `M := Bb`),
+  -- exploiting `_h_m_jacob`. The substantive gap is the primitive-element
+  -- claim itself: `Bb / m·Bb ≃ k_{i_n}` (the i_n-factor of `B/mB ≃ ∏ k_i`),
+  -- and the image `image(ψ)` contains `algebraMap A Bb` (reducing to `k`)
+  -- and `β'` (reducing to a primitive element of `k_{i_n}` over `k`).
+  -- iter-046+ target: identify `Bb/m·Bb = k_{i_n}` via the `e`-isolation and
+  -- formalize the primitive-element image fact, then thread through Nakayama.
+  classical
+  rw [← AlgHom.range_eq_top]
+  -- iter-047 Step 2a — image-covers-A: `algebraMap A Bb a ∈ ψ.range` for all `a`.
+  have h_A_in_S : ∀ a : A, algebraMap A Bb a ∈ ψ.range :=
+    fun a => ψ.range.algebraMap_mem a
+  -- iter-047 Step 2b — image-covers-β': `β' ∈ ψ.range` (via `_hψ_X`).
+  have h_X_in_S : β' ∈ ψ.range :=
+    _hψ_X ▸ AlgHom.mem_range_self ψ (standardEtalePairOfMonic f hf).X
+  -- iter-047 Step 2c — image-covers-f'(β'): any polynomial in `β'` with `A`-coefficients
+  -- lies in `ψ.range`; in particular `Polynomial.aeval β' f.derivative ∈ ψ.range`.
+  have h_fdβ'_in_S : Polynomial.aeval β' f.derivative ∈ ψ.range := by
+    refine ⟨Polynomial.aeval (standardEtalePairOfMonic f hf).X f.derivative, ?_⟩
+    have h := Polynomial.aeval_algHom (R := A) ψ (standardEtalePairOfMonic f hf).X
+    have h' := congrArg (fun g : _ →ₐ[A] _ => g f.derivative) h
+    -- `h' : Polynomial.aeval (ψ P.X) f.derivative = ψ (Polynomial.aeval P.X f.derivative)`
+    simp only at h'
+    rw [_hψ_X] at h'
+    exact h'.symm
+  -- iter-047 Step 1 — étale-product decomposition setup. The classical proof of
+  -- Stacks 00U7 Step 8 uses the étale decomposition `B ⊗_A k ≃ ∏_i k_i` (each
+  -- `k_i` finite separable over `k = A/m`) and identifies `Bb/(m·Bb)` with the
+  -- `i_n`-factor `k_{i_n}` (via the localization-at-the-idempotent `Pi.single i_n 1`).
+  -- We set up the decomposition here for use in the residue identification.
+  haveI hBkEt : Algebra.Etale (IsLocalRing.ResidueField A)
+      (TensorProduct A (IsLocalRing.ResidueField A) B) :=
+    Algebra.Etale.baseChange A B (IsLocalRing.ResidueField A)
+  obtain ⟨I, hIfin, kI, hKfield, hKalg, eqv, hKsep⟩ :=
+    (Algebra.Etale.iff_exists_algEquiv_prod (K := IsLocalRing.ResidueField A)
+      (A := TensorProduct A (IsLocalRing.ResidueField A) B)).mp inferInstance
+  letI : Finite I := hIfin
+  letI : Fintype I := Fintype.ofFinite I
+  letI : ∀ i, Field (kI i) := hKfield
+  letI : ∀ i, Algebra (IsLocalRing.ResidueField A) (kI i) := hKalg
+  -- iter-047 Step 3+4 substantive residual. With the witnesses `h_A_in_S`,
+  -- `h_X_in_S`, `h_fdβ'_in_S` and the étale decomposition `eqv` in hand, the
+  -- remaining work decomposes as:
+  --
+  -- (i) Residue identification `Bb/(m·Bb) ≃ k_{i_n}` (the `i_n`-factor of
+  --     `B/mB ≃ ∏ k_i`), via the localization-quotient commutation:
+  --     `Bb/(m·Bb) ≃ (B/mB)[1/b̄] ≃ (∏ k_i)[1/b̄]`. The image of
+  --     `b := e * f'(β) * s_B` in `B/mB ≃ ∏ k_i` projects to a component
+  --     supported only at `i_n` (since `e` is the `i_n`-isolating idempotent
+  --     and the other factors `f'(β)`, `s_B` are non-zero divisors there).
+  --     Localizing at such an element collapses to the `i_n`-factor.
+  --
+  -- (ii) Image-covers-residue: the composite `ψ.range ↪ Bb ↠ Bb/(m·Bb) ≃ k_{i_n}`
+  --      is surjective, since `β'` reduces (via `_hβ'_lift`) to the image of
+  --      `β` in `k_{i_n}`, which is a primitive element of `k_{i_n}` over `k`
+  --      by Helper B.1.
+  --
+  -- (iii) A-submodule equality `ψ.range.toSubmodule + (m·Bb) = ⊤` in `Bb`,
+  --       directly from (ii).
+  --
+  -- (iv) Nakayama close: combine (iii) with `_h_m_jacob` to conclude
+  --      `ψ.range = ⊤`. The standard Mathlib lemma
+  --      `Submodule.le_of_le_smul_of_le_jacobson_bot` requires the larger
+  --      submodule (i.e. `⊤`) to be finitely generated; here `Bb` is NOT
+  --      finite over `A`, so the close needs an étale-Nakayama variant
+  --      (e.g. "A-subalgebra-Nakayama for finite-type étale extensions").
+  --
+  -- Steps (i)–(iv) require infrastructure not present in Mathlib at iter-047
+  -- (the localization-of-products-of-fields hook, the primitive-element-on-
+  -- localization fact, and the étale-Nakayama variant). iter-048 refactor
+  -- subagent target. The structural witnesses above (`h_A_in_S`, `h_X_in_S`,
+  -- `h_fdβ'_in_S`, `eqv`, `hKsep`) preserve all reusable scaffolding.
+  --
+  -- ============================================================
+  -- iter-048: substantive scaffolding for Steps (i)–(iv).
+  --
+  -- The §5 body is decomposed into four named sub-claims, each typed
+  -- inline. The deepest residuals (residue identification + étale-Hensel
+  -- close) are tagged as Gap A / Gap B respectively and are the
+  -- Mathlib-PR-quality content to extract in iter-049+ refactor.
+  -- ============================================================
+  --
+  -- Step (i.a). Set up the mod-m ideal of `Bb`.
+  let mBb : Ideal Bb := (IsLocalRing.maximalIdeal A).map (algebraMap A Bb)
+  -- Step (i.b). Note the propagated Jacobson-containment hypothesis.
+  have _h_mBb_jacob : mBb ≤ Ideal.jacobson (⊥ : Ideal Bb) := _h_m_jacob
+  -- Step (ii). The composite `ψ̄ : P.Ring →+* (Bb ⧸ mBb)` is surjective.
+  --
+  -- Substantive Stacks 00U7 Step 8 content. Two sub-claims fuse here:
+  -- (1) Gap A: `Bb ⧸ mBb` is a finite separable field extension of
+  --     `k := A/m`, identified with the `i_n`-factor `k_{i_n}` of the
+  --     étale-product decomposition `eqv : B ⊗_A k ≃ ∀ i, kI i`. The
+  --     identification uses the idempotent isolation in `e` (from
+  --     `exists_idempotent_lift_isolating_at_maximal`) plus localization-
+  --     quotient commutation at the inverted element `e * f'(β) * s_B`.
+  -- (2) Primitive-element image: the image of `(standardEtalePairOfMonic f hf).X`
+  --     under `ψ̄` is the residue of `β'`; by `_hβ'_lift` this equals the
+  --     residue of `β`, which is a primitive element of `k_{i_n}` over `k`
+  --     (Helper B.1 / `exists_lift_separablePrimitiveElement_of_etale_at_maxIdeal`).
+  --     Combined with the ring-hom image containing `algebraMap A Bk'`, the
+  --     image equals `k_{i_n} = Bb ⧸ mBb`.
+  have h_ψ_bar_surj :
+      Function.Surjective ((Ideal.Quotient.mk mBb).comp ψ.toRingHom) := by
+    -- ============================================================
+    -- iter-049 Gap A substantive scaffolding (Minimum-band attempt).
+    --
+    -- Decomposition into named sub-claims:
+    --   (S1) Residue commutation: `mk_mBb (ψ P.X) = mk_mBb β'`.
+    --   (S2) Residue identity: `mk_mBb β' = mk_mBb (algebraMap B Bb β)`
+    --        (from `_hβ'_lift`).
+    --   (S3) Range contains `mk_mBb (algebraMap A Bb a)` for every `a : A`.
+    --   (S4) Range contains `mk_mBb (aeval β' p)` for every `p : A[X]`
+    --        (polynomial expressions in `β'` with `A`-coefficients).
+    --   (S5) `e` is a unit in `Bb` (divides the inverted element of the
+    --        `IsLocalization.Away` instance).
+    --   (S6) `n.map (algebraMap B Bb) ≤ mBb`, via `_he_isolate` + (S5).
+    --   (S7) Gap A residue identification + primitive-element image
+    --        (typed sub-sorry; Pi-localization collapse).
+    -- ============================================================
+    -- (S1) Residue commutation: image of `P.X` under `ψ̄` is `mk_mBb β'`.
+    have h_r_X :
+        (Ideal.Quotient.mk mBb) (ψ (standardEtalePairOfMonic f hf).X) =
+          (Ideal.Quotient.mk mBb) β' := by
+      rw [_hψ_X]
+    -- (S2) Residues of `β'` and `algebraMap B Bb β` agree in `Bb ⧸ mBb`.
+    have h_β'_β : (Ideal.Quotient.mk mBb) β' =
+        (Ideal.Quotient.mk mBb) (algebraMap B Bb β) := by
+      rw [eq_comm, Ideal.Quotient.eq]
+      rw [show algebraMap B Bb β - β' = -(β' - algebraMap B Bb β) from by ring]
+      exact mBb.neg_mem _hβ'_lift
+    -- (S3) Range contains residues of `algebraMap A Bb`.
+    have h_r_A : ∀ a : A,
+        (Ideal.Quotient.mk mBb) ((algebraMap A Bb) a) ∈
+          ((Ideal.Quotient.mk mBb).comp ψ.toRingHom).range := by
+      intro a
+      refine ⟨(algebraMap A (standardEtalePairOfMonic f hf).Ring) a, ?_⟩
+      show (Ideal.Quotient.mk mBb) (ψ ((algebraMap A _) a)) = _
+      rw [ψ.commutes]
+    -- (S4) Range contains residues of every polynomial in `β'` over `A`.
+    have h_r_poly : ∀ (p : Polynomial A),
+        (Ideal.Quotient.mk mBb) (Polynomial.aeval β' p) ∈
+          ((Ideal.Quotient.mk mBb).comp ψ.toRingHom).range := by
+      intro p
+      refine ⟨Polynomial.aeval (standardEtalePairOfMonic f hf).X p, ?_⟩
+      show (Ideal.Quotient.mk mBb)
+          (ψ (Polynomial.aeval (standardEtalePairOfMonic f hf).X p)) = _
+      rw [← Polynomial.aeval_algHom_apply, _hψ_X]
+    -- (S5) `algebraMap B Bb e` is a unit in `Bb`: it divides the inverted
+    -- element `e * f'(β) * _s_B` of the `IsLocalization.Away` instance.
+    have he_unit_Bb : IsUnit (algebraMap B Bb e) := by
+      have h_b_unit : IsUnit (algebraMap B Bb
+          (e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * _s_B)) :=
+        IsLocalization.Away.algebraMap_isUnit (S := Bb) _
+      refine isUnit_of_dvd_unit ?_ h_b_unit
+      rw [show (e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * _s_B) =
+              e * (Polynomial.eval β (f.derivative.map (algebraMap A B)) * _s_B)
+            from by ring, map_mul]
+      exact dvd_mul_right _ _
+    -- (S6) For every `x ∈ n`, `algebraMap B Bb x ∈ mBb`. Uses `_he_isolate`
+    -- to lift `e * x ∈ m·B`, plus (S5) to "divide out" the unit `e`.
+    have h_mB_map_eq :
+        ((IsLocalRing.maximalIdeal A).map (algebraMap A B)).map (algebraMap B Bb)
+          = mBb := by
+      show ((IsLocalRing.maximalIdeal A).map (algebraMap A B)).map (algebraMap B Bb) =
+        (IsLocalRing.maximalIdeal A).map (algebraMap A Bb)
+      rw [Ideal.map_map, ← IsScalarTower.algebraMap_eq A B Bb]
+    have h_mB_map_le_mBb :
+        ((IsLocalRing.maximalIdeal A).map (algebraMap A B)).map (algebraMap B Bb)
+          ≤ mBb := h_mB_map_eq.le
+    have h_n_in_mBb : ∀ x : B, x ∈ n → algebraMap B Bb x ∈ mBb := by
+      intro x hx
+      have h_ex_in_mB := _he_isolate x hx
+      have h_aex_in_mBb : algebraMap B Bb (e * x) ∈ mBb :=
+        h_mB_map_le_mBb (Ideal.mem_map_of_mem _ h_ex_in_mB)
+      obtain ⟨u, hu⟩ := he_unit_Bb
+      have key : algebraMap B Bb x = (↑u⁻¹ : Bb) * algebraMap B Bb (e * x) := by
+        rw [map_mul, ← hu, ← mul_assoc, Units.inv_mul, one_mul]
+      rw [key]
+      exact mBb.mul_mem_left _ h_aex_in_mBb
+    -- (S7) Gap A residue identification + primitive-element image
+    -- (iter-050+ Mathlib-PR target).
+    --
+    -- The remaining substantive content: identify `Bb ⧸ mBb` with `k_{i_n}`,
+    -- the i_n-factor of the étale-product decomposition
+    -- `eqv : k ⊗_A B ≃ ∀ i, kI i` (with `k := ResidueField A`,
+    -- `kI i` finite separable over `k`). Steps:
+    --
+    --   (a) Quotient-localization commutation: `Bb ⧸ mBb ≃ (B ⧸ mB)[1/b̄]`,
+    --       where `b̄` is the image of `e * f'(β) * _s_B` in `B ⧸ mB`.
+    --   (b) Étale-decomposition transfer: `B ⧸ mB ≃ ∀ i, kI i` via `eqv`.
+    --   (c) Pi-localization collapse: under `eqv`, the image of `e` projects
+    --       to the idempotent `Pi.single i_n 1` (where `i_n` is the index
+    --       corresponding to `n`, via the bijection
+    --       `{primes of B over m} ↔ I`); hence `(∀ i, kI i)[1/eqv(b̄)]
+    --       ≃ kI i_n`.
+    --   (d) Primitive-element generation: the residue of `β` in `kI i_n`
+    --       (= `B ⧸ n` via the étale-product decomposition) generates `kI i_n`
+    --       over `k`, by Helper B.1 / the primitive-element data.
+    --
+    -- With (a)-(d) in hand, surjectivity follows: every element of
+    -- `Bb ⧸ mBb ≃ kI i_n` is a polynomial in residue(β) = residue(β') with
+    -- `k`-coefficients (= `A/m`-residues, in (S3)). Combined with (S4)
+    -- (polynomials in β' with `A`-coefficients in the range), this gives
+    -- the conclusion.
+    --
+    -- Authorized helper-file extraction:
+    -- `Proetale/Mathlib/RingTheory/Localization/AtIdempotent.lean` for the
+    -- Pi-localization collapse (step (c)).
+    -- ============================================================
+    -- iter-051 wiring (Acceptable band).
+    --
+    -- The substantive Stacks 00U7 Step 8 content (Steps A-D) is bundled
+    -- into the polynomial-lift surjectivity claim `h_polylift`: every
+    -- residue in `Bb ⧸ mBb` is the image of a polynomial in `β'` with
+    -- coefficients in `A`. Concretely the four bridging sub-steps are:
+    --
+    --   (A) Quotient-localization commutation:
+    --       `Bb ⧸ mBb ≃ Localization.Away (mk_mB b₀)`,
+    --       where `b₀ = e * f'(β) * _s_B` is the inverted element of
+    --       the `IsLocalization.Away` instance and `mk_mB b₀ ∈ B ⧸ mB`
+    --       its image.
+    --   (B) Étale-decomposition transfer via the existing `eqv`:
+    --       `B ⧸ mB ≃ ∀ i, kI i` (over `k := ResidueField A`), through
+    --       the canonical iso `(B ⊗_A k) ≃ (B ⧸ mB)` + `eqv`.
+    --   (C) Pi-localization collapse via the iter-050 Mathlib-PR helper
+    --       `Localization.Away_pi_field_supportedAt` from
+    --       `Proetale/Mathlib/RingTheory/Localization/AtIdempotent.lean`:
+    --       `(∀ i, kI i)[1/r̄] ≃ kI i_n`, where `i_n ∈ I` is the index
+    --       corresponding to `n` via the bijection
+    --       {primes of B over m} ↔ I. The support data `r̄ i_n ≠ 0`
+    --       (resp. `r̄ i = 0` for `i ≠ i_n`) comes from `_he_notmem` and
+    --       `_hfdβ` (resp. `_he_isolate` via the étale transfer).
+    --   (D) Primitive-element image: residue of `β` generates `kI i_n`
+    --       over `k`, via `hKsep i_n` and Helper B.1.
+    --
+    -- Combining (A)-(D), every residue is a `k`-polynomial in residue β';
+    -- lifting `k = A/m`-coefficients to `A`-coefficients (using
+    -- `Ideal.Quotient.mk_surjective`) yields the polynomial-lift claim.
+    --
+    -- The (C1) `i_n`-identification step requires the bijection
+    -- {primes of B over m} ↔ I, which is HenselianPair-idempotent-
+    -- bijection content (Stacks 04GG / 0DXB) deferred to iter-052+.
+    -- The entire `h_polylift` claim is the single typed sub-sorry
+    -- tagged accordingly.
+    have h_polylift : ∀ y : Bb,
+        ∃ p : Polynomial A,
+          Ideal.Quotient.mk mBb y =
+            Ideal.Quotient.mk mBb (Polynomial.aeval β' p) := by
+      -- iter-052+ HenselianPair-idempotent-bijection target.
+      sorry
+    -- Polynomial lifting through `ψ`: every residue of `Bb ⧸ mBb`,
+    -- being a residue of `Polynomial.aeval β' p` (by `h_polylift`), is
+    -- the image of `Polynomial.aeval (standardEtalePairOfMonic f hf).X p`
+    -- under the composite `(Ideal.Quotient.mk mBb).comp ψ.toRingHom`
+    -- (via `_hψ_X` and `Polynomial.aeval_algHom_apply`).
+    intro y
+    obtain ⟨b, hb⟩ := Ideal.Quotient.mk_surjective y
+    obtain ⟨p, hpy⟩ := h_polylift b
+    refine ⟨Polynomial.aeval (standardEtalePairOfMonic f hf).X p, ?_⟩
+    show (Ideal.Quotient.mk mBb)
+        (ψ (Polynomial.aeval (standardEtalePairOfMonic f hf).X p)) = y
+    rw [← Polynomial.aeval_algHom_apply, _hψ_X, ← hpy]
+    exact hb
+  -- Step (iii). Recast Step (ii) as an additive decomposition on `Bb`.
+  --
+  -- For every `b : Bb`, there is `p : P.Ring` and `δ ∈ mBb` with `b = ψ p + δ`.
+  -- This is a mechanical consequence of `h_ψ_bar_surj`: the residue of `b`
+  -- is hit by `ψ̄ p` for some `p`, so `b - ψ p` lies in `mBb`.
+  have h_decompose : ∀ b : Bb,
+      ∃ p : (standardEtalePairOfMonic f hf).Ring, ∃ δ ∈ mBb, b = ψ p + δ := by
+    intro b
+    obtain ⟨p, hp⟩ := h_ψ_bar_surj (Ideal.Quotient.mk mBb b)
+    refine ⟨p, b - ψ p, ?_, by ring⟩
+    have hsub : (Ideal.Quotient.mk mBb) (b - ψ p) = 0 := by
+      rw [map_sub]
+      have hpres : (Ideal.Quotient.mk mBb) (ψ p) =
+          ((Ideal.Quotient.mk mBb).comp ψ.toRingHom) p := rfl
+      rw [hpres, hp, sub_self]
+    exact (Ideal.Quotient.eq_zero_iff_mem).mp hsub
+  -- Step (iv). Étale-Hensel close. The substantive Mathlib gap.
+  --
+  -- We must conclude `ψ.range = ⊤`. The straightforward Nakayama path via
+  -- `Submodule.le_of_le_smul_of_le_jacobson_bot` requires the ambient
+  -- module to be A-finitely-generated, which `Bb` is not. The Stacks 00U7
+  -- proof bridges this gap using the Henselian-étale lifting content:
+  -- given the decomposition `b = ψ p + δ` (with `δ ∈ mBb ⊆ jacobson(⊥)`),
+  -- one applies an étale-Hensel lift to `δ` to obtain `δ' ∈ ψ.range`
+  -- with `b = ψ p + δ' ∈ ψ.range`. The lift exists because `ψ : P.Ring → Bb`
+  -- is étale (composition of étale `A → P.Ring` and `A → Bb`, both étale)
+  -- and `_h_m_jacob` provides the Henselian condition needed to lift roots.
+  -- Gap B: étale-Hensel-Nakayama variant. iter-049+ Mathlib-PR target.
+  refine Algebra.eq_top_iff.mpr fun b => ?_
+  obtain ⟨p, δ, hδ, hb⟩ := h_decompose b
+  -- Reduces to showing `δ ∈ ψ.range`, then `b = ψ p + δ ∈ ψ.range`.
+  -- The étale-Hensel close: for `δ ∈ mBb`, there exists `q : P.Ring` with
+  -- `ψ q = δ`. (Substantive Stacks 04D1 / 04GE content; Mathlib gap.)
   sorry
 
 /-- **Helper B.3.a (substantive sub-helper): surjective polynomial presentation
@@ -1432,8 +1852,9 @@ private lemma exists_localization_surjective_standardEtale
         ∃ ψ : (standardEtalePairOfMonic f hf).Ring →ₐ[A] Bb,
           Function.Surjective ψ := by
   -- Step (a). Extract the strengthened witness (idempotent `e` + isolation +
-  -- iter-042 further-localization scalar `s_B` + the per-`Bb` `HasMap` data) from B.3.a.i.
-  obtain ⟨e, he_notmem, he_idem, he_isolate, hb_notmem, s_B, hs_B_notmem, hwit⟩ :=
+  -- iter-046 horizontal-killing conjunct + iter-042 further-localization
+  -- scalar `s_B` + the per-`Bb` `HasMap` data) from B.3.a.i.
+  obtain ⟨e, he_notmem, he_idem, he_isolate, he_horizontal, hb_notmem, s_B, hs_B_notmem, hwit⟩ :=
     exists_etale_witness_for_standardEtalePair (A := A) (B := B) n _h β f hf _hfβ _hfdβ
   -- The Zariski-localization witness is now `b := e * f'(β) * s_B`.
   refine ⟨e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * s_B,
@@ -1450,11 +1871,30 @@ private lemma exists_localization_surjective_standardEtale
   let _P : StandardEtalePair A := standardEtalePairOfMonic f hf
   have hHas : _P.HasMap β' := ⟨hfβ'_zero, hfdβ'_unit⟩
   refine ⟨_P.lift β' hHas, ?_⟩
-  -- Step (c). Surjectivity via B.3.a.ii (Nakayama on `Bb / m · Bb`).
+  -- iter-045: derive the shared Jacobson-containment fact for the §5 caller.
+  have hb_outer_notmem :
+      e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * s_B ∉ n := by
+    intro hmem
+    rcases (‹n.IsMaximal›.isPrime.mem_or_mem hmem) with h1 | h1
+    · exact hb_notmem h1
+    · exact hs_B_notmem h1
+  have he_div_b :
+      e ∣ (e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * s_B) := by
+    rw [mul_assoc]; exact dvd_mul_right _ _
+  have h_m_jacob :
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A Bb) : Ideal Bb) ≤
+        Ideal.jacobson (⊥ : Ideal Bb) :=
+    m_map_le_jacobson_of_etale_isolating n _h e he_idem he_notmem he_isolate
+      he_horizontal
+      (e * Polynomial.eval β (f.derivative.map (algebraMap A B)) * s_B)
+      hb_outer_notmem he_div_b Bb
+  -- Step (c). Surjectivity via B.3.a.ii (Nakayama on `Bb / m · Bb`), now
+  -- consuming the propagated Jacobson-containment hypothesis.
   exact surjective_standardEtalePair_lift_of_etale (A := A) (B := B) n _h β f hf
-    _hfβ _hfdβ e he_idem he_notmem he_isolate s_B Bb β' hβ'_lift
+    _hfβ _hfdβ e he_idem he_notmem he_isolate he_horizontal s_B Bb β' hβ'_lift
     (_P.lift β' hHas)
     (_P.lift_X β' hHas)
+    h_m_jacob
 
 /-- **Helper B.3: assemble the standard-étale presentation after Zariski localization.**
 

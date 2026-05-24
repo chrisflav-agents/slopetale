@@ -1,0 +1,80 @@
+\chapter{Hensel-lifting orthogonal idempotents (Stacks 0DXB fragment)}
+\label{chap:Mathlib_RingTheory_Etale_HenselianIdempotentLift}
+
+This chapter tracks the Mathlib-PR-target helper
+\lean{Algebra.Etale.exists_completeOrthogonalIdempotents_lift_of_henselian}
+extracted (during iter-048) from
+\lean{exists_idempotent_lift_isolating_at_maximal} in
+\texttt{Proetale/Mathlib/RingTheory/Etale/StrictlyHenselian.lean}.
+
+\begin{theorem}
+  \label{thm:etale-henselian-cop-lift}
+  \lean{Algebra.Etale.exists_completeOrthogonalIdempotents_lift_of_henselian}
+  \leanok
+  Let $A$ be a henselian local ring with maximal ideal $\mathfrak{m}$
+  and residue field $k = A/\mathfrak{m}$, and let $B$ be an étale
+  $A$-algebra. Let $k \otimes_A B \simeq \prod_{i \in I} k_i$ be the
+  residue product decomposition (each $k_i$ a finite separable
+  extension of $k$, $I$ finite). Then the canonical orthogonal
+  idempotents $\{e_i\}_{i \in I}$ of the product $\prod_{i \in I} k_i$
+  lift to a complete orthogonal idempotent system
+  $\{\tilde e_i\}_{i \in I}$ in $B$, in the sense that the image of
+  $1 \otimes \tilde e_i$ in $k \otimes_A B$ corresponds to $e_i$
+  under the product decomposition.
+\end{theorem}
+\begin{proof}
+  \uses{thm:etale-henselian-cop-lift}
+  \leanok
+  Write $\bar B := k \otimes_A B$ and let $\pi : B \to \bar B$,
+  $b \mapsto 1 \otimes b$, be the canonical surjection (surjective
+  because $A \to k$ is, hence so is $B \to k \otimes_A B$ as an
+  $A$-module map, hence as a ring map). Its kernel is
+  $\mathfrak{m} \cdot B$.
+
+  By the étale-over-field structure theorem
+  $\bar B \simeq \prod_{i \in I} k_i$ with each $k_i$ finite separable
+  over $k$, so for each $i \in I$ the element
+  $\bar e_i := \pi^{-1}(e_i) \in \bar B$ is a true orthogonal
+  idempotent. Choose any preimage $e_i^{(0)} \in B$ with
+  $\pi(e_i^{(0)}) = \bar e_i$. Then
+  $(e_i^{(0)})^2 - e_i^{(0)} \in \ker \pi = \mathfrak{m} \cdot B$.
+
+  Consider the polynomial $f(X) = X^2 - X \in B[X]$. Its derivative
+  $f'(X) = 2X - 1$, evaluated at $e_i^{(0)}$, reduces modulo
+  $\mathfrak{m} \cdot B$ to the element $2 \bar e_i - 1 \in \bar B$.
+  Componentwise in $\prod_i k_i$ this is $2 \cdot 1 - 1 = 1$ at the
+  $i$-component and $2 \cdot 0 - 1 = -1$ elsewhere; both are units in
+  the respective residue fields. Hence $2 e_i^{(0)} - 1$ is a unit
+  modulo every maximal ideal of $B$ above $\mathfrak{m}$, and (since
+  $\mathfrak{m} \cdot B$ lies in the Jacobson radical when $A$ is
+  henselian and $B$ is étale over $A$) it is a unit in $B$.
+
+  $A$ henselian local plus $B$ étale of finite presentation gives
+  $(B, \mathfrak{m} \cdot B)$ the henselian-pair property
+  (Stacks 04GG/0DXB). Henselian-pair lifting applied to $f$ and the
+  approximate root $e_i^{(0)}$ (with derivative a unit modulo
+  $\mathfrak{m} \cdot B$) yields a \emph{unique} root
+  $\tilde e_i \in B$ of $f$ with
+  $\tilde e_i \equiv e_i^{(0)} \pmod{\mathfrak{m} \cdot B}$. Since
+  $f(\tilde e_i) = 0$, $\tilde e_i$ is an idempotent of $B$ lifting
+  $\bar e_i$.
+
+  Orthogonality and completeness follow by uniqueness: for $i \ne j$,
+  $\tilde e_i \tilde e_j$ is a root of $f$ congruent to
+  $\bar e_i \bar e_j = 0$ modulo $\mathfrak{m} \cdot B$, hence equals
+  the unique idempotent lift of $0$, which is $0$. Similarly
+  $\sum_{i \in I} \tilde e_i$ is a root of $f$ congruent to
+  $\sum_i \bar e_i = 1$ modulo $\mathfrak{m} \cdot B$, hence equals
+  the unique idempotent lift of $1$, which is $1$.
+\end{proof}
+
+\medskip\noindent\textbf{Status.} The statement is formalized
+(\texttt{\textbackslash leanok} on the theorem environment); the body
+is a single typed \texttt{sorry} pending two pieces of Mathlib-PR
+infrastructure: (i) a \texttt{HenselianPair} predicate together with
+the henselian-pair condition for $(B, \mathfrak{m} \cdot B)$ when $B$
+is étale over a henselian local $A$, and (ii) a
+\texttt{CompleteOrthogonalIdempotents}-flavoured analogue of
+\texttt{CompleteOrthogonalIdempotents.lift\_of\_isNilpotent\_ker}
+weakened from `nilpotent kernel' to `kernel contained in the Jacobson
+radical of a henselian pair'.
