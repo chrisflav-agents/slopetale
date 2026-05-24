@@ -82,6 +82,7 @@ In general, $\pi_0(X) \times \pi_0(Y)$ is continuous and bijective, but not nece
   \label{thm:pi0-prod}
   \lean{connectedComponent.prod,ConnectedComponents.isHomeomorph_connectedComponentsLift_prod,
     ConnectedComponents.prodMap}
+  \leanok
   Let \(X, Y\) be topological spaces. Then we have 
   \(\pi_0 (X \times Y) \simeq \pi_0(X) \times \pi_0(Y)\) as topological spaces.
 \end{lemma}
@@ -107,6 +108,7 @@ In general, $\pi_0(X) \times \pi_0(Y)$ is continuous and bijective, but not nece
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Use the universal property of connected components.
 \end{proof}
 
@@ -193,6 +195,7 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -231,10 +234,12 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0906}{Tag 0906}]{stacks-project}}]
   \label{thm:pi0-profinite}
   \lean{compactSpace_connectedComponent,t2Space_connectedComponent}
+  \leanok
   Let $X$ be a spectral space. Then $\pi_0(X)$ is a profinite space.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:connected-component-intersection-closed-open}
   We will show that \(\pi_0(X)\) is Hausdorff, quasi-compact, and totally disconnected.
   By \Cref{thm:connected-component-intersection-closed-open}, every connected component of \(X\) is the intersection of the open and closed subsets containing it. Since \(\pi_0(X)\) is the image of a quasi-compact space, it is also quasi-compact. It is totally disconnected by construction. Let \(C,D \subset X\) be distinct connected components of \(X\). Write \(C = \bigcap_{\alpha} U_\alpha\) as the intersection of the open and closed subsets of \(X\) containing \(C\). Any finite intersection of \(U_\alpha\)'s is another \(U_\alpha\). Since \(\bigcap_\alpha U_\alpha \cap D = \emptyset\) we conclude that \(U_\alpha \cap D = \emptyset\) for some \(\alpha\) (connected components are closed, thus quasi-compact). Since \(U_\alpha\) is open and closed, it is the union of the connected components it contains, i.e., \(U_\alpha\) is the inverse image of some open and closed subset \(V_\alpha \subset \pi_0(X)\). This proves that the points corresponding to \(C\) and \(D\) are contained in disjoint open subsets, i.e., \(\pi_0(X)\) is Hausdorff.
@@ -244,10 +249,12 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
   \label{thm:closed-subspace-spectral}
   \lean{Topology.IsClosedEmbedding.isOpen_and_isCompact_and_preimage_eq,
     Topology.IsClosedEmbedding.spectralSpace,SpectralSpace.of_isClosed}
+  \leanok
   Let $X$ be a spectral space. Let $Y \subset X$ be a closed subspace. Then $Y$ is spectral.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   The only remaining part in Lean is quasi-separatedness.
   Suppose that \(V\) is open compact in \(Y\), we show that there exists open compact \(U\) in 
   \(X\) such that \(V = U \cap Y\). We can find \(U'\) in \(X\) such that \(V = U' \cap Y\). Write
@@ -278,10 +285,12 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0907}{Tag 0907}]{stacks-project}}]
   \label{thm:spectral-product}
   \lean{QuasiSeparatedSpace.prod,QuasiSober.prod,PrespectralSpace.prod,SpectralSpace.prod}
+  \leanok
   Let $X$ and $Y$ be spectral spaces. Then the product $X \times Y$ is spectral.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:closure-product}
   Let $X$, $Y$ be spectral spaces. Denote $p : X \times Y \to X$ and $q : X \times Y \to Y$ the projections. We first show that \(X \times Y\) is sober. Let $Z \subset X \times Y$ be a closed irreducible subset. Then $p(Z) \subset X$ is irreducible and $q(Z) \subset Y$ is irreducible. Let $x \in X$ be the generic point of the closure of $p(Z)$ and let $y \in Y$ be the generic point of the closure of $q(Z)$. If $(x, y) \notin Z$, then there exist opens $x \in U \subset X$, $y \in V \subset Y$ such that $Z \cap (U \times V) = \emptyset$. Hence $Z$ is contained in $(X - U) \times Y \cup X \times (Y - V)$. Since $Z$ is irreducible, we see that either $Z \subset (X - U) \times Y$ or $Z \subset X \times (Y - V)$. In the first case $p(Z) \subset (X - U)$ and in the second case $q(Z) \subset (Y - V)$. Both cases are absurd as $x$ is in the closure of $p(Z)$ and $y$ is in the closure of $q(Z)$. Thus we conclude that $(x, y) \in Z$, which means that $(x, y)$ is the generic point for $Z$ (\Cref{thm:closure-product}).
 
@@ -303,12 +312,14 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}[{\stacksproject{08ZH}}]
   \label{thm:pullback-closed-embedding-prod}
   \lean{TopCat.isClosedEmbedding_pullback_to_prod}
+  \leanok
   Let \(X\), \(Y\), and \(S\) be topological spaces. Assume that \(S\) is Hausdorff. 
   Let \(f : X \to S\) and \(g : Y \to S\) be continuous maps. The natural map 
   \(X \times_S Y \to X \to Y\) is a closed embedding.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:Hausdorff-diagonal-closed}
   \(X \times_S Y\) is the inverse image of the image \(\Delta(S)\) of the diagonal map 
   \(\Delta : S \to S \times S\). It follows from \Cref{thm:Hausdorff-diagonal-closed} that 
@@ -318,10 +329,12 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}
   \label{thm:homeo-preserves-spectral}
   \lean{Homeomorph.spectralSpace,Homeomorph.t0Space,Homeomorph.t2Space,Homeomorph.quasiSober,Homeomorph.quasiSeparatedSpace,Homeomorph.compactSpace,Homeomorph.prespectralSpace}
+  \leanok
   Let \(X\) and \(Y\) be topological spaces. If \(X\) is spectral (resp. T0, Hausdorff, Sober, quasi-separated, quasi-compact, prespectral) and there is a homeomorphism \(X \cong Y\), then \(Y\) is spectral (resp. T0, Hausdorff, Sober, quasi-separated, quasi-compact, prespectral).
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -331,10 +344,12 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
     QuasiSober.pullback,CompactSpace.pullback,CategoryTheory.IsPullback.t0Space,
     CategoryTheory.IsPullback.quasiSober,CategoryTheory.IsPullback.compactSpace,
     CategoryTheory.IsPullback.prespectralSpace,CategoryTheory.IsPullback.spectralSpace}
+  \leanok
   Let \(X\) and \(Y\) be spectral spaces. Let \(S\) be a Hausdorff topological space. Let \(f : X \to S\) and \(g : Y \to S\) be continuous maps. Then the fiber product \(X \times_S Y\) is spectral.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:spectral-product,thm:closed-subspace-spectral,thm:pullback-closed-embedding-prod,
     thm:homeo-preserves-spectral}
   Note that \(X \times_S Y\) is a closed subspace of $X \times Y$ by 
@@ -348,10 +363,12 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}
   \label{thm:profinite-spectral}
   \lean{Prespectral.of_profinite,Spectral.of_profinite}
+  \leanok
   Let $X$ be a profinite space. Then $X$ is spectral.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Since R1 implies Sober, Hausdorff implies quasi-separated, it only remains to show that \(X\) is prespectral. Write \(X\) as an inverse limit of finite discrete topological spaces. The preimage of singletons in every finite discrete space are open and closed subsets and forms a topological basis for the topology on \(X\). Thus \(X\) is prespectral.
 \end{proof}
 
@@ -359,6 +376,7 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \label{thm:cartesian-profinite}
 \uses{def:pi0-to-totally-disconnected}
 \lean{ConnectedComponents.spectralSpace_of_isPullback,ConnectedComponents.lift_bijective_of_isPullback,ConnectedComponents.isHomeomorph_lift_of_isPullback}
+\leanok
 Let $X$ be a spectral space. Let
 \[
 \begin{tikzcd}
@@ -370,6 +388,7 @@ be a cartesian diagram in the category of topological spaces with $T$ profinite.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:profinite-spectral,thm:pullback-spectral,thm:pi0-profinite,def:pi0-to-totally-disconnected,thm:pi0-to-totally-disconnected-injective}
   By \Cref{thm:profinite-spectral}, \(T\) is spectral. By \Cref{thm:pi0-profinite} \(\pi_0(X)\) is Hausdorff.
   By \Cref{thm:pullback-spectral}, \(Y\) is spectral.
@@ -380,19 +399,22 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
 
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/00EA}{Tag 00EA}, (1) + (2)(a)]{stacks-project}}]
   \label{thm:localization-isom-of-going-down}
-  \lean{Algebra.HasGoingDown.factor_bijective_of_subsingleton}
+  \lean{Algebra.HasGoingDown.isLocalization_atPrime_of_subsingleton}
+  \leanok
   Let $A \to B$ be a ring map which has going down. Let $\p \subset A$ be a prime ideal and let 
   $\q \subset B$ be a prime ideal lying over $\p$. Assume that and there is at most one prime
   of $B$ above every prime of $A$. Then the natural map $B_{\p B} \to B_{\q}$ is an isomorphism.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   It suffices to show that all the elements of $B - \q$ are all invertible in $B_{\p B}$. Suppose the contrary, let $x \in B - \q$ be an element not invertible in $B_{\p B}$. We can find a prime ideal $\q' \subseteq \p B$ of $B$ containing $x$. By going down there exists a prime $\q'' \subseteq \q$ lying over $\p' = A \cap \q'$. By the uniqueness of primes lying over $\p'$ we see that $\q' = \q''$, which contradicts the fact that $x \notin \q$.
 \end{proof}
 
 \begin{definition}[Local isomorphisms, {\cite[\href{https://stacks.math.columbia.edu/tag/096E}{Tag 096E} (1)]{stacks-project}}]
   \label{def:local-isomorphism}
   \lean{Algebra.IsLocalIso, RingHom.IsLocalIso}
+  \leanok
   We say $A \to B$ is a \emph{local isomorphism} if for every prime $\mathfrak{q} \subset B$ there exists a $g \in B$, $g \notin \mathfrak{q}$ such that $A \to B_g$ induces an open immersion $\Spec (B_g) \to \Spec (A)$.
 \end{definition}
 
@@ -515,6 +537,7 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   \label{thm:ind-Zariski-identifies-local-rings}
   \uses{def:ind-Zariski,def:identify-local-rings}
   \lean{Algebra.IndZariski.bijectiveOnStalks_algebraMap,RingHom.IndZariski.bijectiveOnStalks}
+  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -526,9 +549,11 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   \label{thm:ind-Zariski-is-flat}
   \uses{def:ind-Zariski}
   \lean{Module.Flat.of_indZariski,RingHom.IndZariski.flat}
+  \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     An ind-Zariski ring map is a filtered colimit of local isomorphisms. A local isomorphism is flat.
 \end{proof}
 
@@ -538,6 +563,7 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   \uses{def:ind-Zariski}
   \lean{Algebra.IndZariski.of_colimitPresentation,RingHom.IndZariski.of_isColimit,
     Algebra.IndZariski.iff_ind_indZariksi,RingHom.IndZariski.iff_ind_indZariski}
+  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -552,9 +578,11 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
         RingHom.IndZariski.prod,
         Algebra.IndZariski.pi,
         RingHom.IndZariski.pi}
+  \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
   This is the consequence of the more general fact that if a property $p$ of ring maps is stable
   under finite products, then Ind-$p$ is also stable under finite products since finite product
   of filtered index category is again filtered.
@@ -572,6 +600,7 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   Let \(A \to B\) and \(B \to C\) be ind-Zariski ring maps. Then the composition \(A \to C\) is also ind-Zariski.
   \uses{def:ind-Zariski}
   \lean{Algebra.IndZariski.trans,RingHom.IndZariski.comp}
+  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -657,22 +686,8 @@ The following example shows that our definition agrees with the one in
     \label{lem:etale-locally-standard-etale-at-max}
     \lean{Algebra.Etale.isStandardEtale_localizationAway_of_etale_at_maxIdeal}
     \leanok
-    Let \(A\) be a Henselian local ring and \(A \to B\) an étale ring map. Let \(\n \subset B\) be a maximal ideal lying over the maximal ideal \(\m\) of \(A\). Then there exists \(b \in B \setminus \n\) such that the localization \(B_b = B[1/b]\) is a standard étale \(A\)-algebra (Stacks 00U7 / EGA IV 17.6.1, Henselian specialisation).
-
-    \emph{Remark on Henselian restriction.} Stacks 00U7 is stated for any local ring. The proof's Step 3 (Hensel-lifting the primitive element across the nilpotent thickening \(\m B_b\)) requires either an étale Hensel-lift infrastructure or \(\m\)-adic completeness, neither directly available in Mathlib at the algebraic API. Restricting to \(A\) Henselian unlocks the construction via the Stacks 04GF étale-over-Henselian-implies-Henselian-at-prime transfer (formalised in this project as an in-file helper, ready to upstream to Mathlib). The unrestricted form is recovered once Mathlib gains the missing étale Hensel-lift API. All downstream consumers in this project (Stacks 04GH/04GG and Phase 2 / Phase 3) already assume strictly Henselian \(A\), which implies Henselian.
+    Let \(A\) be a Henselian local ring and \(A \to B\) an étale ring map. Let \(\n \subset B\) be a maximal ideal lying over the maximal ideal \(\m\) of \(A\). Then there exists \(b \in B \setminus \n\) such that the localization \(B_b = B[1/b]\) is a standard étale \(A\)-algebra.
 \end{lemma}
-\textit{Source: Stacks \href{https://stacks.math.columbia.edu/tag/00U7}{Tag 00U7}.}
-\begin{proof}
-
-\leanok
-    The strategy is to find a single generator that exhibits \(B\) as a standard étale algebra after a Zariski localization. The classical argument, due to Raynaud (cf.\ Stacks 00U7), proceeds in three steps.
-    \begin{enumerate}
-        \item \emph{Primitive element at the residue field.} The algebra \(B / \m B\) is étale over \(k = A / \m\); by the structure theorem for étale algebras over a field it decomposes as a finite product \(B / \m B \cong \prod_{i \in I} k_i\) of finite separable extensions of \(k\). The image of \(\n\) in \(B / \m B\) is one of the kernel-of-projection maximal ideals; the corresponding factor \(k_{i_0}\) is canonically isomorphic to \(B / \n\). In particular \(B / \n\) is a finite separable extension of \(k\). By the primitive element theorem, choose \(\bar{\alpha} \in B / \n\) generating \(B / \n\) over \(k\) with separable minimal polynomial \(\bar{f} \in k[X]\); separability means \(\bar{f}'(\bar{\alpha}) \ne 0\).
-        \item \emph{Lifting the primitive element to \(B\).} Lift \(\bar{\alpha}\) to some \(\beta \in B\), and lift the monic polynomial \(\bar{f}\) to a monic polynomial \(f \in A[X]\). Reducing modulo \(\n\) gives \(f(\beta) \equiv \bar{f}(\bar{\alpha}) = 0\), so \(f(\beta) \in \n\). Reducing the derivative similarly gives \(f'(\beta) \equiv \bar{f}'(\bar{\alpha}) \ne 0\) in \(B / \n\); hence \(f'(\beta) \notin \n\).
-        \item \emph{Standard étale presentation after localizing away from \(b := f'(\beta)\).} Consider the \(A\)-algebra map \(\varphi : A[X] \to B\) sending \(X \mapsto \beta\). Because \(\beta\) generates \(B / \m B\) modulo the factor \(k_{i_0}\) at the chosen idempotent (after refining \(b\) to also annihilate the other factors), the induced map \(\bar\varphi : A[X]/(f) \to B / \m B\) is surjective onto the \(k_{i_0}\)-factor up to a localization at the appropriate idempotent. Etaleness of \(B\) over \(A\), together with the fact that \(f'(\beta)\) is invertible in \(B_b\), forces the induced map \(\bar\psi : A[X][1/f']/(f) \to B_b\) to be an isomorphism (this is the standard-étale criterion: an étale algebra equipped with a Zariski-locally surjective polynomial presentation whose derivative is invertible is exactly a standard étale presentation). This gives the required identification of \(B_b\) with the standard étale \(A\)-algebra \(A[X][1/f']/(f)\), so the standard étale Bezout identity for \((f, f')\) is \(f' \cdot 1 + f \cdot 0 = (f')^1\).
-    \end{enumerate}
-    Mathlib provides the weaker form \(\mathtt{Algebra.exists\_etale\_of\_isEtaleAt}\) (étale, not standard étale); the standard-étale strengthening is the residual Mathlib gap. The autonomous-loop dispatch (iter-031) is expected to decompose this lemma into 2–3 sub-helpers — the primitive-element / lifting step (1+2), the standard-étale presentation construction (3), and the identification of \(B_b\) with the presentation via the étale criterion.
-\end{proof}
 
 \begin{proposition}
     \label{thm:strictly-henselian-good-retraction}
@@ -720,11 +735,13 @@ The following example shows that our definition agrees with the one in
     We say a ring homomorphism $R \to S$ is \emph{ind-étale} if $S$ is ind-étale as an $R$-algebra via $f$.
     \label{def:ind-etale}
     \lean{Algebra.IndEtale, RingHom.IndEtale}
+    \leanok
 \end{definition}
 
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0BSI}{Tag 0BSI}]{stacks-project}}]
   \label{thm:ind-etale-comp}
   \lean{Algebra.IndEtale.trans, RingHom.IndEtale.comp}
+  \leanok
   \uses{def:ind-etale}
   Let $A \to B$ and $B \to C$ be ring maps. If $A \to B$ and $B \to C$ are ind-étale, 
   then $A \to C$ is ind-étale.
@@ -738,11 +755,13 @@ The following example shows that our definition agrees with the one in
   \label{thm:ind-etale-base-change}
   \uses{def:ind-etale}
   \lean{RingHom.IndEtale.isStableUnderBaseChange}
+  \leanok
   Let $A \to B$ be an ind-étale ring map. For any ring map $A \to C$, the base change 
   $C \to B \otimes_A C$ is ind-étale.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -753,9 +772,11 @@ The following example shows that our definition agrees with the one in
     \label{lemma:ind-ind-etale}
     \lean{Algebra.IndEtale.of_colimitPresentation,RingHom.IndEtale.iff_ind_indEtale,
       RingHom.IndEtale.of_isColimit,Algebra.IndEtale.iff_ind_indEtale}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     This follows from general theory, because étale maps are of finite presentation.
 \end{proof}
 
@@ -764,9 +785,11 @@ The following example shows that our definition agrees with the one in
   \label{thm:ind-Zariski-is-ind-etale}
   \uses{def:ind-Zariski,def:ind-etale}
   \lean{Algebra.IndEtale.of_indZariski,RingHom.IndZariski.indEtale}
+  \leanok
 \end{lemma}
 
 \begin{proof}
+  \leanok
   An ind-Zariski ring map is a filtered colimit of local isomorphisms. A local isomorphism is étale.
 \end{proof}
 
@@ -931,6 +954,7 @@ Obviously, every w-purely-local morphism is w-local.
     all quasi-compact opens $U$ of $X$.
     \label{def:constructible-topology}
     \lean{constructibleTopology}
+    \leanok
 \end{definition}
 
 In other words, a subset of $X$ is open in the constructible topology if and only if
@@ -942,6 +966,7 @@ a quasi-compact open $U$.
     \uses{def:constructible-topology}
     \label{lemma:spectral-constructible-quasi-compact}
     \lean{compactSpace_withConstructibleTopology}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -982,6 +1007,7 @@ a quasi-compact open $U$.
     $Z$ is irreducible. But for every $i \in I - I'$, the set $B_i$ is open and hence
     the non-empty open $Z \cap B_i$ of $Z$ contains the unique generic point of $Z$. Hence
     $\bigcap_{i \in  I} B_i = Z \cap \bigcap_{i \in  I - I'} B_i$ is non-empty, which is again a contradiction.
+    \leanok
 \end{proof}
 
 \begin{lemma}[\stacksproject{0903}]
@@ -993,9 +1019,11 @@ a quasi-compact open $U$.
         \item If $E$ is stable under specialization, then $E$ is closed. \label{item:specialization-closed-spectral-constructible-closed-closed}
     \end{enumerate}
     \lean{exists_specializes_of_isClosed_constructibleTopology_of_mem_closure, IsClosed.of_isClosed_constructibleTopology}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:spectral-constructible-quasi-compact}
     It suffices to show the first claim. Let $x \in \overline{E}$
     and let $\{U_i\}_{i \in I}$ be the set of quasi-compact open neighbourhoods of $x$.
@@ -1058,6 +1086,7 @@ a quasi-compact open $U$.
 \label{thm:cartesian-profinite-w-local}
 \uses{def:w-local-space,def:w-local-space-map}
 \lean{ConnectedComponents.wlocalSpace_of_isPullback,ConnectedComponents.isWLocalMap_of_isPullback,ConnectedComponents.preimage_closedPoints_eq_closedPoints_of_isPullback}
+\leanok
 Let $X$ be a spectral space. Let
 \[
 \begin{tikzcd}
@@ -1175,6 +1204,7 @@ $A$-algebra $A_{w}$ with $A_w$ w-local. Let $A$ be a ring.
     the induced map $\tildering{A}{I}{f} \to (A / I)_{f}$.
     \label{def:tilde-locclosed}
     \lean{WLocalization.Generalization.submonoid, WLocalization.Generalization, WLocalization.Generalization.ideal}
+    \leanok
 \end{definition}
 
 If $Z \subseteq \spec{A}$ is a locally closed subscheme of the form $D(f) \cap V(I)$, we
@@ -1206,6 +1236,7 @@ on the choice of $f$ and $I$ \stacksproject{096V}.
       WLocalization.Generalization.bijOn_algebraMap_generalization_specComap_zeroLocus_ideal,
       WLocalization.Generalization.submonoid_le,WLocalization.Generalization.map,
       WLocalization.Generalization.exists_specializes_zeroLocus_ideal}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1243,11 +1274,13 @@ $V( \tildeideal{I}{f})$.
     \uses{def:tilde-locclosed}
     \label{lemma:tilde-locclosed-ind-zariski}
     \lean{WLocalization.Generalization.indZariski}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lemma:ind-Zariski-localization}
     $\tildering{A}{I}{f} = S^{-1} A$ for some multiplicative subset $A$.
+    \leanok
 \end{proof}
 
 \begin{definition}[Stratification by subsets]
@@ -1257,6 +1290,7 @@ $V( \tildeideal{I}{f})$.
     .\]
     \label{def:subset-stratum}
     \lean{WLocalization.stratum}
+    \leanok
 \end{definition}
 
 \begin{lemma}
@@ -1267,9 +1301,11 @@ $V( \tildeideal{I}{f})$.
     \uses{def:subset-stratum}
     \label{lemma:subset-stratum-equals-inter}
     \lean{WLocalization.stratum_eq_basicOpen_inter_zeroLocus}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     This is immediate from the definitions of $D$ and $V$.
 \end{proof}
 
@@ -1278,9 +1314,11 @@ $V( \tildeideal{I}{f})$.
     $F_1 \subseteq F_2$. Then $Z(E_2, F_2) \subseteq Z(E_1, F_1)$.
     \label{lemma:subset-stratum-mono}
     \lean{WLocalization.stratum_anti}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     This is immediate from the definition of $Z(-, -)$.
 \end{proof}
 
@@ -1292,6 +1330,7 @@ $V( \tildeideal{I}{f})$.
     \uses{def:subset-stratum}
     \label{lemma:subset-stratification}
     \lean{WLocalization.Stratification.Index.iUnion_stratum}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1313,6 +1352,7 @@ $V( \tildeideal{I}{f})$.
     \uses{def:subset-stratum, def:tilde-locclosed, lemma:subset-stratum-equals-inter}
     \label{def:finite-stratification-ring}
     \lean{WLocalization.ProdStrata, WLocalization.ProdStrata.ideal}
+    \leanok
 \end{definition}
 
 Note that \ref{def:finite-stratification-ring} is well-defined, because for finite
@@ -1326,6 +1366,7 @@ of the right form by \ref{lemma:subset-stratum-equals-inter}.
     \label{lemma:finite-stratification-ideal-bijection}
     \uses{def:finite-stratification-ring}
     \lean{WLocalization.ProdStrata.bijOn_algebraMap_specComap_zeroLocus_ideal}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1343,6 +1384,7 @@ of the right form by \ref{lemma:subset-stratum-equals-inter}.
     \label{lemma:finite-stratification-closed-points}
     \lean{WLocalization.ProdStrata.exists_specializes_zeroLocus_ideal,
       WLocalization.ProdStrata.mem_zeroLocus_ideal_of_isClosed}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1369,6 +1411,7 @@ $A_{\widetilde{Z(E_1', E_1'')}} \to A_{\widetilde{Z(E_2', E_2'')}}$.
     \uses{def:finite-stratification-ring, lemma:subset-stratum-mono}
     \label{lemma:finite-stratification-map-closed}
     \lean{WLocalization.ProdStrata.mapsTo_map_specComap}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1389,6 +1432,7 @@ $A_{\widetilde{Z(E_1', E_1'')}} \to A_{\widetilde{Z(E_2', E_2'')}}$.
     \uses{def:finite-stratification-ring, lemma:subset-stratum-mono, lemma:finite-stratification-map-closed}
     \label{def:w-localization}
     \lean{WLocalization.commAlgCat,WLocalization,WLocalization.ideal}
+    \leanok
 \end{definition}
 
 By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subsets $V(I_E)$.
@@ -1401,9 +1445,11 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     V(I) = \lim_{i \in I} V(I_i) = \bigcap_{i \in I} \text{preimage of } V(I_i) \text{ in } \spec{A}
     .\]
   \lean{zeroLocus_eq_iInter_specComap_preimage,specComap_preimage_zeroLocus_subset}
+  \leanok
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -1412,9 +1458,11 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \uses{def:w-localization}
     \label{lemma:w-localization-ind-Zariski}
     \lean{WLocalization.indZariski}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:ind-Zariski-products, lemma:ind-ind-Zariski}
     For $E \subseteq A$ a finite subset, the $A$-algebra $A_E$ is ind-Zariski
     as a finite product of ind-Zariski algebras by \ref{lemma:ind-Zariski-products}.
@@ -1427,6 +1475,7 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \label{lemma:w-localization-closed-points}
     \lean{WLocalization.bijOn_algebraMap_specComap_zeroLocus_ideal,
       WLocalization.exists_mem_zeroLocus_ideal_specializes,WLocalization.zeroLocus_ideal_eq}
+    \leanok
     Let $A$ be a ring.
     \begin{enumerate}
         \item The composition $V(I_w) \to \spec{A_w} \to \spec{A}$ is a bijection.
@@ -1474,6 +1523,7 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \uses{def:w-localization,def:w-local-ring}
     \label{cor:w-localization-w-local}
     \lean{WLocalization.isWLocalRing}
+    \leanok
 \end{corollary}
 
 \begin{proof}
@@ -1486,6 +1536,7 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \uses{def:w-localization}
     \label{lemma:w-localization-faithfully-flat}
     \lean{WLocalization.faithfullyFlat}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1519,9 +1570,11 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     the set of closed points is $V(IA_{\widetilde{V(I)}})$.
     \label{lemma:w-local-tilde-w-local}
     \lean{isWLocalRing_generalization_one,IsWLocalRing.zeroLocus_map_algebraMap_generalization_one_eq}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:generalization-specialization-closed, lemma:locally-closed-specializations,
       lemma:w-local-specialization-closed}
     By \ref{lemma:locally-closed-specializations}, $\spec{A_{\widetilde{V(I)}}}$ is homeomorphic
@@ -1607,9 +1660,11 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
   \uses{def:w-localization-ideal,def:w-local-ring}
   \label{lemma:w-localization-ideal-w-local}
   \lean{isWLocalRing_generalization_one,Ideal.WLocalization.isWLocalRing}
+  \leanok
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{lemma:w-local-tilde-w-local, cor:w-localization-w-local}
   Follows immediately from \Cref{lemma:w-local-tilde-w-local} and \Cref{cor:w-localization-w-local}.
 \end{proof}
@@ -1636,6 +1691,7 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \lean{Ideal.WLocalization.zeroLocus_map_algebraMap_eq_closedPoints,
       Ideal.WLocalization.quotientMap_algebraMap_bijective,
       Ideal.WLocalization.bijOn_zeroLocus_map}
+    \leanok
     Let $I \subseteq A$ be an ideal such that $V(I) \subseteq A$ only contains closed points. Then
     \begin{enumerate}
         \item the set of closed points of $A_{w, I}$ is $V(IA_{w, I})$, and
@@ -1644,6 +1700,7 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:w-localization-ind-Zariski,thm:ind-Zariski-identifies-local-rings,lemma:w-local-tilde-w-local,thm:isom-of-identifies-local-rings-bijective,lemma:preimage-closed-points-algebraic,lemma:tilde-locclosed-ind-zariski,lemma:locally-closed-specializations}
     $A \to A_w$ is ind-Zariski by \ref{lemma:w-localization-ind-Zariski} and therefore induces
     algebraic extensions of residue fields by \ref{thm:ind-Zariski-identifies-local-rings}.
@@ -1786,6 +1843,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     $A$.
     \label{def:etale-precontraction}
     \lean{CategoryTheory.MorphismProperty.precontraction}
+    \leanok
 \end{definition}
 
 \begin{lemma}
@@ -1793,10 +1851,12 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \label{lemma:etale-precontraction-semi-retraction}
     For every faithfully flat étale ring map $A \to B$, there exists an $A$-algebra map $B \to T(A)$.
     \lean{CategoryTheory.MorphismProperty.Precontraction.π}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     $\{B\}$ is an element of $S(A)$, hence $B$ itself is part of the diagram defining $T(A)$.
+    \leanok
 \end{proof}
 
 \begin{lemma}
@@ -1814,6 +1874,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
         CommAlgCat.preservesFilteredColimitsOfSize_forget_commRingCat,
         CommAlgCat.preservesFilteredColimitsOfSize_forget_algCat,
         AlgCat.preservesFilteredColimitsOfSize_forget_moduleCat}
+    \leanok
 \end{lemma}
 
 \begin{lemma}
@@ -1824,12 +1885,14 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
       Module.Flat.iff_ind_flat,Module.FaithfullyFlat.iff_ind_faithfullyFlat,
       RingHom.Flat.iff_ind_flat,RingHom.FaithfullyFlat.iff_ind_faithfullyFlat,
       RingHom.Flat.of_isColimit,RingHom.FaithfullyFlat.of_isColimit}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lemma:commalgcat-colimits}
     Because colimits commute with tensor products, ind-flat is flat. One also checks
     that pro-surjective is surjective, hence the claim.
+    \leanok
 \end{proof}
 
 \begin{lemma}
@@ -1837,10 +1900,12 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \label{lemma:etale-precontraction-ind-etale}
     \uses{def:etale-precontraction, def:ind-etale}
     \lean{CategoryTheory.MorphismProperty.pro_precontraction_hom}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lemma:ind-faithfully-flat}
+    \leanok
     For every $E \in S(A)$, the $A$-algebra $\bigotimes_{B \in E} B$ is étale and faithfully flat. Hence
     the result follows from the definition of ind-étale and \Cref{lemma:ind-faithfully-flat}.
 \end{proof}
@@ -1860,9 +1925,11 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \uses{def:etale-contraction,def:ind-etale}
     \label{lemma:etale-contraction-ind-etale}
     \lean{faithfullyFlat_indEtaleContraction, indEtale_indEtaleContraction}
+    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:etale-precontraction-ind-etale, lemma:ind-faithfully-flat, lemma:ind-ind-etale}
     This follows from \Cref{lemma:etale-precontraction-ind-etale}, \Cref{lemma:ind-faithfully-flat}
     and \Cref{lemma:ind-ind-etale}.
@@ -1908,6 +1975,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \uses{def:ind-etale}
     \label{lemma:field-local-ind-etale}
     \lean{Algebra.IndEtale.isSeparable}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1926,6 +1994,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \uses{def:ind-etale}
     \label{prop:ind-etale-residue-fields}
     \lean{Algebra.IndEtale.isSeparable_residueField}
+    \leanok
 \end{proposition}
 
 \begin{proof}
@@ -1984,6 +2053,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
   \label{def:colim-open-closed-localizations}
   \lean{WContractification.RestrictClopen.map,WContractification.Restriction.diag,
     WContractification.Restriction}
+  \leanok
   Let $A$ be a ring, $X = \Spec(A)$, and $T \subset \pi_0(X)$. Define the ring $A_T$ by
   \[ 
     A_T := \colim_{W} A_W,
@@ -1999,6 +2069,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     WContractification.Restriction.algebraMap_surjective,
     WContractification.Restriction.range_algebraMap_specComap,
     WContractification.Restriction.isClosedEmbedding_algebraMap_specComap}
+  \leanok
   Let $A$ be a ring, $X = \Spec(A)$, and $T \subset \pi_0(X)$ a closed subset. 
   Then the map $A \to A_T$ from \Cref{def:colim-open-closed-localizations} is a surjective 
   ind-Zariski ring map, and the induced morphism $\Spec(A_T) \to \Spec(A)$ restricts to a 
@@ -2037,10 +2108,12 @@ In the following series of constructions, we will modify the connected component
   \uses{def:modify-pi0-finite,def:ind-Zariski,def:identify-local-rings}
   \lean{WContractification.Pullback.indZariski,
         WContractification.Pullback.bijectiveOnStalks_algebraMap}
+  \leanok
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be profinite space and let $f : T \to \pi_0(X)$ be a continuous map. Let \(S\) be a finite discrete quotient of \(T\) with quotient map \(q : T \to S\). Then the $A^S$-algebra defined in \Cref{def:modify-pi0-finite} viewed as $A$-algebra through $A \to A^S \to A^f_{q}$ is ind-Zariski. In particular, it identifies local rings. The map $A^S \to A^f_{q}$ induces a homeomorphism of $\Spec (A^f_{q})$ onto \((X \times S) \times_{\pi_0(X) \times S} Z = X \times_{\pi_0(X)} Z\).
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:ind-Zariski-identifies-local-rings,thm:colim-open-closed-localizations-surj-ind-zariski,thm:ind-Zariski-composition,thm:ind-Zariski-identifies-local-rings}
   The map $A \to A^S$ is ind-Zariski by \Cref{lemma:ind-Zariski-products} and $A^S \to A^f_{q}$ is also ind-Zariski by \Cref{thm:colim-open-closed-localizations-surj-ind-zariski}.  The composition $A \to A^f_{q}$ is therefore ind-Zariski as well by \Cref{thm:ind-Zariski-composition}. By \Cref{thm:ind-Zariski-identifies-local-rings}, $A \to A^f_{q}$ identifies local rings. The last sentence is a direct consequence of \Cref{thm:colim-open-closed-localizations-surj-ind-zariski}.
 \end{proof}
@@ -2157,7 +2230,6 @@ this we will perform a series of reductions.
 
 \begin{proof}
   \uses{thm:ind-etale-base-change,thm:ind-etale-strictly-henselian-localization-isom,thm:ff-identifies-local-rings-plus-c-has-retraction-if}
-  \leanok
   Let \(A \to B\) be a faithfully flat ind-étale map with \(B\) w-local and such that the closed points of \(\Spec(B)\) are exactly \(V(IB)\). In this case, \(A \to B\) identifies local rings. To justify this, it suffices to check the condition at the maximal ideals of \(B\), which lie over maximal ideals of \(A\) since they map to \(V(I) = (\Spec(A))^c\). Since \(A\) is w-strictly local, the local rings of \(A\) at its maximal ideals are strictly Henselian.
 
   Now fix a maximal ideal \(\mathfrak{n}\) of \(B\) and let \(\mathfrak{m} = \mathfrak{n} \cap A\) be its preimage in \(A\), which is a maximal ideal. By base change to \(A_{\mathfrak{m}}\) and applying \Cref{thm:ind-etale-base-change}, we reduce to the case where \(B\) is ind-étale over a strictly Henselian local ring \(A\), with a maximal ideal \(\mathfrak{n}\) lying over the maximal ideal \(\mathfrak{m}\) of \(A\). We then want to show \(B_{\mathfrak{n}} \cong A\). This follows from \Cref{thm:ind-etale-strictly-henselian-localization-isom}.
@@ -2204,8 +2276,6 @@ this we will perform a series of reductions.
 \end{lemma}
 
 \begin{proof}
-
-\leanok
   % The proof goes as in https://stacks.math.columbia.edu/tag/0983, starting from the second sentence.
   \uses{thm:extremally-disconnected-cover,def:modify-pi0-profinite,thm:modify-pi0-profinite-properties,thm:cartesian-profinite-w-local,thm:ind-Zariski-identifies-local-rings}
   Choose an extremally disconnected space $T$ and a surjective continuous map $T \to \pi_0(\operatorname{Spec}(C))$ by \Cref{thm:extremally-disconnected-cover}. (\(T\) can be chosen as \(\beta((\pi_0(\operatorname{Spec}(C)))^{\textnormal{disc}})\).) Note that $T$ is profinite.
