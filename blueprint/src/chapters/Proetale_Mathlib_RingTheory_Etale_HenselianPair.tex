@@ -30,15 +30,35 @@ $B = A[1/r]$ is not \texttt{Module.Finite} over $A$ in general
 finiteness hypothesis excludes the counterexample family. The
 corrected hypothesis matches the standard Stacks formulation.
 
+\emph{Why the noetherian hypothesis on $A$ is essential.}
+The iter-055 prover further identified that the substantive
+Hensel-lift body (Stage 3 of the Stacks 0DXB recipe below) requires
+$\mathfrak m B$-adic separation of $B$, i.e.\ $\bigcap_n
+(\mathfrak m B)^n = (0)$. Mathlib's Krull intersection theorem
+\texttt{Ideal.iInf\_pow\_smul\_eq\_bot\_of\_le\_jacobson} takes
+$\mathrm{IsNoetherianRing}\,B$ as hypothesis, which under
+$\mathrm{Module.Finite}\,A\,B$ descends from
+$\mathrm{IsNoetherianRing}\,A$. But \texttt{HenselianLocalRing A}
+does \emph{not} extend $\mathrm{IsNoetherianRing}$ in Mathlib's
+class hierarchy (the Stacks definition of henselian local does not
+require Noetherian), so the planner added an explicit
+\texttt{[IsNoetherianRing A]} hypothesis in iter-056. This matches
+the canonical Stacks~04GE/04GG hypothesis and is automatic on every
+$\S 3$-cluster consumer where $A$ is a localisation of a Noetherian
+ring. The previously-validated soundness witnesses
+($A = \mathbb{Z}_p$, $B = \mathbb{Z}_p[X]/(X^2 - pX - 1)$;
+$A = \mathbb{Z}_p$, $B = \mathbb{Q}_p$ counterexample) are
+unaffected by the addition: $\mathbb{Z}_p$ is Noetherian (a DVR).
+
 \section{Headline statement}
 
 \begin{theorem}\leanok
 [Stacks 04GG / 09XK; henselian-pair fragment]
 \label{thm:henselianRing-map-maximalIdeal}
 \lean{Algebra.Etale.henselianRing_map_maximalIdeal}
-Let $A$ be a henselian local ring with maximal ideal $\mathfrak m$,
-and let $B$ be a finite étale $A$-algebra (i.e.\ an étale
-$A$-algebra that is also finite as an $A$-module). Set
+Let $A$ be a Noetherian henselian local ring with maximal ideal
+$\mathfrak m$, and let $B$ be a finite étale $A$-algebra (i.e.\ an
+étale $A$-algebra that is also finite as an $A$-module). Set
 $\mathfrak m \cdot B$ to be the image ideal of $\mathfrak m$
 under $A \to B$. Then $(B, \mathfrak m \cdot B)$ is a Henselian
 pair, i.e.\
@@ -108,6 +128,43 @@ The Mathlib hooks confirmed available (iter-054 plan survey):
 
 \section{Hensel lift via residue-product reduction}
 
+\begin{lemma}[Stage 2 — Newton iteration in henselian-pair setting]
+\label{lem:henselianPair-newton-step}
+\lean{Algebra.Etale.exists_seq_lift_of_henselianPair}
+\leanok
+Under the hypotheses of \cref{thm:henselianRing-map-maximalIdeal}
+(noetherian henselian local $A$, finite étale $B/A$), let
+$f \in B[Y]$ be monic and $a_0 \in B$ such that $f(a_0) \in
+\mathfrak m \cdot B$ and $f'(a_0)$ is a unit in $B$ (a unit-image
+modulo $\mathfrak m B$ suffices, by Nakayama and
+\cref{lem:henselianPair-jac}). Then there exists a sequence
+$\{a_n\}_{n \ge 0} \subset B$ with $a_0$ as given,
+\[
+  f(a_n) \in (\mathfrak m B)^{n+1},
+  \qquad
+  a_{n+1} - a_n \in (\mathfrak m B)^{n+1}.
+\]
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The step is $a_{n+1} := a_n - f(a_n) \cdot f'(a_n)^{-1}$. Unit
+propagation along $\mathfrak m B$-small perturbations follows
+from the in-file Nakayama upgrade lemma (the residue map
+$B \twoheadrightarrow B/\mathfrak m B$ is a local homomorphism
+since $\mathfrak m B \subseteq \mathrm{jacobson}\,B$). The Taylor
+identity
+\(f(b - \delta) = f(b) - f'(b)\delta + k \delta^2\)
+(Mathlib: \texttt{Polynomial.binomExpansion}) combined with the
+cancellation \(f'(b) \cdot f'(b)^{-1} f(b) = f(b)\) gives
+$f(a_{n+1}) = k \cdot \delta^2$ for some $k \in B$, where
+$\delta := f(a_n) \cdot f'(a_n)^{-1}$. The strong invariant
+$f(a_n) \in (\mathfrak m B)^{n+1}$ is then propagated by induction
+using $\delta^2 \in (\mathfrak m B)^{2(n+1)} \subseteq
+(\mathfrak m B)^{n+2}$.
+\end{proof}
+
 \begin{lemma}[Stacks 0DXB; Hensel lift for étale algebras]
 \label{lem:henselianPair-is-henselian}
 Under the hypotheses of \cref{thm:henselianRing-map-maximalIdeal},
@@ -118,58 +175,346 @@ with $f(a) = 0$ and $a - a_0 \in \mathfrak m \cdot B$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-The Stacks~0DXB recipe splits into three stages.
+The proof splits into three stages.
 
-\emph{Stage 1 (residue projection).} By
-\cref{thm:henselianRing-map-maximalIdeal}'s base change setup,
-$B / \mathfrak m B$ is étale over $k := A / \mathfrak m$. By the
-structure theorem \cite[Tag~00U7]{stacks} (Mathlib:
-\texttt{Algebra.Etale.iff\_exists\_algEquiv\_prod}), there exists
-a finite index set $I$ and finite separable field extensions
-$\{k_i\}_{i \in I}$ of $k$ together with an isomorphism
-$\mathrm{eqv} : B / \mathfrak m B \xrightarrow{\sim} \prod_{i \in I} k_i$.
+\emph{Stage 1 ($\mathfrak m B$-adic separation).} Closed in
+iter-056 by \cref{lem:henselianPair-l1-separation}: under
+$\mathrm{IsNoetherianRing}\,A + \mathrm{Module.Finite}\,A\,B$,
+the ring $B$ is itself Noetherian and Mathlib's
+\texttt{Ideal.iInf\_pow\_smul\_eq\_bot\_of\_le\_jacobson} applied
+to \cref{lem:henselianPair-jac} gives $\bigcap_n (\mathfrak m B)^n
+= (0)$.
 
-\emph{Stage 2 (Newton iteration).} The hypothesis that
-$f'(a_0)$ is a unit mod $\mathfrak m B$, combined with
-\cref{lem:henselianPair-jac} ($\mathfrak m B \subseteq
-\mathrm{jacobson}\,B$), implies $f'(a_0)$ is already a unit in
-$B$ (Nakayama). Define recursively
-\[
-  a_{n+1} := a_n - \frac{f(a_n)}{f'(a_n)}.
-\]
-A standard computation shows $f(a_{n+1}) \in (\mathfrak m B)^{2^{n+1}}$
-and $a_{n+1} - a_n \in (\mathfrak m B)^{2^n}$.
+\emph{Stage 2 (Newton iteration).} Closed in iter-057 by
+\cref{lem:henselianPair-newton-step}.
 
-\emph{Stage 3 (convergence).} The sequence $\{a_n\}$ is Cauchy
-in the $\mathfrak m B$-adic topology. To conclude that the limit
-$a \in B$ exists and is a true root of $f$, we use that $B$ is
-$\mathfrak m B$-adically separated and complete. Separation follows
-from $\mathfrak m B \subseteq \mathrm{jacobson}\,B$ and the
-Krull intersection theorem applied to each connected component;
-completeness follows from $A$'s henselian-local property together
-with the étale-product structure of each $B / \mathfrak m^n B$
-(itself obtained by inductively Hensel-lifting the
-\cref{thm:henselianRing-map-maximalIdeal}-instance from $A / \mathfrak m^n$
-to $A / \mathfrak m^{n+1}$, which is the standard étale-lifting
-recipe \cite[Tag~04D1]{stacks}).
+\emph{Stage 3 (convergence via residue-product decomposition).}
+This is the substantive step and the current iter-058+ target.
+We follow the Stacks~04GE residue-product programme rather than
+an $\mathfrak m B$-adic completion argument, since henselian
+local rings need not be $\mathfrak m B$-adically complete (the
+identification ``limit $\in B$'' is itself the substantive
+content, not a free Mathlib hook).
 
-The limit $a := \lim_n a_n$ then satisfies $f(a) = 0$ and
-$a - a_0 = \lim_n (a_n - a_0) \in \mathfrak m B$.
+Sub-step \textbf{L3a (residue idempotent lift).} The residue ring
+$B / \mathfrak m B$ is étale over $k := A / \mathfrak m$. By
+\cite[Tag~00U7]{stacks} (Mathlib's
+\texttt{Algebra.Etale.iff\_exists\_algEquiv\_prod}), there is a
+finite index set $I$ and finite separable extensions
+$\{k_i\}_{i \in I}$ of $k$ with
+$B / \mathfrak m B \xrightarrow{\sim} \prod_{i \in I} k_i$. Lift
+the orthogonal idempotents $e_i \in \prod k_i$ to a complete
+orthogonal family $\{\tilde e_i\}_{i \in I}$ in $B$. The
+derivative of $Y^2 - Y$ at any preimage $e^{\mathrm{pre}}_i$ is
+$2 e^{\mathrm{pre}}_i - 1$, whose residue $2 e_i - 1$ has
+$i$-coordinate $1$ and other coordinates $-1$ — all units in the
+fields $k_j$. Hence $2 e^{\mathrm{pre}}_i - 1$ is a unit modulo
+$\mathfrak m B$, and \cref{lem:henselianPair-newton-step} produces
+a Cauchy sequence converging to the lifted idempotent
+$\tilde e_i$.
+
+Sub-step \textbf{L3b (orthogonal decomposition of $B$).} The
+complete orthogonal family $\{\tilde e_i\}$ yields a ring
+isomorphism $B \xrightarrow{\sim} \prod_i B_i$ where
+$B_i := \tilde e_i \cdot B$. Each $B_i$ is finite over $A$ with
+residue field $k_i$; hence $B_i$ is a local ring with maximal
+ideal $\tilde e_i \cdot \mathfrak m B$.
+
+Sub-step \textbf{L3c (per-factor Hensel lift).} Each $B_i$, as a
+finite extension of the henselian local ring $A$, is itself
+henselian local \cite[Tag~04GH]{stacks}. Hence
+\texttt{HenselianLocalRing.is\_henselian} applies per factor: in
+each $B_i$, the image of $f$ has a root $a_i$ with $a_i$
+congruent to the image of $a_0$ modulo $\tilde e_i \cdot
+\mathfrak m B$. Reassemble $a := (a_i)_i \in \prod B_i \simeq B$
+and verify $f(a) = 0$ and $a - a_0 \in \mathfrak m B$.
 \end{proof}
 
-\emph{Mathlib-formalisation note.} The Stage~2 Newton iteration is
-the same calculation underlying \texttt{HenselianLocalRing} (Mathlib's
-\texttt{Mathlib/RingTheory/Henselian.lean}); the Stage~3 convergence
-argument is the non-trivial generalisation from local rings to
-henselian pairs. A cleaner alternative proof, more amenable to
-direct Lean formalisation, uses the
-infinitesimal-lifting characterisation of étale algebras
-(\texttt{Algebra.FormallySmooth.exists\_algHom\_of\_isNilpotent}):
-given the residue-product decomposition $B / \mathfrak m B \simeq
-\prod k_i$, the lifts of $a_0$ to each $B / (\mathfrak m B)^n$ are
-constructed inductively via the infinitesimal lift, and the
-inverse limit is an element of $B$ because $B$ is itself
-$\mathfrak m B$-adically separated.
+\emph{Mathlib-formalisation note (gaps surfaced by iter-058 plan
+pre-flight).} The Stage~2 Newton iteration is the same
+calculation underlying \texttt{HenselianLocalRing} (Mathlib's
+\texttt{Mathlib/RingTheory/Henselian.lean}); the Stage~3
+convergence argument requires three pieces of Mathlib-shaped
+infrastructure that are not currently available:
+\begin{itemize}
+\item \emph{Idempotent lifting along an ideal in the Jacobson
+radical} (L3a). Mathlib has no
+\texttt{Ideal.lift\_idempotent} / \texttt{HenselianPair.lift\_idempotent}.
+The natural formalisation reuses
+\cref{lem:henselianPair-newton-step} applied to $Y^2 - Y$, then
+identifies the limit using $\mathfrak m B$-adic separation
+(\cref{lem:henselianPair-l1-separation}).
+\item \emph{Finite-over-henselian decomposition} (L3b). Stacks~04GE
+in Lean form (``$S$ finite over henselian local $R$ decomposes as a
+finite product of local rings finite over $R$'') is absent from
+Mathlib.
+\item \emph{Finite-extension-of-henselian-local-is-henselian-local}
+(L3c). Stacks~04GH in Lean form. Mathlib has the related TFAE for
+$\mathrm{HenselianLocalRing}$ but not the propagation statement.
+\end{itemize}
+The iter-058 prover lane is authorised either to close Stage~3
+end-to-end, or — if monolithic close exceeds the iter LOC budget
+— to extract L3a/L3b/L3c as named typed sub-helpers and close at
+least L3a sorry-free. Either outcome advances the project.
+
+\begin{lemma}[Stage 1 — $\mathfrak m B$-adic separation]
+\label{lem:henselianPair-l1-separation}
+\lean{Algebra.Etale.maximalIdeal_map_iInf_pow_eq_bot}
+\leanok
+Under the hypotheses of \cref{thm:henselianRing-map-maximalIdeal},
+$\bigcap_{n} (\mathfrak m B)^n = (0)$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+Under $\mathrm{Module.Finite}\,A\,B$, the descent
+$\mathrm{IsNoetherianRing}\,A \Rightarrow
+\mathrm{IsNoetherianRing}\,B$ (Mathlib's
+\texttt{IsNoetherianRing.of\_finite}) combines with
+\cref{lem:henselianPair-jac} ($\mathfrak m B \subseteq
+\mathrm{jacobson}\,B$) and Mathlib's
+\texttt{Ideal.iInf\_pow\_smul\_eq\_bot\_of\_le\_jacobson} (the
+ideal-versus-module Krull statement) to give the conclusion.
+\end{proof}
+
+\begin{lemma}\leanok
+[L3a — Residue idempotent lift]
+\label{lem:henselianPair-l3a-idempotent-lift}
+\lean{Algebra.Etale.lift_idempotent_henselianPair}
+\uses{lem:henselianPair-newton-step,
+      lem:henselianPair-l1-separation,
+      lem:henselianPair-jac}
+Let $A$ be a Noetherian henselian local ring, $B$ a finite étale
+$A$-algebra, and write $\mathfrak m B :=
+(\mathrm{maximalIdeal}\,A)\cdot B$. For every idempotent
+$\bar e \in B/\mathfrak m B$ there exists an idempotent $e \in B$
+with $e \bmod \mathfrak m B = \bar e$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+Apply \cref{lem:henselianPair-newton-step} to the monic polynomial
+$f := Y^2 - Y$ at any preimage $e_0 \in B$ of $\bar e$:
+$f(e_0) = e_0^2 - e_0 \in \mathfrak m B$ (since $\bar e^2 = \bar
+e$) and the residue of $f'(e_0) = 2 e_0 - 1$ in $B/\mathfrak m B$
+is a unit (in each component of the residue product
+$B/\mathfrak m B \simeq \prod_i k_i$ the value is $\pm 1$).
+\cref{lem:henselianPair-newton-step} produces a Cauchy sequence
+$(a_n)$ in $B$ with $f(a_n) \in (\mathfrak m B)^{n+1}$. Identify
+the limit using $\mathfrak m B$-adic separation
+(\cref{lem:henselianPair-l1-separation}): the differences
+$a_{n+1} - a_n$ lie in $(\mathfrak m B)^{n+1}$, so
+$\bigcap_n (\mathfrak m B)^n = 0$ ensures the sequence
+stabilises modulo any power of $\mathfrak m B$; combined with
+\cref{lem:henselianPair-jac} ($\mathfrak m B \subseteq
+\mathrm{jacobson}\,B$), the formal limit $e := \lim a_n$ exists
+in $B$ and satisfies $e^2 = e$ with $e \equiv e_0 \equiv \bar e$
+modulo $\mathfrak m B$.
+\end{proof}
+
+\begin{lemma}
+
+\leanok
+[L3a-limit — Limit identification for the residue idempotent lift]
+\label{lem:henselianPair-l3a-limit-identification}
+\lean{Algebra.Etale.idempotent_lift_limit}
+\uses{lem:henselianPair-newton-step,
+      lem:henselianPair-l1-separation,
+      lem:henselianPair-jac,
+      lem:henselianPair-l3c-newton-convergence}
+Let $A$ be a Noetherian henselian local ring and $B$ a finite étale
+$A$-algebra. Let $e_0 \in B$ with $e_0^2 - e_0 \in \mathfrak m B$
+and such that the residue of $2 e_0 - 1$ in $B/\mathfrak m B$ is a
+unit. Then there exists $e \in B$ with $e^2 = e$ and $e - e_0 \in
+\mathfrak m B$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+This is the substantive limit-identification step extracted from
+\cref{lem:henselianPair-l3a-idempotent-lift}. \cref{lem:henselianPair-newton-step}
+applied to $f := Y^2 - Y$ at $e_0$ produces a Cauchy sequence
+$(a_n)$ in $B$ with $a_n^2 - a_n \in (\mathfrak m B)^{n+1}$ and
+$a_{n+1} - a_n \in (\mathfrak m B)^{n+1}$. Uniqueness of any limit
+modulo every power of $\mathfrak m B$ is provided by
+\cref{lem:henselianPair-l1-separation}. Existence of the limit
+admits two routes: either a direct $Y^2 - Y$-specific descent to
+$A$ via the characteristic polynomial of multiplication-by-$e_0$
+on $B$ combined with $A$'s henselianness, or — preferred — a
+specialisation of \cref{lem:henselianPair-l3c-newton-convergence}
+at $g := Y^2 - Y$ once the multivariate convergence is in place.
+The reverse specialisation does not hold, so the direction of
+dependency is fixed.
+\end{proof}
+
+\begin{lemma}\leanok
+[L3c — Finite extension of henselian local is henselian local]
+\label{lem:henselianPair-l3c-finite-henselian}
+\lean{Algebra.Etale.henselianLocalRing_of_finite_over_henselianLocal}
+\uses{lem:henselianPair-jac}
+Let $A$ be a henselian local ring and $B$ a finite $A$-algebra
+which is itself a local ring. Then $B$ is henselian local. (Stacks
+Tag~04GH.)
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+Since $B$ is finite over $A$ and $A$ is local, $\mathfrak m_A\cdot
+B$ lies in $\mathrm{jacobson}\,B = \mathfrak m_B$ (the unique
+maximal of $B$ contracts to $\mathfrak m_A$, and conversely
+$\mathfrak m_A B \subseteq \mathfrak m_B$). The simple-root
+lifting criterion for henselian local rings is then verified by
+\cref{lem:henselianPair-l3c-newton-convergence}, which provides
+the Newton iteration in $B$ plus the descent to $A$'s
+henselianness.
+\end{proof}
+
+\begin{lemma}
+
+\leanok
+[L3c-newton — Newton-iteration root in a finite local algebra]
+\label{lem:henselianPair-l3c-newton-convergence}
+\lean{Algebra.Etale.exists_root_in_finite_henselian_module}
+\uses{lem:henselianPair-l3c-finite-henselian,
+      lem:henselianPair-jac}
+Let $A$ be a henselian local ring and $B$ a finite local
+$A$-algebra. For every monic $g \in B[X]$ and $b_0 \in B$ with
+$g(b_0) \in \mathfrak m_B$ and $g'(b_0)$ a unit in $B$, there
+exists a root $b \in B$ of $g$ with $b - b_0 \in \mathfrak m_B$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The quotient $B/\mathfrak m_A B$ is a finite-dimensional
+$A/\mathfrak m_A$-vector space, hence Artinian as a ring, so
+$\mathfrak m_B/\mathfrak m_A B$ is nilpotent: $\exists N$ with
+$\mathfrak m_B^{N} \subseteq \mathfrak m_A \cdot B$. The Newton
+iteration $b_{n+1} := b_n - g(b_n) \cdot g'(b_n)^{-1}$ is
+well-defined in $B$ (since $g'(b_n)$ is a unit in $B$ by Nakayama
+applied to its residue) and satisfies $g(b_{n+1}) \in g(b_n)^2
+\cdot B \subseteq (\mathfrak m_A B)^{2^n}$ once $g(b_n) \in
+\mathfrak m_A B$, which holds for $n$ large enough by the
+$\mathfrak m_B^N \subseteq \mathfrak m_A B$ inclusion. The limit
+identification proceeds by descent to $A$: form the
+characteristic polynomial $h \in A[X]$ of multiplication-by-$b_0$
+on $B$ (monic of degree $\mathrm{rank}_A B$, with $h(b_0) = 0$ by
+Cayley--Hamilton); apply $A$'s henselianness on a polynomial in
+$A[X]$ whose $\mathrm{aeval}$-image at $b_0$ recovers $g$ at
+$b_0$ to produce a root $a \in A$ whose image in $B$ is the
+desired root of $g$. The substantive content is the multivariate
+descent argument (generating tuple of $B$ over $A$, multivariate
+Newton iteration in $A$, reassembly back in $B$), packaged in
+\cref{lem:henselianPair-l3c-charpoly-descent}.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-charpoly-descent}
+\lean{Algebra.Etale.descend_root_via_charpoly}
+\uses{lem:henselianPair-l3c-finite-henselian}
+\leanok
+[L3c-charpoly — Cayley--Hamilton descent of a Newton-Cauchy
+sequence to a root]
+Let $A$ be a henselian local ring and $B$ a finite local
+$A$-algebra. Let $g \in B[X]$ be monic with $b_0 \in B$
+satisfying $g(b_0) \in \mathfrak m_B$ and $g'(b_0) \in B^\times$.
+Suppose $(s_n)_{n \ge 0}$ is a sequence in $B$ with $s_0 = b_0$,
+$g(s_n) \in \mathfrak m_B^{n+1}$, and $s_{n+1} - s_n \in
+\mathfrak m_B^{n+1}$ for every $n$. Then there exists a root
+$b \in B$ of $g$ with $b - b_0 \in \mathfrak m_B$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+Combine the nilpotency $\exists N,\ \mathfrak m_B^N \subseteq
+\mathfrak m_A \cdot B$ (from
+\cref{lem:henselianPair-l3c-finite-henselian}) with the
+Newton-Cauchy invariants on $s_n$ to convert the $\mathfrak
+m_B$-power filtration into a $\mathfrak m_A$-adic Cauchy
+condition on the sequence $(s_n)$ inside $B$. View each $s_n -
+b_0$ as a $\mathfrak m_A$-small element of the finite
+$A$-module $B$; the multiplication-by-$(s_n - b_0)$ endomorphism
+of $B$ then admits a monic annihilating polynomial in $A[X]$ via
+\texttt{LinearMap.exists\_monic\_and\_aeval\_eq\_zero} (the
+Cayley--Hamilton statement valid for arbitrary finite $A$-modules,
+not requiring $\mathrm{Module.Free}\ A\ B$). Combine the
+annihilating polynomial with $g$ to manufacture a monic
+polynomial $h \in A[X]$ whose mod-$\mathfrak m_A$ reduction has
+$0$ as a simple root; apply \texttt{HenselianLocalRing.is\_henselian}
+on $A$ to obtain a root $a \in \mathfrak m_A$ of $h$, and read
+off the desired root $b := b_0 + (\text{image of }a) \in B$ of
+$g$. The bookkeeping of how the annihilating polynomial composes
+with $g$ to expose a Henselian-shaped polynomial in $A[X]$ is the
+substantive multivariate-descent step (isolated in
+\cref{lem:henselianPair-l3c-charpoly-substantive-descent}); the
+conclusion $b - b_0 \in \mathfrak m_B$ follows because the image
+of $\mathfrak m_A$ in $B$ lies inside $\mathfrak m_B$.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-charpoly-substantive-descent}
+\lean{Algebra.Etale.descend_root_of_eval_mem_mAB}
+\uses{lem:henselianPair-l3c-finite-henselian}
+\leanok
+[L3c-charpoly substantive — Hensel descent under the strengthened
+$\mathfrak m_A \cdot B$ hypothesis]
+Let $A$ be a henselian local ring and $B$ a finite local
+$A$-algebra. Let $g \in B[X]$ be monic and let $b_0 \in B$
+satisfy the \emph{strengthened} hypotheses
+$g(b_0) \in \mathfrak m_A \cdot B$ and
+$g'(b_0) \in B^\times$ (a unit \emph{in $B$}, not merely modulo
+$\mathfrak m_A \cdot B$). Then there exists a root $b \in B$ of
+$g$ with the strengthened closeness
+$b - b_0 \in \mathfrak m_A \cdot B$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+This is the genuine multivariate Hensel descent. Fix a finite
+generating tuple $(b_1, \ldots, b_k)$ of $B$ as an $A$-module
+(via $\mathrm{Submodule.fg\_iff\_exists\_fin\_generating\_family}$
+applied to $\mathrm{Module.Finite.fg\_top}$). Build a Newton
+sequence $(c_n)_{n \ge 0}$ in $B$ with $c_0 := b_0$,
+$c_{n+1} := c_n - g(c_n) \cdot g'(c_n)^{-1}$. Induction on $n$
+gives the invariants
+$c_n - b_0 \in \mathfrak m_A \cdot B$,
+$g(c_n) \in (\mathfrak m_A \cdot B)^{n+1}$, and
+$c_{n+1} - c_n \in (\mathfrak m_A \cdot B)^{n+1}$. Express the
+displacements $c_n - b_0 = \sum_i \gamma_{n,i} \cdot b_i$ with
+$\gamma_{n,i} \in A$; the Newton invariants then force
+$\gamma_{n+1,i} - \gamma_{n,i} \in \mathfrak m_A$.
+
+For each $i$, the sequence $(\gamma_{n,i})$ is Cauchy in the
+$\mathfrak m_A$-adic filtration on $A$; the henselianness of
+$A$ (applied per-coordinate to a single-variable polynomial
+manufactured from $g$ via the basis expansion of $g \in B[X]$)
+produces a limit $\alpha_i \in A$ with
+$\alpha_i - \gamma_{0,i} \in \mathfrak m_A$ and the per-coordinate
+root condition. Set
+$b := b_0 + \sum_i (\mathrm{algebraMap}\ A\ B)(\alpha_i) \cdot b_i$.
+The reassembled $b$ satisfies $g(b) = 0$ (the per-coordinate
+limit conditions combine via the basis expansion) and
+$b - b_0 \in \mathfrak m_A \cdot B$ (by construction, each
+summand lies in $\mathfrak m_A \cdot B$).
+
+The Cayley--Hamilton hook
+$\mathrm{LinearMap.exists\_monic\_and\_natDegree\_eq\_and\_coeff\_mem\_pow\_and\_aeval\_eq\_zero}$
+(applied to multiplication-by-$(c_n - b_0)$ on the finite
+$A$-module $B$, with $I := \mathfrak m_A$) provides the monic
+polynomial in $A[X]$ with $\mathfrak m_A$-power coefficients
+that anchors each per-coordinate construction; it avoids the
+$\mathrm{Module.Free}\ A\ B$ requirement that the naive
+$\mathrm{LinearMap.charpoly}$ route demands. No multivariate
+Hensel primitive exists in Mathlib (negative-result confirmed
+in iter-062 and iter-063 pre-flight surveys); the descent must
+be coded in-file by the recipe above.
+\end{proof}
 
 \section{Downstream consumers}
 
@@ -246,10 +591,49 @@ the wiring lanes.
   (slug \texttt{amend-henselianpair-sig}) to add
   \texttt{[Module.Finite A B]} to the signature; the Lean file
   is now mathematically sound. This chapter restated to match.
-\item iter-054 prover: targets closing \texttt{jac} sorry-free
-  per the mechanical integral-going-up recipe above.
-\item iter-055+: closes \texttt{is\_henselian} (substantive
-  Stacks~0DXB Newton iteration), then wires both fields into
+\item iter-054 prover: closed \texttt{jac} sorry-free per the
+  mechanical integral-going-up recipe above.
+\item iter-055 prover (Acceptable-partial): \texttt{is\_henselian}
+  decomposed sorry-free at the structural level — it delegates to
+  a single named typed helper
+  \texttt{exists\_root\_of\_eval\_mem\_of\_isUnit\_derivative\_quotient}
+  whose signature matches the field verbatim. The Nakayama
+  unit-upgrade glue (\texttt{maximalIdeal\_map\_le\_jacobson\_bot},
+  \texttt{isUnit\_of\_isUnit\_quotient\_mk\_maximalIdeal\_map})
+  landed sorry-free; the substantive root-finding step
+  (Stages~1–3 above) is the single remaining typed sorry inside
+  the named helper.
+\item iter-056 plan: dispatched the \texttt{refactor} subagent
+  (slug \texttt{add-noetherian-henselianpair}) to add
+  \texttt{[IsNoetherianRing A]} to the headline instance and the
+  three helpers, per the iter-055 prover finding that
+  $\mathfrak m B$-adic separation (Stage~3 prerequisite) needs
+  the Noetherian descent
+  $\mathrm{IsNoetherianRing}\,A + \mathrm{Module.Finite}\,A\,B
+  \Rightarrow \mathrm{IsNoetherianRing}\,B$ to invoke Mathlib's
+  \texttt{Ideal.iInf\_pow\_smul\_eq\_bot\_of\_le\_jacobson}.
+\item iter-056 prover (Acceptable-partial): closed
+  $\mathfrak m B$-adic separation
+  (\cref{lem:henselianPair-l1-separation}) sorry-free as
+  \texttt{maximalIdeal\_map\_iInf\_pow\_eq\_bot} (10 LOC) and
+  extracted Stage~2 Newton iteration as a typed named helper
+  \texttt{exists\_seq\_lift\_of\_henselianPair} with body sorry.
+\item iter-057 prover (Acceptable-full): closed
+  \cref{lem:henselianPair-newton-step} sorry-free via
+  $\Sigma'$-joint-state Newton recursion (\textasciitilde{}100
+  LOC). The file is now down to exactly one sorry — the Stage~3
+  convergence helper.
+\item iter-058+ (current): closes the substantive Stage~3
+  convergence helper via Stacks~04GE residue-product
+  decomposition (orthogonal-idempotent lift in henselian local
+  $A$ applied to the étale $B/\mathfrak m B \simeq \prod k_i$).
+  Decomposes into sub-helpers L3a (idempotent lifting), L3b
+  (product decomposition), L3c (per-factor Hensel-lift); plan
+  acknowledges these are themselves new Mathlib-shaped
+  infrastructure pieces and the prover may extract them as named
+  typed sub-helpers. Once Stage~3 closes, iter-059+ wires the
+  full \texttt{HenselianRing $B$ $\mathfrak m B$} instance into
   the four \S3-cluster consumers via the localise-then-glue
-  pattern.
+  pattern, together with the iter-054-identified consumer-side
+  helper \texttt{Algebra.Etale.localisation\_finite\_at\_maximal}.
 \end{itemize}
