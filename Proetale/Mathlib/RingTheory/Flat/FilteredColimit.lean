@@ -8,6 +8,7 @@ import Mathlib.CategoryTheory.Limits.Shapes.Pullback.HasPullback
 import Mathlib.CategoryTheory.Limits.Filtered
 import Proetale.Algebra.FaithfullyFlat
 import Proetale.Algebra.WeaklyEtale
+import Proetale.Mathlib.CategoryTheory.Limits.Presentation
 
 /-!
 # Filtered colimit stability of `Algebra.TensorProduct.lmul'.Flat`
@@ -59,34 +60,6 @@ namespace ColimitPresentation
 
 variable [HasPushouts C]
 variable {ι : Type*} [Category ι] {X : C} (P : ColimitPresentation ι X)
-
-/-- The diagonal pushout diagram: `i ↦ pushout(P.ι.app i, P.ι.app i)`. -/
-@[simps]
-noncomputable def diagPushout : ι ⥤ C where
-  obj i := pushout (P.ι.app i) (P.ι.app i)
-  map {i j} h :=
-    pushout.map (P.ι.app i) (P.ι.app i) (P.ι.app j) (P.ι.app j)
-      (𝟙 X) (𝟙 X) (P.diag.map h)
-      (by simpa using (P.w h).symm) (by simpa using (P.w h).symm)
-  map_id i := by apply pushout.hom_ext <;> simp
-  map_comp {i j k} f g := by
-    apply pushout.hom_ext
-    · simp [pushout.map_comp]
-    · simp [pushout.map_comp]
-
-@[reassoc (attr := simp)]
-lemma diagPushout_inl_map {i j : ι} (h : i ⟶ j) :
-    pushout.inl (P.ι.app i) (P.ι.app i) ≫ P.diagPushout.map h =
-      pushout.inl (P.ι.app j) (P.ι.app j) := by
-  rw [P.diagPushout_map]
-  exact (pushout.inl_desc _ _ _).trans (Category.id_comp _)
-
-@[reassoc (attr := simp)]
-lemma diagPushout_inr_map {i j : ι} (h : i ⟶ j) :
-    pushout.inr (P.ι.app i) (P.ι.app i) ≫ P.diagPushout.map h =
-      pushout.inr (P.ι.app j) (P.ι.app j) := by
-  rw [P.diagPushout_map]
-  exact (pushout.inr_desc _ _ _).trans (Category.id_comp _)
 
 /-- The codiagonal cocone: `app i = pushout.desc (𝟙 X) (𝟙 X) rfl`. -/
 @[simps]
