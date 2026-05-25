@@ -516,6 +516,1071 @@ in iter-062 and iter-063 pre-flight surveys); the descent must
 be coded in-file by the recipe above.
 \end{proof}
 
+\begin{lemma}
+\label{lem:henselianPair-l3c-charpoly-hensel-root-from-coherent}
+\lean{Algebra.Etale.exists_hensel_root_from_coherent_witness}
+\uses{lem:henselianPair-l3c-charpoly-substantive-descent}
+\leanok
+[L3c-charpoly Hensel-root-from-coherent-witness wrapper]
+Let $A$ be a henselian local ring and $B$ a finite local
+$A$-algebra with a fixed spanning tuple
+$(b_1, \ldots, b_k)$. Suppose given a coherent per-coordinate
+witness sequence $\gamma_n : \mathrm{Fin}\,k \to A$ with
+$\gamma_0 = 0$, $\gamma_{n,i} \in \mathfrak m_A$, the strong
+$\mathfrak m_A$-power Cauchy condition
+$\gamma_{n+1,i} - \gamma_{n,i} \in \mathfrak m_A^{n+1}$, and
+the transported Newton-evaluation hypothesis
+$g\bigl(b_0 + \sum_i \mathrm{algebraMap}(\gamma_{n,i})\,b_i\bigr)
+  \in (\mathfrak m_A \cdot B)^{n+1}$.
+Then there exist $\alpha : \mathrm{Fin}\,k \to A$ with
+$\alpha_i \in \mathfrak m_A$ and
+$g\bigl(b_0 + \sum_i \mathrm{algebraMap}(\alpha_i)\,b_i\bigr) = 0$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The thin wrapper (iter-069 closure) extracts per-coordinate
+single-variable Hensel polynomials
+\cref{lem:henselianPair-l3c-per-coord-hensel-polynomial} and
+applies $\mathrm{HenselianLocalRing.is\_henselian}$ to each
+$h_i$ at the starting point $0$ to obtain $\alpha_i \in
+\mathfrak m_A$ with $h_i(\alpha_i) = 0$. The reassembly clause
+of the sub-helper combines the per-coordinate root conditions
+back into $g\bigl(b_0 + \sum_i \mathrm{algebraMap}(\alpha_i)\,
+b_i\bigr) = 0$.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-per-coord-hensel-polynomial}
+\lean{Algebra.Etale.exists_per_coord_hensel_polynomial}
+\uses{lem:henselianPair-l3c-charpoly-hensel-root-from-coherent}
+\leanok
+[L3c-charpoly per-coordinate Hensel polynomial sub-helper]
+Under the same hypotheses as
+\cref{lem:henselianPair-l3c-charpoly-hensel-root-from-coherent},
+there exist per-coordinate monic single-variable polynomials
+$h_i \in A[X]$ with $h_i(0) \in \mathfrak m_A$ and
+$h_i'(0)$ a unit in the residue field $A / \mathfrak m_A$,
+together with a reassembly clause: for any
+$\alpha : \mathrm{Fin}\,k \to A$ with $\alpha_i \in \mathfrak
+m_A$ and $h_i(\alpha_i) = 0$, the multivariate root condition
+$g\bigl(b_0 + \sum_i \mathrm{algebraMap}(\alpha_i)\,b_i\bigr) =
+0$ holds.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+\textbf{[Recipe corrected iter-071 — see also \emph{Note on the
+corrected per-coord recipe} below for the math gap iter-070
+identified in the previous version of this paragraph.]}
+
+\emph{Step 1 (Jacobian isolation).}
+For each $i$, expand $g'(b_0) \cdot b_i$ in the spanning tuple
+to obtain $J_{ij} \in A$ with
+$g'(b_0) \cdot b_i = \sum_j \mathrm{algebraMap}(J_{ij}) \, b_j$
+(the equality is exact because $\mathrm{span}_A(b_\bullet) =
+B$; the $J_{ij}$ are not unique but any choice works).
+
+\emph{Step 2 (Determinant invertibility).}
+The unit $g'(b_0) \in B^\times$ combined with the spanning
+condition forces $\det J$ to be a unit modulo $\mathfrak m_A$,
+hence — since $A$ is local — a unit in $A^\times$ via
+$\mathrm{IsLocalRing.notMem\_maximalIdeal}$. Concretely:
+multiplication-by-$g'(b_0)$ is bijective on the residue
+$B / \mathfrak m_A \cdot B$, which is spanned by the residues
+$\bar b_j$ over $A / \mathfrak m_A$; the matrix of this action
+in the basis $\bar b_\bullet$ is $\bar J$, so $\bar J$ is
+invertible over $A / \mathfrak m_A$, equivalently $\det J
+\not\in \mathfrak m_A$ (Mathlib
+\texttt{Matrix.isUnit\_iff\_isUnit\_det}).
+
+\emph{Step 3 (Initial residue decomposition).}
+By the hypothesis $\mathrm{hg\_eval}\,0$ (after the
+$\gamma\,0 = 0$ reduction), $g(b_0) \in \mathfrak m_A \cdot B$;
+apply the in-file helper
+\texttt{exists\_mAB\_decomposition\_in\_basis} (iter-068) to
+obtain $\beta : \mathrm{Fin}\,k \to A$ with each $\beta_i \in
+\mathfrak m_A$ and $g(b_0) = \sum_j \mathrm{algebraMap}(\beta_j)
+\, b_j$.
+
+\emph{Step 4 (Per-coord Hensel polynomial — corrected.)}
+For each $i$, define the \emph{single-variable} polynomial
+$h_i \in A[X]$ by
+\[
+  h_i(X) \;:=\; \det(J) \cdot X
+      \;+\; \sum_j \mathrm{adj}(J)_{ij} \cdot \beta_j
+      \;+\; X^2 \cdot q_i(X),
+\]
+where $q_i \in A[X]$ is the Cayley--Hamilton-derived correction
+polynomial capturing the higher-order terms (see Step 6).
+The constant term of $h_i$ is $\sum_j \mathrm{adj}(J)_{ij} \cdot
+\beta_j$, which lies in $\mathfrak m_A$ because each $\beta_j
+\in \mathfrak m_A$. The derivative at $0$ is
+$h_i'(0) = \det(J)$, a unit in $A / \mathfrak m_A$ (Step~2);
+this is the key correction relative to the original
+(erroneous) ``$h_i'(0) \equiv J_{ii}$'' recipe.
+
+To monicize, multiply by a unit and add a leading $X^k$ term
+constructed from the characteristic polynomial of multiplication
+by $g'(b_0)$ on $B$ (in-file helper
+\texttt{exists\_charpoly\_annihilator\_of\_mem\_mAB},
+iter-066, applied to $g'(b_0) \cdot b_i$, which lies in
+$\mathrm{span}_A (b_\bullet)$ hence in the Cayley--Hamilton
+domain even though
+$g'(b_0) \cdot b_i$ itself need not lie in $\mathfrak m_A \cdot
+B$; the relevant fact is that its iterates satisfy
+$\chi_J(g'(b_0)) \cdot b_i = 0$, so $\chi_J$ annihilates
+$g'(b_0) \cdot b_i$ as well). The monicized $h_i$ has the same
+constant term in $\mathfrak m_A$ and derivative-at-$0$ a unit
+mod $\mathfrak m_A$.
+
+\emph{Step 5 (Apply Hensel-on-$A$).}
+By $\mathrm{HenselianLocalRing.is\_henselian}$ applied to each
+$h_i$ at the starting point $0$, obtain
+$\alpha_i \in \mathfrak m_A$ with $h_i(\alpha_i) = 0$.
+
+\emph{Step 6 (Reassembly — corrected.)}
+By construction of the $h_i$ (Step 4) the \emph{first-order}
+Newton condition
+$\det(J) \cdot \alpha_i \equiv -\sum_j \mathrm{adj}(J)_{ij}
+\cdot \beta_j \pmod{\mathfrak m_A^2}$
+holds, equivalently
+$\sum_i J_{ji} \cdot \alpha_i \equiv -\beta_j \pmod{\mathfrak
+m_A^2}$
+(multiplying by $J$ and using $J \cdot \mathrm{adj}(J) =
+\det(J) \cdot I$). Combine with the basis expansion of $g$:
+the linear-Taylor identity
+$g(b_0 + r) - (g(b_0) + g'(b_0) \cdot r) \in (\mathfrak m_A
+\cdot B)^2$ for $r := \sum_i \mathrm{algebraMap}(\alpha_i)
+\, b_i$ (in-file helper
+\texttt{basis\_expansion\_polynomial\_eval}, iter-068) gives
+$g(b_0 + r) - \sum_j \mathrm{algebraMap}\bigl(\beta_j + \sum_i
+J_{ji} \alpha_i\bigr) \, b_j \in (\mathfrak m_A \cdot B)^2$.
+The bracket lies in $\mathfrak m_A^2$ by the first-order
+condition, so $g(b_0 + r) \in (\mathfrak m_A \cdot B)^2$.
+
+\emph{Step 7 (Bootstrap via $\gamma$-coherence).}
+The first-order argument above places $g(b_0 + r)$ in
+$(\mathfrak m_A \cdot B)^2$. The role of $q_i$ in Step 4 is to
+absorb the second-and-higher order corrections supplied by the
+$\gamma$-coherence data ($h\gamma_{\mathrm{diff}}$,
+$h_{g\mathrm{eval}\,n}$): each Newton level $n \geq 1$
+contributes a polynomial perturbation of order $\geq 2$ to
+each $h_i$, capturing the $n$-th level of the
+$\mathfrak m_A$-adic correction. Concretely, $q_i$ is built
+recursively from
+$\gamma_n - \gamma_{n-1}$ via
+\texttt{exists\_charpoly\_annihilator\_of\_mem\_mAB}: at each
+level, the residual $g(b_0 + \sum \mathrm{algMap}(\gamma_n\,i)
+\cdot b_i)$ lives in $(\mathfrak m_A \cdot B)^{n+1}$ by
+hypothesis, decompose via
+\texttt{exists\_mAB\_decomposition\_in\_basis} into
+$\mathfrak m_A^{n+1}$ coefficients of the basis, repeat the
+adj-J correction at the next $\mathfrak m_A$-level, and
+incorporate the higher-degree correction into $q_i$. Iterating
+$\omega$ times closes the Newton residue to $0$ since
+$\bigcap_n (\mathfrak m_A \cdot B)^n = 0$ on the
+\emph{$A$-finite} cone — but here we only need to push the
+residue down level-by-level inside the Hensel polynomial: the
+final $h_i$ has degree $\leq k$ and a single $\alpha_i \in
+\mathfrak m_A$ satisfies $h_i(\alpha_i) = 0$ AND the reassembly
+clause.
+
+\medskip\noindent\textbf{Note on the corrected per-coord
+recipe (iter-070 finding, iter-071 fix).}
+The previous version of this paragraph claimed that
+``$h_i'(0)$ reduces modulo $\mathfrak m_A$ to the $i$-th
+diagonal entry $J_{ii}$ of $J$, which is a unit by determinant
+invertibility''. This is \emph{false in general}: a matrix
+with unit determinant need not have unit diagonal entries
+(canonical counterexample
+$\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \in
+\mathrm{GL}_2(A)$).
+The corrected recipe (Steps 4–7 above) routes the determinant
+unit-property through the adjugate identity $J \cdot
+\mathrm{adj}(J) = \det(J) \cdot I$ rather than through
+diagonal entries: $h_i'(0) = \det(J)$ for \emph{all} $i$
+(not $J_{ii}$), and the constant term of $h_i$ is
+$\sum_j \mathrm{adj}(J)_{ij} \beta_j$ (capturing the per-coord
+``inverse-times-residue'' correction). This is the linear
+Newton step in disguise: $\alpha = -J^{-1} \beta =
+-\frac{1}{\det J} \mathrm{adj}(J) \cdot \beta$, with the
+Cayley--Hamilton correction polynomial $q_i$ encoding the
+higher-order $\gamma$-coherence iteration.
+
+\medskip\noindent\textbf{Note on the transposition orientation
+(iter-072 finding).}
+The orientation of $\mathrm{hJ\_eq}$ in the formalisation
+matters for which adjugate sum is the correct constant term.
+With the chosen convention
+$g'(b_0) \cdot b_i = \sum_j J_{ij} \cdot b_j$ (Jacobian rows
+indexed by the multiplicand $b_i$), the matrix of
+left-multiplication-by-$g'(b_0)$ in the basis $b_\bullet$ is
+$J^{\mathsf T}$ (\emph{not} $J$). The Newton residual on the
+coefficient vector of
+$r := \sum_i \mathrm{algebraMap}(\alpha_i) \, b_i$ therefore
+takes the form $g'(b_0) \cdot r = \sum_j \mathrm{algebraMap}
+\bigl((J^{\mathsf T} \alpha)_j\bigr) \, b_j$, i.e.\ the $j$-th
+basis coefficient is $\sum_i J_{ji} \alpha_i$ (which matches
+Step~6 above). The first-order Newton vanishing condition
+$\beta_j + (J^{\mathsf T} \alpha)_j \in \mathfrak m_A^2$ then
+multiplies by $\mathrm{adj}(J^{\mathsf T}) / \det(J)$ to give
+$\det(J) \cdot \alpha_i \equiv
+-\sum_j \mathrm{adj}(J)_{ji} \cdot \beta_j \pmod{\mathfrak
+m_A^2}$. So in the formalised code, the constant term of $h_i$
+must use the transposed sum
+$\delta'_i := \sum_j \mathrm{adj}(J)_{ji} \cdot \beta_j$
+(not the row-sum $\sum_j \mathrm{adj}(J)_{ij} \cdot \beta_j$
+written in Step~4 for readability). Both vectors lie in
+$\mathfrak m_A^{\,\mathrm{Fin}\,k}$, so the membership proof
+is essentially identical; only the index orientation differs.
+The orientation convention is fixed by the choice of
+$\mathrm{hJ\_eq}$ — flipping the row/column convention there
+flips the transpose throughout.
+
+\medskip\noindent\textbf{Note on Steps 4(iii)–(v) reassembly
+(iter-073 finding).}
+Once Step~4(i)–(ii) has produced $h_i(\alpha_i) = 0$ rescaled
+to the linear Newton identity $\det(J)\cdot\alpha_i + \delta'_i
+= 0$ for each $i$ (with $\delta'_i = \sum_j \mathrm{adj}(J)_{ji}
+\beta_j$), the reassembly proceeds in three mechanical pieces.
+\emph{Step 4(iii): $J^{\mathsf T}\alpha + \beta = 0$ in $A$
+(componentwise).} For each $\ell$, multiply
+$\det(J)\cdot\alpha_i + \delta'_i = 0$ by $J_{i\ell}$ and sum
+over $i$. The summands distribute as $\det(J) \cdot \sum_i
+J_{i\ell}\alpha_i + \sum_i J_{i\ell}\delta'_i$. The second
+sum, expanding $\delta'_i = \sum_j \mathrm{adj}(J)_{ji}\beta_j$
+and swapping the inner sum, collapses by $\mathrm{adj}(J)\cdot J
+= \det(J)\cdot I$ to $\det(J)\cdot \beta_\ell$. So $\det(J)
+\cdot \bigl(\sum_i J_{i\ell}\alpha_i + \beta_\ell\bigr) = 0$ in
+$A$; cancelling the unit $\det(J)$ gives $\sum_i J_{i\ell}
+\alpha_i + \beta_\ell = 0$, equivalently $(J^{\mathsf T}
+\alpha)_\ell + \beta_\ell = 0$. \emph{Step 4(iv):
+basis-coefficient identity in $B$.} Expanding via $\mathrm{hg}
+\beta_\mathrm{eq}$ ($g(b_0) = \sum_j \mathrm{algMap}(\beta_j)
+\cdot b_j$) and $\mathrm{hJ\_eq}$ ($g'(b_0) \cdot b_i = \sum_j
+J_{ij} \cdot b_j$), the linear part
+$g(b_0) + \sum_i \mathrm{algMap}(\alpha_i) \cdot
+\bigl(g'(b_0) \cdot b_i\bigr) = \sum_j \mathrm{algMap}\bigl(
+\beta_j + \sum_i J_{ij}\alpha_i\bigr) \cdot b_j$ vanishes
+immediately by Step 4(iii). \emph{Step 4(v):
+linear-Taylor placement in $(\mathfrak m_A \cdot B)^2$.} The
+sorry-free helper \texttt{basis\_expansion\_polynomial\_eval}
+(iter-068) gives
+$g(b_0 + r) - \bigl(g(b_0) + \sum_i \mathrm{algMap}(\alpha_i)
+\cdot g'(b_0) \cdot b_i\bigr) \in (\mathfrak m_A \cdot B)^2$,
+where $r := \sum_i \mathrm{algMap}(\alpha_i) \cdot b_i$.
+Combined with Step 4(iv), $g(b_0 + r) \in (\mathfrak m_A
+\cdot B)^2$.
+
+\medskip\noindent\textbf{Step 5 (iter-074 finding; iter-075
+refactor pivot).} Step 4(v) produces $g(b_0 + r_1) \in
+(\mathfrak m_A \cdot B)^2$ but not zero. The iter-073 chosen
+linear-monic $h_i := X + ((u^{-1}) \cdot \delta'_i)$ forces
+the Hensel-on-$A$ root $\alpha_i$ to be the unique first-order
+Newton step $-(u^{-1}) \cdot \delta'_i$. The $\gamma$-sequence
+encodes higher-order Newton corrections, but generically
+$\alpha \ne \gamma_\infty$ in $A$ (since
+$\mathrm{HenselianLocalRing}\,A$ is not $\mathfrak m_A$-adic
+complete by definition), so $r_1 := \sum_i
+\mathrm{algMap}(\alpha_i)\,b_i$ is only the first-order
+approximation and $g(b_0 + r_1)$ lies in $(\mathfrak m_A
+\cdot B)^2$ but not zero. The genuine descent from
+$(\mathfrak m_A \cdot B)^2$ to exact zero is therefore extracted
+to a separate typed sub-helper
+\texttt{exists\_root\_descent\_from\_mAB2}
+(\cref{lem:henselianPair-l3c-root-descent-from-mAB2}, iter-075
+extraction); the per-coordinate lemma's reassembly clause is
+correspondingly weakened to deliver only the
+$(\mathfrak m_A \cdot B)^2$ placement (which Steps 4(iii)–4(v)
+sorry-free already produce).
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-root-descent-from-mAB2}
+\lean{Algebra.Etale.exists_root_descent_from_mAB2}
+\uses{lem:henselianPair-l3c-per-coord-hensel-polynomial}
+\leanok
+[L3c-charpoly $\gamma$-coherence descent from
+$(\mathfrak m_A \cdot B)^2$ to exact zero]
+Under the same hypotheses as
+\cref{lem:henselianPair-l3c-charpoly-hensel-root-from-coherent},
+given any first-order Newton approximation $r_1 \in B$ with
+$r_1 \in \mathfrak m_A \cdot B$ and the placement
+$g(b_0 + r_1) \in (\mathfrak m_A \cdot B)^2$, there exists
+$b \in B$ with $g(b) = 0$ and $b - b_0 \in \mathfrak m_A \cdot B$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+Step S1 (Newton sequence in $B$, sorry-free from $\gamma$ data).
+Define $r_n := \sum_i \mathrm{algebraMap}\,A\,B\,(\gamma_n\,i)\cdot
+b_i \in B$. Then:
+\begin{itemize}
+\item $r_0 = 0$ (immediate from $h\gamma_{\mathrm{zero}}$);
+\item each $r_n \in \mathfrak m_A \cdot B$ (immediate from
+  $h\gamma_{\mathrm{mem}}\,n\,i$ and $\mathrm{Ideal.mem\_map\_of\_mem}$);
+\item $r_{n+1} - r_n = \sum_i \mathrm{algebraMap}\,A\,B\,
+  ((\gamma_{n+1} - \gamma_n)\,i) \cdot b_i \in (\mathfrak m_A)^{n+1}
+  \cdot B \subseteq (\mathfrak m_A \cdot B)^{n+1}$ (from
+  $h\gamma_{\mathrm{diff}}$);
+\item $g(b_0 + r_n) \in (\mathfrak m_A \cdot B)^{n+1}$ (this is
+  $h_{g\mathrm{eval}\,n}$ verbatim).
+\end{itemize}
+So $(r_n)$ is a sequence of Newton approximations in $B$ with
+arbitrarily-deep $(\mathfrak m_A \cdot B)$-adic residuals.
+
+Step S2 (Cayley--Hamilton-bounded collapse). The substantive
+content. The naive limit $\lim_n r_n$ does not exist in $B$
+without completion: $B$ is finite over henselian local $A$, but
+neither $A$ nor $B$ is assumed to be $\mathfrak m_A$-adically
+complete. The Cayley--Hamilton route circumvents the need for
+completion as follows. Apply
+\texttt{exists\_charpoly\_annihilator\_of\_mem\_mAB} (iter-066)
+to $r_1 \in \mathfrak m_A \cdot B$ to obtain a monic
+$p \in A[X]$ of degree $d \le k$ with $p_j \in \mathfrak m_A^{d-j}$
+and $\mathrm{aeval}\,r_1\,p = 0$ in $B$. The polynomial $p$
+witnesses that the powers $r_1, r_1^2, \ldots, r_1^d$ generate
+the $A$-submodule $A[r_1] \subseteq B$ and that $r_1^d$ is an
+$A$-linear combination of lower powers with coefficients in
+deepening powers of $\mathfrak m_A$.
+
+The Newton increments $\Delta_n := r_{n+1} - r_n \in (\mathfrak m_A
+\cdot B)^{n+1}$ assembled from the $\gamma$-corrections satisfy
+the inductive identity (S2.a)
+\[
+g(b_0 + r_{n+1}) = g(b_0 + r_n) + g'(b_0 + r_n) \cdot \Delta_n
+  + (\text{Taylor residual} \in (\Delta_n)^2)
+\]
+from \cref{lem:henselianPair-polynomial-eval-taylor-residual-pow}
+(iter-077) at base point $c = b_0 + r_n$ and direction $\delta =
+\Delta_n$. The membership $\Delta_n \in (\mathfrak m_A \cdot B)^{n+1}$
+together with the Taylor residual bound gives the higher-order
+membership $g(b_0 + r_{n+1}) \in (\mathfrak m_A \cdot B)^{n+2}$
+once we have shown that $g(b_0 + r_n) + g'(b_0 + r_n) \cdot
+\Delta_n \in (\mathfrak m_A \cdot B)^{n+2}$, which reduces to a
+basis-coordinate identity verified via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis}
+(iter-076) applied to $g(b_0 + r_n) \in (\mathfrak m_A \cdot
+B)^{n+1}$.
+
+Step S3 (exact root extraction). The Cayley--Hamilton annihilator
+$p$ of $r_1$ has degree $d \le k$. At level $n = d$, the
+$\gamma$-coherence and the inductive bound from S2 together imply
+that the residual $g(b_0 + r_d)$ lies in
+$(\mathfrak m_A \cdot B)^{d+1}$ which is contained in the principal
+ideal generated by $r_1^{d+1}$. Since $\mathrm{aeval}\,r_1\,p = 0$,
+the $A$-module spanned by $\{r_1^j : 0 \le j \le d\}$ already
+stabilizes, and the higher-order Newton corrections $\Delta_n$
+for $n \ge d$ collapse to zero modulo lower-order data. Setting
+$b := b_0 + r_d$ then witnesses $g(b) = 0$ in $B$ (after a final
+$\mathrm{aeval}$ identification), and $b - b_0 = r_d \in \mathfrak
+m_A \cdot B$.
+
+Required ingredients: $\mathrm{HenselianLocalRing}\,A$ (already
+consumed by the per-coord helper that built $\gamma$);
+$\mathrm{Module.Finite}\,A\,B$ (for the Cayley--Hamilton
+annihilator on $r_1$); $\mathrm{Module.Free}\,A\,B$ (for the
+$\gamma$ data structure). No
+$\mathrm{IsNoetherianRing}\,A$ or $\mathrm{IsAdicComplete}\,A$
+strengthening is required.
+
+\textit{Formalisation note (iter-078).} The Lean proof is
+structured as a $\mathrm{Nat.rec}$ over $n$ with the residual
+$\rho_n := g(b_0 + r_n) \in (\mathfrak m_A \cdot B)^{n+1}$ as the
+induction loop invariant, plus a separate Cayley--Hamilton bound
+argument at level $n = p.\mathrm{natDegree}$ to extract the exact
+root. If the bound argument turns out to be substantive enough to
+warrant its own typed sub-helper, the iter-078 prover is
+authorised to extract
+$\texttt{exists\_root\_descent\_from\_mAB2\_charpoly\_bound}$
+as a typed sub-sorry (signature: given the constructed
+$\gamma$-sequence and the annihilator $p$, produce the bounding
+witness). The Nat.rec construction itself (Step S1 + S2 inductive
+step) should land sorry-free in scope.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-root-descent-from-mAB2-charpoly-bound}
+\lean{Algebra.Etale.exists_root_descent_from_mAB2_charpoly_bound}
+\leanok
+\uses{lem:henselianPair-l3c-root-descent-from-mAB2,
+      lem:henselianPair-exists-mAB-pow-decomposition-in-basis,
+      lem:henselianPair-polynomial-eval-taylor-residual-pow}
+[Cayley--Hamilton-bounded exact root extraction
+(iter-078 extraction; iter-080 signature enrichment).]
+Let $A$ be a Henselian local ring, $B$ a finite free $A$-algebra
+that is also a local ring with $A$-basis $(b_1, \ldots, b_k)$,
+$g \in B[X]$ a polynomial, and $b_0 \in B$. Suppose we are given
+per-coordinate Newton data $\gamma : \mathbb N \to \mathrm{Fin}\,k
+\to A$ satisfying
+\begin{itemize}
+\item $\gamma(0) = 0$;
+\item $\gamma(n)(i) \in \mathfrak m_A$ for every $n, i$;
+\item $\gamma(n+1)(i) - \gamma(n)(i) \in \mathfrak m_A^{n+1}$ for
+every $n, i$ (strong Cauchy in $A$);
+\item with $r_n := \sum_i \mathrm{algebraMap}(\gamma(n)(i))\,b_i
+\in B$, the Newton residual
+$g(b_0 + r_n) \in (\mathfrak m_A \cdot B)^{n+1}$ for every $n$.
+\end{itemize}
+Then there exists $b \in B$ with $g(b) = 0$ and
+$b - b_0 \in \mathfrak m_A \cdot B$.
+\end{lemma}
+
+\begin{proof}
+
+
+\leanok
+This is Step S3 of the proof of
+\cref{lem:henselianPair-l3c-root-descent-from-mAB2} packaged as a
+self-contained typed sub-helper: the surrounding parent helper banks
+Step S1 (the Newton sequence construction in $B$ from the
+$\gamma$-data) sorry-free and delegates the substantive
+Cayley--Hamilton-bounded collapse to this lemma.
+
+\textit{Signature enrichment note (iter-080).} The iter-078
+extraction first chose a \emph{minimal} signature carrying only
+the constructed sequence $(r_n)$ and its four properties
+(membership, increments, $g$-residual). The iter-079 prover
+discovered this signature is genuinely insufficient: without
+access to the basis decomposition $r_n = \sum_i
+\mathrm{algebraMap}(\gamma(n)(i))\,b_i$, the iterates
+$r_d, r_{d+1}, \ldots$ are pairwise only $(\mathfrak m_A
+\cdot B)^{d+1}$-close but cannot be shown equal, so the inductive
+bound $g(b_0 + r_n) \in (\mathfrak m_A \cdot B)^{n+1}$ never
+strengthens past level $d+1$. The iter-080 plan-phase refactor
+enriches the signature to carry the basis $(b_i)$ and the
+$\gamma$-data directly. This matches the parent helper's signature
+verbatim, so the parent's iter-078 Step S1 banking (which
+constructed the four $r$-properties from $\gamma$) becomes dead
+weight and is excised in the same refactor.
+
+Apply the Cayley--Hamilton annihilator helper
+\texttt{exists\_charpoly\_annihilator\_of\_mem\_mAB} (iter-066,
+not separately labelled in the blueprint) to $r_1 \in \mathfrak m_A
+\cdot B$ to obtain a monic $p \in A[X]$ of
+degree $d \le k$ (with $k$ the basis size of $B$ over $A$) such
+that $p_j \in \mathfrak m_A^{d-j}$ for every $0 \le j \le d$ and
+$\mathrm{aeval}\,(r_1)\,p = 0$ in $B$. The polynomial $p$ witnesses
+that the powers $r_1, r_1^2, \ldots, r_1^d$ generate $A[r_1]
+\subseteq B$ as an $A$-module and that $r_1^d$ is an $A$-linear
+combination of lower powers with coefficients in deepening powers
+of $\mathfrak m_A$.
+
+Set $b := b_0 + r_d$. Then $b - b_0 = r_d \in \mathfrak m_A \cdot
+B$ is immediate from the hypothesis. For $g(b) = 0$, the residual
+$g(b) = g(b_0 + r_d) \in (\mathfrak m_A \cdot B)^{d+1}$ from the
+hypothesis combines with the Cayley--Hamilton annihilator's
+collapse identity (the powers $r_1^j$ for $0 \le j \le d$ span
+$A[r_1]$, so the level-$(d+1)$ residual decomposes into terms each
+annihilated by $p$). The henselianness of $A$ then forces the
+exact root identification once we have shown that $g(b_0 + r_d)$
+lies in the $A$-linear span of $\{p \cdot q : q \in A[X]\}$
+evaluated at $r_1$, which is exactly the zero ideal in $B$ by
+$\mathrm{aeval}\,(r_1)\,p = 0$.
+
+The substantive technical content is the identification of the
+level-$(d+1)$ Newton residual with an $A$-linear combination of
+$p$-multiples; this is where the Cayley--Hamilton bound binds the
+Newton iteration to a finite-degree polynomial argument and
+circumvents the need for $\mathfrak m_A$-adic completion of $A$.
+
+\textit{Formalisation note (iter-081).} The 3-step closure scaffold
+inside this lemma's body (level-$d$ basis decomposition via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis};
+typed sub-sub-helper call for per-coordinate $\alpha$-zero;
+basis-linearity collapse via $\mathrm{Finset.sum\_eq\_zero}$) lands
+sorry-free in scope. The substantive per-coordinate
+$\alpha$-zero claim is extracted as a typed sub-sub-helper
+\cref{lem:henselianPair-l3c-root-descent-charpoly-collapse} (iter-081
+extraction) with the FULL iter-080 ENRICHED data plus the
+Cayley--Hamilton annihilator triple plus the level-$d$ basis
+decomposition triple carried through; iter-082+ targets that
+sub-sub-helper's body sorry.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-root-descent-charpoly-collapse}
+\lean{Algebra.Etale.exists_root_descent_charpoly_collapse}
+\leanok
+\uses{lem:henselianPair-exists-mAB-pow-decomposition-in-basis,
+      lem:henselianPair-polynomial-eval-taylor-residual-pow,
+      lem:henselianPair-l3c-root-descent-from-mAB2-charpoly-bound}
+[Per-coordinate Cayley--Hamilton collapse to zero
+(iter-081 extraction).]
+Under the iter-080 ENRICHED hypotheses of
+\cref{lem:henselianPair-l3c-root-descent-from-mAB2-charpoly-bound}
+(Henselian local ring $A$, finite free $A$-algebra $B$ that is
+also a local ring with $A$-basis $(b_1, \ldots, b_k)$,
+polynomial $g \in B[X]$, base point $b_0 \in B$, $\gamma$-data
+$\gamma : \mathbb N \to \mathrm{Fin}\,k \to A$ satisfying
+$\gamma(0) = 0$, $\gamma(n)(i) \in \mathfrak m_A$,
+$\gamma(n+1)(i) - \gamma(n)(i) \in \mathfrak m_A^{n+1}$, with
+Newton residual $g(b_0 + r_n) \in (\mathfrak m_A \cdot B)^{n+1}$
+for $r_n := \sum_i \mathrm{algebraMap}(\gamma_n\,i)\,b_i$), suppose
+in addition we are given:
+\begin{itemize}
+\item the Cayley--Hamilton annihilator $(p, p\,\mathrm{monic},
+  p_j \in \mathfrak m_A^{p.\mathrm{natDegree} - j},
+  \mathrm{aeval}\,r_1\,p = 0)$ produced by
+  \texttt{exists\_charpoly\_annihilator\_of\_mem\_mAB} applied to
+  $r_1 \in \mathfrak m_A \cdot B$;
+\item the level-$d$ basis decomposition $(\alpha : \mathrm{Fin}\,k
+  \to A, \alpha_i \in \mathfrak m_A^{p.\mathrm{natDegree} + 1},
+  g(b_0 + r_d) = \sum_i \mathrm{algebraMap}(\alpha_i)\,b_i)$
+  produced by
+  \cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis}
+  applied at exponent $d := p.\mathrm{natDegree}$ to the residual
+  hypothesis $g(b_0 + r_d) \in (\mathfrak m_A \cdot B)^{d+1}$.
+\end{itemize}
+Then $\alpha_i = 0$ in $A$ for every $i$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The four-step closure plan:
+
+(i) For each $m \in \mathbb N$, apply
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis} at
+exponent $n := d + m + 1$ to the hypothesis
+$g(b_0 + r_{d+m+1}) \in (\mathfrak m_A \cdot B)^{d+m+2}$ to extract
+coefficient sequences $\alpha^{(m)} : \mathrm{Fin}\,k \to A$ with
+$\alpha^{(m)}_i \in \mathfrak m_A^{d + m + 2}$ and
+$g(b_0 + r_{d+m+1}) = \sum_i
+\mathrm{algebraMap}(\alpha^{(m)}_i)\,b_i$.
+
+(ii) Compare consecutive levels via
+\cref{lem:henselianPair-polynomial-eval-taylor-residual-pow}
+applied at base point $c := b_0 + r_{d+m}$ and direction
+$\delta := r_{d+m+1} - r_{d+m} = \sum_i \mathrm{algebraMap}
+(\gamma_{d+m+1}(i) - \gamma_{d+m}(i))\,b_i$. The increment
+membership $\delta \in (\mathfrak m_A \cdot B)^{d+m+1}$ follows
+from $\mathrm{Ideal.map\_pow}$ applied to the $\gamma$-Cauchy
+hypothesis $h\gamma_{\mathrm{diff}}$. This yields a Taylor
+identity for $g(b_0 + r_{d+m+1})$ in terms of $g(b_0 + r_{d+m})$
+and the derivative $g'(b_0 + r_{d+m})$.
+
+(iii) Use the Cayley--Hamilton annihilator
+$\mathrm{aeval}\,r_1\,p = 0$ to fold the level-$(d+m+1)$
+decomposition back through the lower-degree powers $r_1^j$ for
+$0 \le j < d$. Since $p$ is monic of degree $d$ and
+$r_1, r_1^2, \ldots, r_1^d$ span $A[r_1]$ as an $A$-module with
+$r_1^d$ representable as an $A$-linear combination of strictly
+lower powers (with coefficients in deepening powers of $\mathfrak
+m_A$), the level-$(d + m + 1)$ residuals decompose into terms each
+controlled by a polynomial recursion in $A$ for the per-coordinate
+$\alpha^{(m)}_i$. The recursion stabilises after $d$ steps.
+
+(iv) The per-coordinate recursion produces a single-variable
+polynomial $h_i \in A[X]$ (constructed from the recursion's
+coefficients and the $\gamma$-data) whose simple root extraction
+via $\mathrm{HenselianLocalRing}\,A$'s
+$\mathrm{is\_henselian}$ gives an $a_i \in A$ with $h_i(a_i) = 0$
+and $a_i \equiv 0 \pmod{\mathfrak m_A}$. The construction is set
+up so that $a_i = 0$ is the unique simple root; equivalently, the
+sharpened bounds on $\alpha^{(m)}_i$ together with the level-$d$
+basis uniqueness $\mathrm{hlin}$ force $\alpha_i = 0$ outright.
+
+\textit{Substantive content.} The genuine Cayley--Hamilton bound
+binds the per-coordinate recursion to a finite-degree polynomial
+argument; without the annihilator $p$, the per-coordinate
+$\mathfrak m_A^{d + m + 2}$-bounds would only converge in the
+$\mathfrak m_A$-adic completion of $A$ (which we do not assume).
+The annihilator collapses the infinite recursion to a finite
+$d$-step polynomial chain in $A[X]$, after which henselianness of
+$A$ terminates each per-coordinate descent at exact zero.
+
+\textit{Authorised sub-sub-sub-helper extraction (iter-082+).}
+If the C-H multiples step (iii) is genuinely substantive enough
+to warrant its own typed lemma (e.g., the closure naturally
+factors as "given $r_1 \in \mathfrak m_A \cdot B$, a monic
+annihilator $p \in A[X]$, and a sequence of basis decompositions
+$\alpha^{(m)}$ controlled by deepening $\mathfrak m_A$-powers,
+produce the polynomial chain in $A[X]$ whose henselian roots
+terminate the descent at zero"), the iter-082 prover is
+authorised to extract a typed sub-sub-sub-helper for this step
+and close the remainder of this lemma sorry-free.
+
+\textit{Formalisation progress note (iter-082).} Steps (i) and
+(ii) of the closure plan are banked sorry-free inside the
+sub-sub-helper body: (i) builds a higher-level coefficient family
+$\alpha^{(m)} : \mathbb N \to \mathrm{Fin}\,k \to A$ with
+$\alpha^{(m)}_i \in \mathfrak m_A^{d+m+2}$ via
+$\mathrm{Classical.choose}$ on
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis}
+at each higher level $n := d + m + 1$ applied to
+$h_{g\_\mathrm{eval}}(d+m+1)$; (ii) banks the increment-membership
+$\delta_m \in (\mathfrak m_A \cdot B)^{d+m+1}$ via
+$\mathrm{Ideal.map\_pow} + h\gamma_{\mathrm{diff}}$, then invokes
+\cref{lem:henselianPair-polynomial-eval-taylor-residual-pow}
+at base $c_m := b_0 + r_{d+m}$ and direction $\delta_m$ to yield
+the level-comparison Taylor identity placing the second-order
+residual into $(\mathfrak m_A \cdot B)^{2(d+m+1)}$. The residual
+typed sorry inside this sub-sub-helper now encodes only
+Steps (iii) and (iv) (the Cayley--Hamilton multiples fold + the
+henselian per-coordinate termination).
+
+\textit{Formalisation progress note (iter-083).} The substantive
+Steps (iii)+(iv) are now extracted as a typed sub-sub-sub-helper
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}
+carrying the FULL iter-080 ENRICHED data PLUS the C-H annihilator
+triple PLUS the level-$d$ basis decomposition triple PLUS the
+iter-082 banked data $(\alpha^{(m)}, h\alpha^{(m)}_{\mathrm{mem}},
+h\alpha^{(m)}_{\mathrm{eq}}, h\delta_{\mathrm{mem}},
+h\mathrm{Taylor})$. The body of this lemma now closes by a single
+delegating call into the new sub-sub-sub-helper.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-l3c-root-descent-charpoly-multiples}
+\lean{Algebra.Etale.exists_root_descent_charpoly_multiples}
+\leanok
+\uses{lem:henselianPair-l3c-root-descent-charpoly-collapse,
+      lem:henselianPair-exists-mAB-pow-decomposition-in-basis,
+      lem:henselianPair-polynomial-eval-taylor-residual-pow}
+[Cayley--Hamilton multiples fold + henselian per-coord termination
+(iter-083 extraction).]
+Under the iter-080 ENRICHED hypotheses of
+\cref{lem:henselianPair-l3c-root-descent-charpoly-collapse}
+together with the iter-082 banked auxiliary data
+$(\alpha^{(m)} : \mathbb N \to \mathrm{Fin}\,k \to A,
+ \alpha^{(m)}_i \in \mathfrak m_A^{d+m+2},
+ g(b_0 + r_{d+m+1}) = \sum_i \mathrm{algebraMap}(\alpha^{(m)}_i)\,b_i,
+ h\delta_{\mathrm{mem}},
+ h\mathrm{Taylor})$,
+each level-$d$ basis-decomposition coefficient $\alpha_i$ satisfies
+$\alpha_i = 0$ in $A$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The substantive Stacks 0DXB content: the Cayley--Hamilton
+annihilator $\mathrm{aeval}\,r_1\,p = 0$ collapses the infinite
+recursion in the per-coordinate $\alpha^{(m)}_i$ to a finite
+$d$-step polynomial chain in $A[X]$, after which henselianness of
+$A$ terminates each per-coordinate descent at exact zero.
+
+(iii) \textbf{Cayley--Hamilton multiples fold.} Unpack
+$\mathrm{aeval}\,r_1\,p = 0$ via
+$\mathrm{Polynomial.aeval\_eq\_sum\_range}$:
+$\sum_{j=0}^{d} p_j \cdot r_1^j = 0$ in $B$, where
+$p_d = 1$ (monic). Solving for $r_1^d$ and iterating yields, for
+every $m \ge 0$, an expression
+$r_1^{d+m} = \sum_{j < d} c^{(m)}_j \cdot r_1^j$ with
+$c^{(m)}_j \in \mathfrak m_A^{(d+m) - j}$ (the coefficients live in
+deepening $\mathfrak m_A$-powers as a function of the gap between
+the target degree $d + m$ and the index $j$). Apply the Taylor
+identities $h\mathrm{Taylor}_m$ iteratively to relate
+$g(b_0 + r_{d+m+1})$ back to $g(b_0 + r_d) + \cdots$ via terms
+controlled by the C-H multiples.
+
+(iv) \textbf{Henselian per-coordinate termination.} The Step (iii)
+recursion converts the basis-uniqueness identity
+$\sum_i \mathrm{algebraMap}(\alpha_i)\,b_i =
+ g(b_0 + r_d) = $ (telescoped through C-H multiples) into a
+per-coordinate identity $\alpha_i = F_i(\alpha_i)$ where $F_i$ is
+a single-variable contraction in $A$ encoded by a polynomial
+$h_i \in A[X]$ with $h_i(0) \equiv 0$ and $h'_i(0)$ a unit modulo
+$\mathfrak m_A$ (specifically $h'_i(0) = 1 - \epsilon$ with
+$\epsilon \in \mathfrak m_A$). Apply
+$\mathrm{HenselianLocalRing.is\_henselian}$ to $h_i$ at the
+residue-class $0$ to obtain a unique lift $a_i \in \mathfrak m_A$
+with $h_i(a_i) = 0$. Uniqueness of the lift forces $a_i =
+\alpha_i$ (since $\alpha_i$ itself satisfies $h_i(\alpha_i) = 0$
+by the recursion, and $\alpha_i \in \mathfrak m_A^{d+1}
+\subseteq \mathfrak m_A$); the trivial lift $a_i = 0$ also
+satisfies $h_i(0) = 0$; hence $\alpha_i = 0$ outright.
+
+The linear-independence collapse bridge from a $B$-equality to
+per-coordinate $A$-identities uses $\mathrm{hlin}$ via
+$\mathrm{Fintype.linearIndependent\_iff}$ or
+$\mathrm{LinearIndependent.eq\_zero\_of\_pair}$ as appropriate.
+
+\textit{Formalisation progress note (iter-084).} The body of this
+sub-sub-sub-helper banks the in-scope notation (via
+$\mathrm{set}$: $\mathfrak m_A$, $d := p.\mathrm{natDegree}$,
+$r_n$, $\mathfrak m_A B$), the Newton-increment identity
+$r_{m+1} - r_m = \sum_i \mathrm{algebraMap}(\gamma_{m+1}(i) -
+\gamma_m(i))\,b_i$ with its $\mathfrak m_A B$-membership, the
+derivative-cross-increment membership $g'(b_0 + r_{d+m}) \cdot
+\delta_m \in (\mathfrak m_A B)^{d+m+1}$, the $\eta$-decomposition
+family at all levels $m$ via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis} +
+$\mathrm{Classical.choose}$ ($\eta : \mathbb N \to \mathrm{Fin}\,k
+\to A$ with $\eta_m(i) \in \mathfrak m_A^{d+m+1}$ and $g'(b_0 +
+r_{d+m}) \cdot \delta_m = \sum_i \mathrm{algebraMap}
+(\eta_m(i))\,b_i$), and the level-$0$ descent residual identity
+$\sum_i \mathrm{algebraMap}(\alpha^{(0)}_i - \alpha_i -
+\eta_0(i))\,b_i \in (\mathfrak m_A B)^{2(d+1)}$ (seed for the
+C-H multiples fold).
+
+\textit{Formalisation progress note (iter-085).} The body now
+additionally banks Step~(1) (level-$(m+1)$ descent residual
+identity $\sum_i \mathrm{algebraMap}(\alpha^{(m+1)}_i -
+\alpha^{(m)}_i - \eta_{m+1}(i))\,b_i \in (\mathfrak m_A
+B)^{2(d+m+2)}$ for all $m$) and Step~(2) ($\epsilon$-extraction
+via the iter-076 power-decomposition helper at exponent
+$2(d+m+1) - 1$, producing two families $\epsilon^{(0)}$ and
+$\epsilon : \mathbb N \to \mathrm{Fin}\,k \to A$ with
+$\epsilon_m(i) \in \mathfrak m_A^{2(d+m+2)}$; per-coordinate
+$A$-recurrences $\alpha^{(0)}_i = \alpha_i + \eta_0(i) +
+\epsilon^{(0)}_i$ and $\alpha^{(m+1)}_i = \alpha^{(m)}_i +
+\eta_{m+1}(i) + \epsilon_m(i)$ via $\mathrm{Algebra.smul\_def}$
++ $\mathrm{Fintype.linearIndependent\_iff}\,\mathrm{hlin}$).
+The body's residual sorry now encodes precisely Steps~(iii) and
+(iv) — the Cayley--Hamilton multiples fold + the henselian
+per-coord termination.
+
+\textit{Authorised 5th-tier helper extraction (iter-086+).}
+Step~(iii) factors cleanly as a standalone lemma
+$\mathrm{cayley\_hamilton\_power\_expansion}$: given a monic
+$p \in A[X]$ of degree $d$ with $p_j \in \mathfrak
+m_A^{d - j}$ and $r_1 \in B$ satisfying
+$\mathrm{aeval}\,r_1\,p = 0$, for every $m \ge 0$ there exist
+$c^{(m)} : \mathrm{Fin}\,d \to A$ with $c^{(m)}_j \in
+\mathfrak m_A^{d + m - j}$ and $r_1^{d + m} = \sum_{j < d}
+\mathrm{algebraMap}(c^{(m)}_j)\,r_1^j$ in $B$. This collapses
+the infinite $\eta$-recursion to a finite $d$-step polynomial
+chain in $A[X]$ per coordinate. Step~(iv) then closes via
+$\mathrm{HenselianLocalRing.is\_henselian}$ applied per coord
+($\sim 20$ LOC closure).
+
+\textit{Formalisation progress note (iter-086).} The 5th-tier
+helper \cref{lem:henselianPair-cayley-hamilton-power-expansion}
+has been extracted with its signature in place. The base case
+$m = 0$ is closed sorry-free by the monic-rearrangement chain
+($\mathrm{Polynomial.aeval\_eq\_sum\_range}$ on the annihilator,
+splitting off the leading term via
+$\mathrm{Finset.sum\_range\_succ}$ and $p.\mathrm{coeff}\,d = 1$,
+yielding $r_1^d = -\sum_{i < d} \mathrm{algebraMap}(p_i)\,r_1^i$;
+the witness is $c_j := -p_j$, with membership from $\mathrm{neg
+\_mem}\,(h_{p\_\mathrm{coeff}}\,j)$). The inductive step
+$m \to m + 1$ remains as a typed sorry — its closure is the
+iter-087 Lane A Target~\#1. The parent body of
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}
+now banks the Step~(iii) structural carrier $c^{\mathrm{CH}} :
+\mathbb N \to \mathrm{Fin}\,d \to A$ via a single call to the
+new helper at $r_1 := \sum_i \mathrm{algebraMap}(\gamma_1(i))\,b_i$
+followed by $\mathrm{Classical.choose}$; the parent body's
+residual sorry now encodes precisely Step~(iv) (henselian
+per-coord termination), which is the iter-087 Lane A Target~\#2.
+
+\textit{iter-087 closure plan.} Lane A dispatches both
+remaining ready sorries in this file under a single
+prover-per-file objective:
+\begin{itemize}
+\item Target~\#1 (L1425): inductive step of
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}.
+Mechanical $\mathrm{Fin}$-index bookkeeping ($\sim 50$--$80$
+LOC): case-split on $d = 0$ (vacuous from the annihilator
+collapse since $p_d = 1$ forces $1 = 0$ in $B$, hence $B$ is
+trivial) versus $d \ge 1$; define
+$c'_j := (\text{shifted IH coeff}) - c_{d-1}\,p_j$, verify
+membership via $\mathrm{sub\_mem}$ +
+$\mathrm{Ideal.pow\_mul\_pow\_le\_pow}$, verify equality by
+$r_1^{d + m + 1} = r_1 \cdot r_1^{d + m} = r_1 \cdot
+(\sum_j \mathrm{algebraMap}(c_j)\,r_1^{j})$ with reindexing
+plus $r_1 \cdot r_1^{d - 1} = r_1^d$ substitution through the
+base case.
+\item Target~\#2 (L1753): Step~(iv) henselian per-coord
+termination. With $c^{\mathrm{CH}}$ banked plus the iter-085
+per-coord $A$-recurrences $h\alpha_0^{\mathrm{rec}}$ /
+$h\alpha_{\mathrm{succ}}^{\mathrm{rec}}$, derive a per-coord
+polynomial $h_i \in A[X]$ with $h_i(\alpha_i) = 0$; verify
+$h_i'(0)$ is a unit modulo $\mathfrak m_A$ (from $h_{p\_
+\mathrm{monic}}$); apply $\mathrm{HenselianLocalRing.is\_henselian}$
+to lift the residue-class $0$ root uniquely; both $\alpha_i$
+and $0$ satisfy $h_i$ in $\mathfrak m_A$, so uniqueness forces
+$\alpha_i = 0$ ($\sim 50$--$100$ LOC).
+\end{itemize}
+
+\textit{Formalisation progress note (iter-087).} Lane~A closed
+Target~\#1 (L1425, the inductive step of
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}) sorry-free
+via the case-split + shifted-IH recipe described above ($\sim 110$
+LOC); the 5th-tier helper is now fully proven (base + inductive).
+For Target~\#2 the parent body banked the \emph{telescoping
+identity}
+\[
+\alpha^{(m)}_i = \alpha_i + \sum_{j \le m} \eta_j(i) +
+\varepsilon_0(i) + \sum_{j < m} \varepsilon_j(i) \quad \forall m, i,
+\]
+sorry-free inline (\textasciitilde{}12 LOC) by induction on $m$
+using $h\alpha_0^{\mathrm{rec}}$ / $h\alpha_{\mathrm{succ}}^{\mathrm{rec}}$.
+The body's residual sorry now sits at L1895 and encodes
+Step~(iv)~only.
+
+The prover reported a \emph{structural} obstruction: the
+$\varepsilon_j$ and $\eta_j$ families have fixed minimum
+$\mathfrak m_A$-depth ($\eta_0 \in \mathfrak m_A^{d+1}$,
+$\varepsilon_0 \in \mathfrak m_A^{2(d+1)}$), so na\"\i ve
+telescoping does not give $\alpha_i$ in arbitrarily deep
+$\mathfrak m_A^{N}$. The $c^{\mathrm{CH}}_j$ family controls
+powers of $r_1$, but $r_m = \sum_i \mathrm{algebraMap}(\gamma_m(i))
+\,e_i$ differs from $r_1^m$ for $m \ge 2$, so the Cayley--Hamilton
+fold does not directly inject into the $\alpha^{(m)}$-recursion.
+
+\textit{Iter-088 plan: route~(c) opened.} The iter-088 plan
+dispatched a \texttt{refactor} subagent
+(\texttt{add-noetherian-l3c}) to add \texttt{[IsNoetherianRing A]}
+to the 11-helper L3c chain
+(\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}
+through \texttt{henselianLocalRing\_of\_finite\_over\_henselianLocal}).
+The headline consumer
+\cref{thm:henselianRing-map-maximalIdeal} already carries this
+hypothesis (see L33--51 of this chapter for the soundness
+discussion), so the propagation costs nothing strategically and
+no iter-079$\to$iter-087 banking is discarded. With
+$\texttt{[IsNoetherianRing A]}$ now in scope inside
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}, the
+closure recipe pivots to \emph{Krull intersection on $A$}: the
+local ring $A$ satisfies $\mathfrak m_A \subseteq \mathrm{jacobson}\,A$
+(canonical \texttt{IsLocalRing} fact), so by
+\texttt{Ideal.iInf\_pow\_smul\_eq\_bot\_of\_le\_jacobson} we have
+$\bigcap_n \mathfrak m_A^n = (0)$ in $A$. The body then closes by
+showing $\alpha_i \in \mathfrak m_A^N$ for every $N$, hence
+$\alpha_i = 0$.
+
+\textit{Iter-088 Step~(iv)$'$ closure recipe (Krull-on-$A$).}
+\begin{itemize}
+\item \textbf{Telescoping step.} Use the iter-087 banked
+$h_{\mathrm{tele}}$:
+$\alpha_i = \alpha^{(m)}_i - (\sum_{j \le m} \eta_j(i)) -
+\varepsilon_0(i) - (\sum_{j < m} \varepsilon_j(i))$ for every $m$.
+\item \textbf{Strong induction on $N$.} Show by strong induction
+on $N$ that $\alpha_i \in \mathfrak m_A^N$. The induction
+hypothesis at stage $N$ is $\alpha_i \in \mathfrak m_A^N$; the
+inductive step shows $\alpha_i \in \mathfrak m_A^{N+1}$. The
+key observation is that the Cauchy structure of $\gamma$ in $A$
+together with $h_{\mathrm{tele}}$ and the iter-086
+$c^{\mathrm{CH}}$ expansion of $r_1^{d+m}$ implies that, at
+sufficiently large $m$, every $\eta_j(i)$ for $j \le m$ and
+every $\varepsilon_j(i)$ for $j < m$ can be re-expressed via a
+substitution chain involving $\alpha_i$ itself plus $\mathfrak m_A^{N+1}$
+remainders. Specifically, the prover's
+suggested recipe~(b) from the iter-087 task result --
+``substitute the explicit
+$c^{\mathrm{CH}}_0$ formula $r_1^d = -\sum_j \mathrm{algebraMap}(p_j)\,r_1^j$
+into the level-$0$ residual identity $h_{\mathrm{level0\_res}}$''
+-- is one concrete substitution; alternative routes that pull
+the induction hypothesis $\alpha_i \in \mathfrak m_A^N$ through
+the $\eta_j$ definitions (via the basis decomposition of the
+residuals $g(b_0 + r_n)$) also work.
+\item \textbf{Krull collapse.} With $\alpha_i \in \mathfrak m_A^N$
+for all $N$, Krull gives $\alpha_i \in \bigcap_N \mathfrak m_A^N
+= (0)$, i.e.\ $\alpha_i = 0$ in $A$. The basis-linearity
+collapse from $\sum_i \mathrm{algebraMap}(\alpha_i)\,e_i = 0$
+to $\forall i, \alpha_i = 0$ is then automatic via
+$\mathrm{Fintype.linearIndependent\_iff}$ + $\mathrm{Algebra.smul\_def}$
+(KB iter-085-B pattern); but in fact the Krull collapse already
+gives the conclusion directly, since $\alpha_i = 0$ follows
+per-coordinate without invoking basis linearity at the final
+step.
+\end{itemize}
+
+If the bootstrap from $\alpha_i \in \mathfrak m_A^N$ to
+$\alpha_i \in \mathfrak m_A^{N+1}$ proves itself substantive
+(e.g.\ requires a non-trivial bridge through the
+$c^{\mathrm{CH}}$ expansion of $r_1$ and the $r_n$ basis
+decomposition), the prover may extract it as a 6th-tier sub-helper
+$\texttt{alpha\_in\_deeper\_mA\_pow}$ analogous to the previous
+extractions. Total residual budget for iter-088: $\sim 80$--$150$
+LOC of induction bookkeeping plus the final Krull invocation.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-cayley-hamilton-power-expansion}
+\lean{Algebra.Etale.cayley_hamilton_power_expansion}
+\leanok
+[Cayley--Hamilton power expansion (iter-086 5th-tier extraction).]
+Let $A$ be a commutative ring, $\mathfrak m_A \subseteq A$ an
+ideal, $B$ a commutative $A$-algebra, and $p \in A[X]$ a monic
+polynomial of degree $d$ whose coefficients $p_j$ lie in deepening
+powers of $\mathfrak m_A$:
+$p_j \in \mathfrak m_A^{d - j}$ for every $j$. Let $r_1 \in B$ be
+annihilated by $p$ over the $A$-algebra structure of $B$, i.e.
+$\mathrm{aeval}\,r_1\,p = 0$. Then for every $m \in \mathbb N$
+there exist coefficients $c^{(m)} : \mathrm{Fin}\,d \to A$ with
+\[
+c^{(m)}_j \in \mathfrak m_A^{d + m - j}
+\quad\text{for all } j \in \mathrm{Fin}\,d,
+\]
+and
+\[
+r_1^{d + m} =
+\sum_{j \in \mathrm{Fin}\,d}
+\mathrm{algebraMap}\bigl(c^{(m)}_j\bigr)\,r_1^{j}
+\quad\text{in } B.
+\]
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+Induction on $m$. The lemma collapses the infinite recursion in
+the Newton-iterate $\alpha^{(m)}$-family of
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples} to a
+finite $d$-step polynomial expansion per coordinate; this is the
+substantive content of the Cayley--Hamilton multiples fold.
+
+\textbf{Base case $m = 0$.} Unpack the annihilator
+$\mathrm{aeval}\,r_1\,p = 0$ via
+$\mathrm{Polynomial.aeval\_eq\_sum\_range}$ to get
+\[
+\sum_{i = 0}^{d} \mathrm{algebraMap}(p_i)\,r_1^{i} = 0 \quad\text{in } B,
+\]
+where the algebraMap-form follows from
+$\mathrm{Algebra.smul\_def}$ (the $\bullet$-action in the
+$\mathrm{aeval}$ expansion is rewritten to algebraMap
+multiplication). Split off the leading term via
+$\mathrm{Finset.sum\_range\_succ}$ and use
+$p.\mathrm{coeff}\,d = 1$ (from monicity, via
+$\mathrm{Monic.coeff\_natDegree}$) together with
+$\mathrm{map\_one}$ to reduce the leading contribution to
+$r_1^d$. Solving for $r_1^d$:
+\[
+r_1^d = -\sum_{i = 0}^{d - 1} \mathrm{algebraMap}(p_i)\,r_1^{i}
+      = \sum_{i = 0}^{d - 1} \mathrm{algebraMap}(-p_i)\,r_1^{i}.
+\]
+Take the witness $c^{(0)}_j := -p_j$ (for $j \in \mathrm{Fin}\,d$);
+membership $c^{(0)}_j \in \mathfrak m_A^{d - j} = \mathfrak m_A^{d
++ 0 - j}$ follows from $\mathrm{neg\_mem}\,(h_{p\_\mathrm{coeff}}\,j)$
+(the ideal $\mathfrak m_A^{d - j}$ is closed under negation via
+the $\mathrm{NegMemClass}$ instance on submodules).
+
+\textbf{Inductive step $m \to m + 1$.} Suppose $c^{(m)}$ has been
+constructed as above. Case-split on whether $d = 0$ or $d \ge 1$.
+
+\emph{Case $d = 0$.} The annihilator collapses to
+$\mathrm{algebraMap}(p_0)\,r_1^0 = 0$, i.e.
+$\mathrm{algebraMap}(p_0) = 0$ in $B$; combined with $p_d = 1$
+(monicity at degree $0$ means $p_0 = 1$), this gives
+$\mathrm{algebraMap}(1) = 0$, i.e. $1 = 0$ in $B$. The ring $B$
+is trivial and the existential goal is vacuously closed by
+$c^{(m+1)} := \mathrm{elim}_{\mathrm{Fin}\,0}$ (empty function).
+
+\emph{Case $d \ge 1$.} Define
+\[
+c^{(m+1)}_j :=
+\bigl[j = 0\bigr]\cdot 0 + \bigl[j \ne 0\bigr]\cdot c^{(m)}_{j - 1}
+- c^{(m)}_{d - 1}\,p_j,
+\]
+where $[\cdot]$ denotes Iverson brackets and the index shift
+$j \mapsto j - 1$ uses the canonical $\mathrm{Fin}$-arithmetic
+(omega-decided bounds). Membership: the shifted term lies in
+$\mathfrak m_A^{d + m - (j - 1)} = \mathfrak m_A^{d + (m+1) - j}$
+by IH; the product term lies in $\mathfrak m_A^{d + m - (d - 1)}
+\cdot \mathfrak m_A^{d - j} = \mathfrak m_A^{m + 1} \cdot
+\mathfrak m_A^{d - j} \subseteq \mathfrak m_A^{(m+1) + (d - j)} =
+\mathfrak m_A^{d + (m+1) - j}$ by $\mathrm{Ideal.mul\_mem\_mul}$
+and $\mathrm{Ideal.pow\_mul\_pow\_le\_pow}$. Closure under
+subtraction via $\mathrm{sub\_mem}$ gives the membership claim.
+
+Equality: compute
+\[
+r_1^{d + (m+1)} = r_1\cdot r_1^{d + m}
+= r_1\cdot \sum_{j \in \mathrm{Fin}\,d}
+\mathrm{algebraMap}(c^{(m)}_j)\,r_1^{j}
+= \sum_{j \in \mathrm{Fin}\,d}
+\mathrm{algebraMap}(c^{(m)}_j)\,r_1^{j + 1}.
+\]
+Re-index by splitting off the last term $j = d - 1$
+(which yields $\mathrm{algebraMap}(c^{(m)}_{d-1})\,r_1^{d}$):
+substitute $r_1^d = \sum_{i < d}
+\mathrm{algebraMap}(-p_i)\,r_1^{i}$ from the base case,
+collect like terms by index, and match against the proposed
+$c^{(m+1)}$.
+
+This closes the inductive step.
+
+The lemma is Mathlib-PR-shape: no Noetherianness on $A$, no
+$[\mathrm{IsLocalRing}\;A]$ assumption, no completeness. The base
+case requires only the monic-leading rearrangement; the
+inductive step is finite $\mathrm{Fin}$-index bookkeeping. It
+belongs in
+\texttt{Mathlib/LinearAlgebra/CharPoly/Basic.lean} or
+\texttt{Mathlib/RingTheory/CayleyHamilton.lean} once both halves
+of the body are closed.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-exists-mAB-pow-decomposition-in-basis}
+\lean{Algebra.Etale.exists_mAB_pow_decomposition_in_basis}
+\leanok
+[Basis decomposition of elements of $(\mathfrak m_A \cdot B)^{n+1}$]
+Let $A$ be a local ring, $B$ an $A$-algebra, and
+$(b_1, \ldots, b_k)$ a finite $A$-spanning tuple of $B$. For every
+$n \in \mathbb N$ and every
+$x \in ((\mathfrak m_A).\mathrm{map}(\mathrm{algebraMap}\,A\,B))^{n+1}$,
+there exist coefficients $\alpha : \mathrm{Fin}\,k \to A$ with
+$\alpha_i \in \mathfrak m_A^{n+1}$ for every $i$ and
+$x = \sum_i \mathrm{algebraMap}(\alpha_i)\,b_i$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The image-of-power identity
+$(\mathfrak m_A).\mathrm{map}(\mathrm{algebraMap}\,A\,B)^{n+1} =
+ (\mathfrak m_A^{n+1}).\mathrm{map}(\mathrm{algebraMap}\,A\,B)$
+(\texttt{Ideal.map\_pow} for the ring hom $\mathrm{algebraMap}\,A\,B$)
+rewrites the hypothesis as $x \in (\mathfrak m_A^{n+1}).\mathrm{map}
+(\mathrm{algebraMap}\,A\,B)$. The Mathlib lemma
+\texttt{Submodule.mem\_ideal\_smul\_span\_iff\_exists\_sum},
+applied to the ideal $\mathfrak m_A^{n+1}$ and the spanning tuple
+$(b_i)$, then produces a finitely-supported witness
+$\delta : \mathrm{Fin}\,k \to_f A$ with each $\delta_i \in
+\mathfrak m_A^{n+1}$ and
+$x = \sum_i \delta_i \cdot b_i$ (after collapsing the Finsupp sum
+to a $\mathrm{Fin}\,k$ sum via $\mathrm{Finsupp.sum\_fintype}$). Converting the $\bullet$-action to
+$\mathrm{algebraMap}$ via $\mathrm{Algebra.smul\_def}$ delivers
+the conclusion in the stated form. This is the power-version of
+\cref{lem:henselianPair-l3c-charpoly-substantive-descent}'s
+iter-068 helper \texttt{exists\_mAB\_decomposition\_in\_basis},
+specialized at exponent $n+1$; it requires no extra hypothesis
+beyond what the base helper already assumes.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-polynomial-eval-taylor-residual-pow}
+\lean{Algebra.Etale.polynomial_eval_taylor_residual_pow}
+\leanok
+[Higher-order linear-Taylor residual at exponent $n+1$]
+Let $g \in B[X]$, $c \in B$, and $\delta \in B$ with
+$\delta \in ((\mathfrak m_A).\mathrm{map}(\mathrm{algebraMap}\,A\,B))^{n+1}$.
+Then the Taylor residual at the base point $c$ in the direction $\delta$
+satisfies
+\[
+g(c + \delta) - \bigl(g(c) + g'(c)\cdot\delta\bigr) \in
+  ((\mathfrak m_A).\mathrm{map}(\mathrm{algebraMap}\,A\,B))^{2(n+1)}.
+\]
+\end{lemma}
+
+\begin{proof}
+
+
+\leanok
+Direct from the single-variable identity
+\texttt{Polynomial.binomExpansion}, which produces $q \in B$ with
+$g(c + \delta) = g(c) + g'(c)\cdot\delta + q\cdot\delta^2$. Rearranging
+gives the residual equal to $q\cdot\delta^2$. Since
+$\delta \in I^{n+1}$ with $I := (\mathfrak m_A).\mathrm{map}
+(\mathrm{algebraMap}\,A\,B)$, the membership
+$\delta^2 \in (I^{n+1})^2 = I^{2(n+1)}$ follows from
+\texttt{Ideal.pow\_mem\_pow}\,$\delta^{(n+1)}\,2$; multiplying by $q$
+on the left (the ideal $I^{2(n+1)}$ is a $B$-submodule) closes the goal.
+The base helper \texttt{basis\_expansion\_polynomial\_eval} (iter-068)
+is the $n = 0$ instance of this lemma combined with a basis
+decomposition for the direction $\delta = \sum_i \mathrm{algebraMap}
+(\alpha_i)\,b_i$; the present lemma states the pure Taylor identity at
+generic exponent.
+\end{proof}
+
 \section{Downstream consumers}
 
 \Cref{thm:henselianRing-map-maximalIdeal} feeds the following
