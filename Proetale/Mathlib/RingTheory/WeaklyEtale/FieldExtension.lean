@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import Proetale.Algebra.WeaklyEtale
 import Proetale.Algebra.WeakDimension
+import Proetale.Algebra.WeaklyEtaleField
 import Mathlib.RingTheory.Unramified.Field
 import Mathlib.FieldTheory.Separable
 import Mathlib.RingTheory.Algebraic.Integral
@@ -78,19 +79,6 @@ lemma formallyUnramified_of_isField [Algebra.WeaklyEtale K L] :
     Algebra.FormallyUnramified K L :=
   inferInstance
 
-/-- If `L / K` is weakly étale between fields, then the tensor square `L ⊗[K] L`
-is an absolutely flat ring.
-
-This is a special case of Stacks [092I]: weakly étale algebras over absolutely flat
-rings are absolutely flat. Here we apply it to the (weakly étale) base change
-`L → L ⊗[K] L`, noting that `L` is absolutely flat because it is a field. -/
-instance absolutelyFlat_tensor_self [Algebra.WeaklyEtale K L] :
-    Ring.AbsolutelyFlat (L ⊗[K] L) :=
-  haveI : Ring.AbsolutelyFlat L := .of_field L
-  haveI : Algebra.WeaklyEtale L (L ⊗[K] L) := inferInstance
-  Ring.AbsolutelyFlat.of_flat_lmul' L (L ⊗[K] L)
-    (Algebra.WeaklyEtale.flat_lmul' L (L ⊗[K] L))
-
 /-- If `L / K` is weakly étale between fields, then `L ⊗[K] L` is reduced.
 
 This is the special-field version: derived from `Ring.AbsolutelyFlat (L ⊗[K] L)` via
@@ -113,40 +101,6 @@ lemma sub_mem_ker_lmul' (a : L) :
     (1 ⊗ₜ[K] a - a ⊗ₜ[K] 1 : L ⊗[K] L) ∈
       RingHom.ker (Algebra.TensorProduct.lmul' (R := K) (S := L)).toRingHom := by
   simp [RingHom.mem_ker]
-
-/-- The `L`-algebra evaluation map `L[X] →ₐ[L] L ⊗[K] L` sending `X` to `1 ⊗ a`.
-The `L`-algebra structure on `L ⊗[K] L` is the standard one from
-`Algebra.TensorProduct`, i.e. `c ∈ L` acts as `c ⊗ 1`.
-Composed with multiplication `μ : L ⊗[K] L → L`, this is the `L`-algebra
-evaluation at `a` (sending `X ↦ a`). -/
-noncomputable def tensorEvalRight (a : L) : Polynomial L →ₐ[L] L ⊗[K] L :=
-  Polynomial.aeval (1 ⊗ₜ[K] a)
-
-@[simp]
-lemma tensorEvalRight_X (a : L) :
-    tensorEvalRight K L a Polynomial.X = (1 ⊗ₜ[K] a : L ⊗[K] L) := by
-  simp [tensorEvalRight]
-
-@[simp]
-lemma tensorEvalRight_C (a c : L) :
-    tensorEvalRight K L a (Polynomial.C c) = (c ⊗ₜ[K] 1 : L ⊗[K] L) := by
-  simp [tensorEvalRight, Algebra.TensorProduct.algebraMap_apply]
-
-/-- Composition with multiplication: `μ ∘ (X ↦ 1 ⊗ a) = (X ↦ a)`. -/
-lemma lmul'_comp_tensorEvalRight (a : L) (p : Polynomial L) :
-    Algebra.TensorProduct.lmul' (R := K) (S := L) (tensorEvalRight K L a p) =
-      Polynomial.aeval a p := by
-  induction p using Polynomial.induction_on with
-  | C c => simp
-  | add p q hp hq => simp [hp, hq]
-  | monomial n c _ =>
-      simp [tensorEvalRight]
-
-/-- The L-algebra map `tensorEvalRight K L a` sends `X - C a` to `1 ⊗ a - a ⊗ 1`. -/
-lemma tensorEvalRight_X_sub_C (a : L) :
-    tensorEvalRight K L a (Polynomial.X - Polynomial.C a) =
-      (1 ⊗ₜ[K] a - a ⊗ₜ[K] 1 : L ⊗[K] L) := by
-  simp
 
 /-- Helper (iter-020 scaffolding) for the `δ ≠ 0` substantive case of
 `isSeparable_algebraic_of_isField` (Stacks [092P]). Given a weakly étale
