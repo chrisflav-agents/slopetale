@@ -1,6 +1,5 @@
 import Mathlib.Topology.Category.TopCat.GrothendieckTopology
 import Proetale.Topology.Flat.Sheaf
-import Upstreamer
 
 open CategoryTheory Limits
 

@@ -657,10 +657,10 @@ private lemma bijective_localRingHom_descend
       have key2 : u_w * f t_w * f x = u_w * f t_w * f y := by
         have lhs : u_w * f v_w * (w * f x) = u_w * f t_w * f x := by
           have := hu_w_eq  -- u_w * w * f v_w = u_w * f t_w
-          ring_nf; ring_nf at this; linear_combination f x * this
+          linear_combination f x * this
         have rhs : u_w * f v_w * (w * f y) = u_w * f t_w * f y := by
           have := hu_w_eq
-          ring_nf; ring_nf at this; linear_combination f y * this
+          linear_combination f y * this
         rw [← lhs, ← rhs, key]
       -- So u_w * f(t_w * x) = u_w * f(t_w * y)
       have key3 : u_w * f (t_w * x) = u_w * f (t_w * y) := by

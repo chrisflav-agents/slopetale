@@ -34,7 +34,7 @@ instance (J : Type*) [Category J] [IsConnected J] [HasLimitsOfShape J C]
     have : PreservesLimitsOfShape J (CostructuredArrow.proj F X) := by
       infer_instance
     have : PreservesLimit K (CostructuredArrow.toOver F X ⋙ Over.forget X) := by
-      show PreservesLimit K (CostructuredArrow.proj F X ⋙ F)
+      change PreservesLimit K (CostructuredArrow.proj F X ⋙ F)
       infer_instance
     have : HasLimit (K ⋙ CostructuredArrow.toOver F X) := by
       infer_instance
@@ -60,7 +60,7 @@ variable [P.IsStableUnderBaseChange]
 instance : PreservesLimitsOfShape WalkingCospan (CostructuredArrow.toOver P F X) := by
   have : PreservesLimitsOfShape WalkingCospan
       (CostructuredArrow.toOver P F X ⋙ Over.forget P ⊤ X) := by
-    show PreservesLimitsOfShape WalkingCospan <|
+    change PreservesLimitsOfShape WalkingCospan <|
       CostructuredArrow.forget P ⊤ F X ⋙ CategoryTheory.CostructuredArrow.toOver F X
     infer_instance
   exact preservesLimitsOfShape_of_reflects_of_preserves _ (Over.forget _ _ X)
