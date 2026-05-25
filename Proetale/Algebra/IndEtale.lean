@@ -32,6 +32,9 @@ lemma CommAlgCat.etale_eq : etale R = RingHom.toObjectProperty RingHom.Etale R :
   ext S
   exact RingHom.etale_algebraMap.symm
 
+instance : (MorphismProperty.ind.{u} CommRingCat.etale.{u}).IsStableUnderComposition :=
+  .ind_of_le_isFinitelyPresentable CommRingCat.etale_le_isFinitelyPresentable.{u}
+
 /-- An algebra is ind-étale if it can be written as the filtered colimit of étale
 algebras. -/
 @[mk_iff]
@@ -47,185 +50,6 @@ variable (R S : Type u) [CommRing R] [CommRing S] [Algebra R S]
 lemma iff_ind_etale (R S : Type u) [CommRing R] [CommRing S] [Algebra R S] :
     Algebra.IndEtale R S ↔ ObjectProperty.ind.{u} (CommAlgCat.etale R) (.of R S) :=
   Algebra.indEtale_iff R S
-
-/-- If `R → S` is ind-étale and `S → A` is étale, then `R → A` is ind-étale.
-This is the key technical step for transitivity: ind(étale) ∘ étale ⊆ ind(étale).
-The proof uses PreIndSpreads to descend the étale map S → A to a finite level S_j → A',
-then forms pushouts along the filtered colimit diagram for S to recover A as a
-filtered colimit of étale R-algebras. -/
-private lemma of_indEtale_etale (A : Type u) [CommRing A] [Algebra R A] [Algebra S A]
-    [IsScalarTower R S A] [Algebra.IndEtale R S] [Algebra.Etale S A] :
-    Algebra.IndEtale R A := by
-  -- The composition of an ind-étale and an étale map is ind-étale.
-  -- The proof mirrors `Algebra.IndZariski.of_indZariski_localIso`: use the colimit
-  -- presentation of `R → S`, descend the étale map `S → A` to a finite stage via
-  -- `PreIndSpreads`, and assemble a refined diagram on `Under j₀` whose colimit is `A`.
-  rw [iff_ind_etale, CommAlgCat.etale_eq,
-    ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty]
-  -- Morphism-level colimit presentation of `R → S` with étale stages.
-  have hRS : MorphismProperty.ind.{u} CommRingCat.etale
-      (CommRingCat.ofHom (algebraMap R S)) := by
-    have h : Algebra.IndEtale R S := inferInstance
-    rwa [iff_ind_etale, CommAlgCat.etale_eq,
-      ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty] at h
-  obtain ⟨J, _, _, D, sR, tS, htS, hRS_data⟩ := hRS
-  -- `S → A` is étale.
-  have hSA : CommRingCat.etale (CommRingCat.ofHom (algebraMap S A)) := by
-    show (algebraMap S A).Etale
-    rw [RingHom.etale_algebraMap]
-    infer_instance
-  -- Descend `S → A` to a finite stage `j₀` via a pushout square.
-  obtain ⟨j₀, T', f', g, hpush, hf'⟩ :=
-    MorphismProperty.PreIndSpreads.exists_isPushout (P := CommRingCat.etale) htS
-      (CommRingCat.ofHom (algebraMap S A)) hSA
-  -- Refined diagram `D' : Under j₀ → CommRingCat` whose colimit is `A`.
-  let D' : Under j₀ ⥤ CommRingCat.{u} :=
-    (Under.post D ⋙ Under.pushout f') ⋙ Under.forget _
-  let c'₀ : Cocone D' :=
-    (Under.pushout f' ⋙ Under.forget _).mapCocone ((Cocone.mk _ tS).underPost j₀)
-  let c' : Cocone D' := c'₀.extend hpush.isoPushout.inv
-  let hc' : IsColimit c' :=
-    IsColimit.extendIso _ (isColimitOfPreserves _ (htS.underPost j₀))
-  -- Natural transformation `R → D'`.
-  let s' : (Functor.const (Under j₀)).obj (CommRingCat.of R) ⟶ D' :=
-    { app := fun k => sR.app k.right ≫ pushout.inl (D.map k.hom) f'
-      naturality := fun k l a => by
-        have hnat := sR.naturality a.right
-        simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.id_comp] at hnat
-        show 𝟙 _ ≫ sR.app l.right ≫ pushout.inl (D.map l.hom) f' =
-          (sR.app k.right ≫ pushout.inl (D.map k.hom) f') ≫ _
-        rw [Category.id_comp, Category.assoc]
-        dsimp [D', Under.post, Under.pushout]
-        rw [pushout.inl_desc, ← Category.assoc, ← hnat] }
-  refine ⟨Under j₀, inferInstance, inferInstance, D', s', c'.ι, hc', fun k => ⟨?_, ?_⟩⟩
-  · -- `s'.app k` is étale: composition of an étale stage with the pushout of an étale map.
-    have h1 : CommRingCat.etale (sR.app k.right) := (hRS_data k.right).1
-    have h2 : CommRingCat.etale (pushout.inl (D.map k.hom) f') :=
-      CommRingCat.etale.pushout_inl _ _ hf'
-    exact CommRingCat.etale.comp_mem _ _ h1 h2
-  · -- `s'.app k ≫ c'.ι.app k = ofHom (algebraMap R A)`.
-    have hassoc : sR.app k.right ≫ tS.app k.right = CommRingCat.ofHom (algebraMap R S) :=
-      (hRS_data k.right).2
-    show (sR.app k.right ≫ pushout.inl (D.map k.hom) f') ≫ c'.ι.app k =
-      CommRingCat.ofHom (algebraMap R A)
-    have hkey : pushout.inl (D.map k.hom) f' ≫ c'₀.ι.app k =
-        tS.app k.right ≫ pushout.inl ((Cocone.mk (CommRingCat.of S) tS).ι.app j₀) f' := by
-      dsimp only [c'₀, Functor.mapCocone_ι_app, Cocone.underPost_ι_app, Functor.comp_map,
-        Under.forget_map, Under.pushout_map, Under.post_obj, Under.mk_hom, Under.homMk_right,
-        Cocone.underPost_pt]
-      exact pushout.inl_desc _ _ _
-    have hc'_def : c'.ι.app k = c'₀.ι.app k ≫ hpush.isoPushout.inv := rfl
-    have hkey' : pushout.inl (D.map k.hom) f' ≫ c'₀.ι.app k ≫ hpush.isoPushout.inv =
-        tS.app k.right ≫
-          pushout.inl ((Cocone.mk (CommRingCat.of S) tS).ι.app j₀) f' ≫
-            hpush.isoPushout.inv := by
-      have := congrArg (· ≫ hpush.isoPushout.inv) hkey
-      simp only [Category.assoc] at this
-      exact this
-    have hcomp : pushout.inl (D.map k.hom) f' ≫ c'.ι.app k =
-        tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) := by
-      rw [hc'_def]
-      have hinl_inv := hpush.inl_isoPushout_inv
-      calc pushout.inl (D.map k.hom) f' ≫ c'₀.ι.app k ≫ hpush.isoPushout.inv
-          = tS.app k.right ≫
-              pushout.inl ((Cocone.mk (CommRingCat.of S) tS).ι.app j₀) f' ≫
-                hpush.isoPushout.inv := hkey'
-        _ = tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) :=
-            congrArg (tS.app k.right ≫ ·) hinl_inv
-    have step1 : (sR.app k.right ≫ pushout.inl (D.map k.hom) f') ≫ c'.ι.app k =
-        sR.app k.right ≫ pushout.inl (D.map k.hom) f' ≫ c'.ι.app k := Category.assoc _ _ _
-    have step2 : sR.app k.right ≫ pushout.inl (D.map k.hom) f' ≫ c'.ι.app k =
-        sR.app k.right ≫ tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) :=
-      congrArg (sR.app k.right ≫ ·) hcomp
-    have step3 : sR.app k.right ≫ tS.app k.right ≫ CommRingCat.ofHom (algebraMap S A) =
-        (sR.app k.right ≫ tS.app k.right) ≫ CommRingCat.ofHom (algebraMap S A) :=
-      (Category.assoc _ _ _).symm
-    have step4 : (sR.app k.right ≫ tS.app k.right) ≫ CommRingCat.ofHom (algebraMap S A) =
-        CommRingCat.ofHom (algebraMap R S) ≫ CommRingCat.ofHom (algebraMap S A) :=
-      congrArg (· ≫ CommRingCat.ofHom (algebraMap S A)) hassoc
-    have step5 : CommRingCat.ofHom (algebraMap R S) ≫ CommRingCat.ofHom (algebraMap S A) =
-        CommRingCat.ofHom (algebraMap R A) := by
-      ext x
-      exact (IsScalarTower.algebraMap_apply R S A x).symm
-    exact step1.trans (step2.trans (step3.trans (step4.trans step5)))
-
-lemma trans (T : Type u) [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
-    [Algebra.IndEtale R S] [Algebra.IndEtale S T] :
-    Algebra.IndEtale R T := by
-  -- Strategy: T = colim D_j in CommRingCat (from IndEtale S T, each S → D_j étale).
-  -- For each j, R → D_j is ind(étale) by of_indEtale_etale.
-  -- Then R → T is ind(ind(étale)) = ind(étale) by ind_ind.
-  -- Convert to MorphismProperty.ind level.
-  suffices MorphismProperty.ind.{u} CommRingCat.etale
-      (CommRingCat.ofHom (algebraMap R T)) by
-    rw [iff_ind_etale, CommAlgCat.etale_eq,
-      ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty]
-    exact this
-  -- Convert IndEtale S T to MorphismProperty.ind form.
-  have hST : MorphismProperty.ind.{u} CommRingCat.etale
-      (CommRingCat.ofHom (algebraMap S T)) := by
-    have : Algebra.IndEtale S T := inferInstance
-    rwa [iff_ind_etale S, CommAlgCat.etale_eq,
-      ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty] at this
-  obtain ⟨J, hJ, hFilt, D, s₂, t₂, ht₂, hst₂⟩ := hST
-  -- For each j, R → D_j is ind(etale) by of_indEtale_etale.
-  have hIndEtale_j : ∀ j, MorphismProperty.ind.{u} CommRingCat.etale
-      (CommRingCat.ofHom (algebraMap R S) ≫ s₂.app j) := by
-    intro j
-    have hEtale_j : (s₂.app j).hom.Etale := (hst₂ j).1
-    letI : Algebra S (D.obj j) := (s₂.app j).hom.toAlgebra
-    letI : Algebra R (D.obj j) :=
-      ((CommRingCat.ofHom (algebraMap R S) ≫ s₂.app j).hom).toAlgebra
-    haveI : IsScalarTower R S (D.obj j) := .of_algebraMap_eq' rfl
-    haveI : Algebra.Etale S (D.obj j) := RingHom.etale_algebraMap.mp hEtale_j
-    have := of_indEtale_etale R S (D.obj j)
-    rwa [iff_ind_etale, CommAlgCat.etale_eq,
-      ← RingHom.Etale.respectsIso.ind_toMorphismProperty_iff_ind_toObjectProperty] at this
-  -- R → T is ind(ind(etale)): T = colim D_j with each R → D_j being ind(etale).
-  have hind_ind : MorphismProperty.ind.{u} (MorphismProperty.ind.{u} CommRingCat.etale)
-      (CommRingCat.ofHom (algebraMap R T)) :=
-    ⟨J, hJ, hFilt, D,
-      (Functor.const J).map (CommRingCat.ofHom (algebraMap R S)) ≫ s₂,
-      t₂, ht₂, fun j => ⟨hIndEtale_j j, by
-        -- Goal: ((Functor.const J).map (ofHom (algebraMap R S)) ≫ s₂).app j ≫ t₂.app j
-        --       = ofHom (algebraMap R T)
-        -- This is: ofHom (algebraMap R S) ≫ s₂.app j ≫ t₂.app j = ofHom (algebraMap R T)
-        -- By (hst₂ j).2: s₂.app j ≫ t₂.app j = ofHom (algebraMap S T)
-        -- So LHS = ofHom (algebraMap R S) ≫ ofHom (algebraMap S T) = ofHom (algebraMap R T)
-        -- by IsScalarTower.
-        show ((Functor.const J).map (CommRingCat.ofHom (algebraMap R S)) ≫ s₂).app j ≫ t₂.app j =
-          CommRingCat.ofHom (algebraMap R T)
-        simp only [NatTrans.comp_app, Functor.const_obj_obj, Functor.const_map_app, Category.assoc]
-        -- after simp, the goal should be in a simplified form
-        -- try to just use (hst₂ j).2 at the element level
-        ext x
-        show (t₂.app j).hom ((s₂.app j).hom ((algebraMap R S) x)) = (algebraMap R T) x
-        have h := RingHom.congr_fun (CommRingCat.hom_ext_iff.mp (hst₂ j).2) ((algebraMap R S) x)
-        simp only [CommRingCat.comp_apply] at h
-        rw [h]; exact (IsScalarTower.algebraMap_apply R S T x).symm⟩⟩
-  -- By ind_ind: ind(ind(etale)) = ind(etale).
-  have key : MorphismProperty.ind.{u} (MorphismProperty.ind.{u} CommRingCat.etale) =
-      MorphismProperty.ind.{u} CommRingCat.etale :=
-    MorphismProperty.ind_ind CommRingCat.etale_le_isFinitelyPresentable
-  rw [key] at hind_ind
-  exact hind_ind
-
-private lemma etale_le_isFinitelyPresentable :
-    CommAlgCat.etale R ≤ ObjectProperty.isFinitelyPresentable.{u} (CommAlgCat.{u} R) := by
-  intro S hS
-  -- hS : Algebra.Etale R S, which implies algebraMap R S is FinitePresentation.
-  have hfp : RingHom.FinitePresentation (algebraMap R S) :=
-    (RingHom.etale_algebraMap.mpr hS).2
-  -- Transfer via commAlgCatEquivUnder: Under version is finitely presentable.
-  have hunder : IsFinitelyPresentable.{u}
-      ((commAlgCatEquivUnder (.of R)).functor.obj S) :=
-    CommRingCat.isFinitelyPresentable_under _ _ (by convert hfp using 1)
-  -- Transfer back via the equivalence.
-  haveI : Fact (Cardinal.aleph0 : Cardinal.{u}).IsRegular := Cardinal.fact_isRegular_aleph0
-  exact (@isCardinalPresentable_iff_of_isEquivalence
-    (CommAlgCat.{u} R) _ S (Cardinal.aleph0 : Cardinal.{u}) this
-    (Under (CommRingCat.of.{u} R)) _
-    (commAlgCatEquivUnder (.of R)).functor inferInstance).mp hunder
 
 /-- Étale `R`-algebras are finitely presented. -/
 lemma etale_le_finitePresentation :
@@ -506,8 +330,9 @@ variable {R S : Type u} [CommRing R] [CommRing S]
 
 lemma comp {T : Type u} [CommRing T] {g : S →+* T} {f : R →+* S} (hg : g.IndEtale)
     (hf : f.IndEtale) : (g.comp f).IndEtale := by
-  algebraize [f, g, (g.comp f)]
-  exact Algebra.IndEtale.trans R S T
+  rw [iff_ind_etale] at hf hg ⊢
+  rw [CommRingCat.ofHom_comp]
+  exact (MorphismProperty.ind.{u} CommRingCat.etale).comp_mem _ _ hf hg
 
 /-- Ind-étale ring homomorphisms are stable under base change. -/
 lemma isStableUnderBaseChange : IsStableUnderBaseChange IndEtale := by
@@ -550,3 +375,17 @@ lemma _root_.RingHom.IndZariski.indEtale {f : R →+* S}
   exact .of_indZariski R S
 
 end RingHom.IndEtale
+
+namespace Algebra.IndEtale
+
+variable (R S : Type u) [CommRing R] [CommRing S] [Algebra R S]
+
+lemma trans (T : Type u) [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
+    [Algebra.IndEtale R S] [Algebra.IndEtale S T] :
+    Algebra.IndEtale R T := by
+  rw [← RingHom.IndEtale.algebraMap_iff R T, IsScalarTower.algebraMap_eq R S T]
+  exact RingHom.IndEtale.comp
+    ((RingHom.IndEtale.algebraMap_iff S T).mpr ‹_›)
+    ((RingHom.IndEtale.algebraMap_iff R S).mpr ‹_›)
+
+end Algebra.IndEtale
