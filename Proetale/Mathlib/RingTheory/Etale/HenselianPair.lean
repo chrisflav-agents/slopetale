@@ -88,6 +88,61 @@ private lemma isUnit_of_isUnit_quotient_mk_maximalIdeal_map
       (maximalIdeal_map_le_jacobson_bot A B)
   exact IsUnit.of_map (Ideal.Quotient.mk _) _ hx
 
+/-- **§A.2 unit-bridge — determinant of the multiplication matrix
+in a finite free local-ring extension is a unit (iter-100 chapter
+refinement).**
+
+Let `A` be a local commutative ring with maximal ideal `mA`, and
+let `B` be a finite `A`-algebra equipped with an explicit `A`-basis
+`(b_j)`. For any `u ∈ B` whose residue in `B / mA·B` is a unit, the
+determinant of the matrix of left-multiplication-by-`u` in the
+basis `(b_j)` is a unit in `A`.
+
+This is the corrected determinantal form of the bridge that the
+iter-096–iter-098 prose stated falsely in terms of basis
+coefficients (see chapter §A.2 / chapter L2357–L2414 for the
+counterexample at `A = 𝔽₃`, `B = 𝔽₃ × 𝔽₃`).
+
+No étale or henselian hypothesis is used: the proof routes through
+the standard "max ideal of `B` contracts to a max ideal of `A`"
+integrality step (giving `mA·B ⊆ Jacobson(⊥)` in `B`) and the
+`isLocalHom`-style unit lift from `B / mA·B` to `B`. The matrix
+preservation step is `Algebra.leftMulMatrix` being an `A`-algebra
+homomorphism, composed with `Matrix.isUnit_iff_isUnit_det`. -/
+lemma mult_det_isUnit_of_isUnit_mod_maximal
+    (A B : Type*) [CommRing A] [IsLocalRing A]
+    [CommRing B] [Algebra A B] [Module.Finite A B]
+    {ι : Type*} [Fintype ι] [DecidableEq ι] (basis : Module.Basis ι A B)
+    (u : B)
+    (hu : IsUnit (Ideal.Quotient.mk
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A B)) u)) :
+    IsUnit ((Algebra.leftMulMatrix basis u).det) := by
+  haveI : Algebra.IsIntegral A B := Algebra.IsIntegral.of_finite A B
+  -- Step 1: `mA·B ⊆ Jacobson(⊥)` in `B`. Same integrality argument as
+  -- `maximalIdeal_map_le_jacobson_bot` but without the henselian /
+  -- Noetherian hypotheses on `A`.
+  have hjac : (IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤
+      Ideal.jacobson (⊥ : Ideal B) := by
+    rw [Ideal.jacobson_bot, Ring.jacobson_eq_sInf_isMaximal]
+    refine le_sInf fun J hJ => ?_
+    have hJmax : J.IsMaximal := hJ
+    rw [Ideal.map_le_iff_le_comap]
+    have hcomap : (J.comap (algebraMap A B)).IsMaximal :=
+      Ideal.isMaximal_comap_of_isIntegral_of_isMaximal J
+    rw [IsLocalRing.eq_maximalIdeal hcomap]
+  -- Step 2: lift the residue unit to a unit in `B` via `isLocalHom`.
+  haveI : IsLocalHom
+      (Ideal.Quotient.mk
+        ((IsLocalRing.maximalIdeal A).map (algebraMap A B))) :=
+    isLocalHom_of_le_jacobson_bot _ hjac
+  have hu' : IsUnit u := IsUnit.of_map (Ideal.Quotient.mk _) u hu
+  -- Step 3: `Algebra.leftMulMatrix basis : B →ₐ[A] Matrix ι ι A` preserves
+  -- units, so the matrix is a unit in the ring `Matrix ι ι A`.
+  have hM : IsUnit (Algebra.leftMulMatrix basis u) :=
+    hu'.map (Algebra.leftMulMatrix basis)
+  -- Step 4: a square matrix over `A` is a unit iff its determinant is a unit.
+  exact (Matrix.isUnit_iff_isUnit_det _).mp hM
+
 /-! **Note on L1 (mB-adic separation).** With `[IsNoetherianRing A]`
 now in the signature, `Module.Finite A B` gives `IsNoetherianRing B`
 via `IsNoetherianRing.of_finite`, so `Ideal.iInf_pow_smul_eq_bot_of_le_jacobson`
@@ -1533,6 +1588,991 @@ private lemma cayley_hamilton_power_expansion
         simp only [gN]
         ring
 
+/-- **L3c-charpoly route-(A) per-coord henselian closure
+(iter-098 refactor).**
+
+Given the iter-079→iter-087 banked basis-decomposition data `α` of
+the level-`d` Newton residual together with a route-(A) per-coord
+polynomial bundle `pCoord : Fin k → Polynomial A` — monic, with
+`(pCoord i).eval (α i) ∈ mA^(d+1)`, and with derivative-at-`α i`
+a unit modulo `mA` — apply `HenselianLocalRing.is_henselian` of `A`
+per coordinate to deduce `∀ i, α i = 0`. Replaces the iter-095
+extraction `alpha_in_deeper_mA_pow` which carried the rejected
+route-(c) Krull-on-A inductive step.
+
+The body is currently a structured `sorry` matching the new
+signature; iter-098+ prover phase fills it. -/
+private lemma alpha_zero_via_per_coord_henselian
+    {A B : Type*} [CommRing A] [CommRing B] [Algebra A B]
+    [HenselianLocalRing A] [Module.Finite A B] [Module.Free A B]
+    {k d : ℕ} {α : Fin k → A}
+    (h_α_mem : ∀ i, α i ∈ IsLocalRing.maximalIdeal A ^ (d + 1))
+    (pCoord : Fin k → Polynomial A)
+    (hpCoord_monic : ∀ i, (pCoord i).Monic)
+    (hpCoord_eval_α : ∀ i, (pCoord i).eval (α i) = 0)
+    (hpCoord_eval_zero : ∀ i, (pCoord i).eval 0 = 0)
+    (hpCoord_deriv_unit : ∀ i,
+      IsUnit ((Ideal.Quotient.mk (IsLocalRing.maximalIdeal A))
+        ((pCoord i).derivative.eval (α i)))) :
+    ∀ i, α i = 0 := by
+  -- iter-099 Option (Y) discharge (chapter §A.4): pure local-ring
+  -- argument from the strengthened polynomial-bundle carriers
+  -- (monic; eval_α = 0; eval_zero = 0; deriv unit mod mA). No
+  -- henselian iteration, no Krull collapse, no IsNoetherianRing A.
+  -- Note: `hpCoord_monic` is retained verbatim from the chapter §A.5
+  -- iter-099 starting-shape (Option (Y)). The local-ring discharge
+  -- below does not consume it; the carrier is kept for parent-side
+  -- API stability.
+  let _ := hpCoord_monic
+  intro i
+  set mA : Ideal A := IsLocalRing.maximalIdeal A with hmA_def
+  set q : Polynomial A := (pCoord i).divX with hq_def
+  -- Step 1: factor `pCoord i = X * q` via `X_dvd_iff` / `divX`.
+  have h_coeff_zero : (pCoord i).coeff 0 = 0 := by
+    rw [coeff_zero_eq_eval_zero]
+    exact hpCoord_eval_zero i
+  have hfact : pCoord i = X * q := by
+    have h := X_mul_divX_add (pCoord i)
+    rw [h_coeff_zero, C_0, add_zero] at h
+    exact h.symm
+  -- Step 2: evaluate the factorisation at `α i`, getting
+  -- `α i * q.eval (α i) = 0` from `hpCoord_eval_α i`.
+  have hstep2 : α i * q.eval (α i) = 0 := by
+    have h := hpCoord_eval_α i
+    rw [hfact, eval_mul, eval_X] at h
+    exact h
+  -- Step 3: differentiate the factorisation:
+  -- `(pCoord i).derivative = q + X * q.derivative`. Evaluate at α i.
+  have hderiv_eq : (pCoord i).derivative.eval (α i) =
+      q.eval (α i) + α i * q.derivative.eval (α i) := by
+    have hd := congrArg derivative hfact
+    rw [derivative_mul, derivative_X, one_mul] at hd
+    rw [hd, eval_add, eval_mul, eval_X]
+  -- α i ∈ mA (depth mA^(d+1) ⊆ mA).
+  have hα_mA : α i ∈ mA := by
+    have := h_α_mem i
+    exact Ideal.pow_le_self (by omega) this
+  -- Reduce mod mA: the `α i * _` term vanishes, so
+  -- `mk mA ((pCoord i)'(α i)) = mk mA (q.eval (α i))`.
+  have hresidue_eq :
+      Ideal.Quotient.mk mA ((pCoord i).derivative.eval (α i)) =
+        Ideal.Quotient.mk mA (q.eval (α i)) := by
+    rw [hderiv_eq, map_add]
+    have hzero : Ideal.Quotient.mk mA (α i * q.derivative.eval (α i)) = 0 := by
+      rw [Ideal.Quotient.eq_zero_iff_mem]
+      exact Ideal.mul_mem_right _ _ hα_mA
+    rw [hzero, add_zero]
+  have hq_unit_residue : IsUnit (Ideal.Quotient.mk mA (q.eval (α i))) := by
+    rw [← hresidue_eq]
+    exact hpCoord_deriv_unit i
+  -- `q.eval (α i) ∉ mA`: residue-class unit ⇒ residue ≠ 0 ⇒ not in mA.
+  have hq_notMem : q.eval (α i) ∉ mA := by
+    intro hmem
+    have h0 : Ideal.Quotient.mk mA (q.eval (α i)) = 0 :=
+      Ideal.Quotient.eq_zero_iff_mem.mpr hmem
+    rw [h0] at hq_unit_residue
+    exact absurd hq_unit_residue not_isUnit_zero
+  -- Step 4: lift to `IsUnit (q.eval (α i))` in `A`, then cancel.
+  have hq_unit : IsUnit (q.eval (α i)) :=
+    IsLocalRing.notMem_maximalIdeal.mp hq_notMem
+  have hcomm : q.eval (α i) * α i = 0 := by
+    rw [mul_comm]; exact hstep2
+  exact (hq_unit.mul_right_eq_zero).mp hcomm
+
+/-- **§A.3 sub-helper — `r_n`-vs-`r_1` bridge via γ-finsupp
+(iter-108 typed-sorry skeleton).**
+
+With the route-(A) γ-data `(γ, hγ_diff)` and basis `(basis)` in
+scope, the level-`n` Newton iterate
+`r_n := ∑_i algebraMap A B (γ n i) * basis i` differs from `r_1`
+by a finite `A`-linear combination of the basis vectors weighted
+by the iterated Newton increments: there exists a function
+`τ : ℕ → Fin k → A` with `τ j i ∈ mA ^ (j + 1)` such that, for
+every `n ≥ 1`,
+`r_n - r_1 = ∑_{j ∈ Finset.Ico 1 n} ∑_i algebraMap A B (τ j i) *
+basis i`.
+
+This is the substantive bridge carrier consumed by
+`per_coord_polynomial_of_charpoly_descent` (chapter §A.3 Q6
+finite-collapse closure + Q7 + P5) to express `r_n` for `n ≥ 2`
+in the level-`m` telescoped Q3 identity, in a form compatible
+with the `ξ_{m,j,l}` basis-projection structure constants of
+`kappaCoefficient`. The concrete witness `τ j i := γ (j + 1) i
+- γ j i` is recorded inline; the basis-projection telescope
+identity is the iter-109+ obligation (typed sorry). -/
+private lemma r_n_minus_r_1_in_gamma_finsupp
+    (A : Type*) [CommRing A] [IsLocalRing A]
+    (B : Type*) [CommRing B] [Algebra A B]
+    (k : ℕ) (basis : Fin k → B)
+    (γ : ℕ → Fin k → A)
+    (hγ_diff : ∀ n i, γ (n + 1) i - γ n i ∈
+      (IsLocalRing.maximalIdeal A) ^ (n + 1))
+    (n : ℕ) (_hn : 1 ≤ n) :
+    ∃ τ : ℕ → Fin k → A,
+      (∀ j i, τ j i ∈ (IsLocalRing.maximalIdeal A) ^ (j + 1)) ∧
+      (∑ i, algebraMap A B (γ n i) * basis i) -
+          (∑ i, algebraMap A B (γ 1 i) * basis i) =
+        ∑ j ∈ Finset.Ico 1 n,
+          ∑ i, algebraMap A B (τ j i) * basis i := by
+  -- Concrete witness `τ j i := γ (j + 1) i - γ j i`. The membership
+  -- `τ j i ∈ mA ^ (j + 1)` is `hγ_diff j i` directly. The
+  -- basis-projection telescope identity follows by induction on
+  -- `n ≥ 1` using `Finset.sum_Ico_succ_top` and the basis-coordinate
+  -- decomposition of consecutive Newton iterates; this is the
+  -- iter-109+ closure obligation (typed sorry skeleton banked here).
+  classical
+  refine ⟨fun j i => γ (j + 1) i - γ j i, fun j i => hγ_diff j i, ?_⟩
+  sorry
+
+/-- **Q6 finite-collapse closure carriers (iter-109 extraction).**
+
+Given the Newton-increment band hypothesis `hγ_diff` and the matrix-
+amplified per-step band `hTele_lhs_mem` (the iter-107 banked
+`M.det · Δ_{d+m+1}` membership), produce the three Q6 finite-collapse
+carriers consumed by the parent `per_coord_polynomial_of_charpoly_descent`:
+
+* `hγ_telescope` — telescoping decomposition of `γ(d+m+1) i - γ d i`
+  as a finite sum of consecutive Newton increments;
+* `hγ_cumulative_mem` — cumulative `mA^(d+1)` band on the telescope;
+* `hγ_finite_chain_mem` — finite-sum band `mA^(d+2)` on the
+  matrix-amplified chain over levels `m ∈ Finset.range d`. -/
+private lemma per_coord_q6_finite_collapse_closure
+    {A : Type*} [CommRing A] {k : ℕ}
+    (mA : Ideal A) (d : ℕ) (M : Matrix (Fin k) (Fin k) A)
+    (γ : ℕ → Fin k → A)
+    (hγ_diff : ∀ m i, γ (m + 1) i - γ m i ∈ mA ^ (m + 1))
+    (hTele_lhs_mem : ∀ m i,
+        M.det * (γ (d + m + 1 + 1) i - γ (d + m + 1) i) ∈
+          mA ^ (d + m + 2)) :
+    (∀ m i, γ (d + m + 1) i - γ d i =
+        ∑ l ∈ Finset.range (m + 1), (γ (d + l + 1) i - γ (d + l) i)) ∧
+    (∀ m i, γ (d + m + 1) i - γ d i ∈ mA ^ (d + 1)) ∧
+    (∀ i, (∑ m ∈ Finset.range d,
+        M.det * (γ (d + m + 1 + 1) i - γ (d + m + 1) i)) ∈
+          mA ^ (d + 2)) := by
+  have hγ_telescope : ∀ m i,
+      γ (d + m + 1) i - γ d i =
+        ∑ l ∈ Finset.range (m + 1), (γ (d + l + 1) i - γ (d + l) i) := by
+    intro m i
+    induction m with
+    | zero => simp
+    | succ m ih =>
+      rw [Finset.sum_range_succ, ← ih]
+      have hdpm : d + (m + 1) + 1 = (d + m + 1) + 1 := by ring
+      have hdpm' : d + (m + 1) = (d + m) + 1 := by ring
+      rw [hdpm, hdpm']
+      ring
+  refine ⟨hγ_telescope, ?_, ?_⟩
+  · intro m i
+    rw [hγ_telescope m i]
+    refine Submodule.sum_mem _ fun l _ => ?_
+    exact Ideal.pow_le_pow_right (by omega) (hγ_diff (d + l) i)
+  · intro i
+    refine Submodule.sum_mem _ fun m _ => ?_
+    exact Ideal.pow_le_pow_right (by omega) (hTele_lhs_mem m i)
+
+/-- **§A.3 per-coord polynomial constructor — `q_i` from the
+charpoly-descent data (iter-100 extraction, typed sorry).**
+
+This is the iter-100 named typed-sorry sub-helper that consumes the
+full iter-083+ banked carrier of `exists_root_descent_charpoly_multiples`
+and produces the per-coordinate polynomial bundle `q : Fin k → A[X]`
+required by `alpha_zero_via_per_coord_henselian` (with the polynomial
+shape `pCoord i := X * q i`). Extracting this signature decomposes
+the iter-099 single existential sorry in
+`exists_root_descent_charpoly_multiples` into a named obligation
+matching chapter §A.3 verbatim, so that iter-101+ provers fill the
+Q1–Q7 + P1–P5 recipe inside this dedicated helper rather than inline
+inside the parent (which previously caused the iter-098/099
+relocation-discharge pattern).
+
+The chapter §A.3 construction recipe in pseudo-Lean tactic
+granularity is:
+
+* **Step Q1.** Form the multiplication matrix
+  `M := Algebra.leftMulMatrix basis (r 1)` (where
+  `r 1 := ∑ i, algebraMap A B (γ 1 i) * basis i`) and its adjugate
+  `Matrix.adjugate M`. The Cayley–Hamilton annihilator `hp_aeval`
+  provides `det M ∈ A` as the constant coefficient of `p`.
+* **Step Q2.** Cramer reformulation of one Newton step.
+* **Step Q3.** Multiply by the adjugate row of `M`.
+* **Step Q4.** Iterate one further Newton level.
+* **Step Q5.** Telescope using `htele` (the level-indexed identity
+  computed in the parent from `hα0_rec`/`hα_succ_rec`).
+* **Step Q6.** Use the iter-086 Cayley–Hamilton power expansion
+  `cayley_hamilton_power_expansion` to bound the polynomial degree
+  by `d := p.natDegree`.
+* **Step Q7.** Define
+  `q_i(X) := det(M) - X · ∑_{j=0}^{d-1} κ_{i,j} · X^j`
+  where `κ_{i,j}` is the collected coefficient from Steps Q3–Q6.
+
+The substantive `hpCoord_eval_α` verification (i.e.
+`(X * q i).eval (α i) = 0`) is given by chapter sketch P1–P5. The
+honest open content remains the C–H-collapse bridge
+`r_n^{d+m} → r_1^{d+m}` of the Substantive Open Content paragraph;
+this may require route (D) (Stacks 04GE / 04GH / 0DXB
+idempotent-lifting) if Krull/Noetherianness is needed.
+
+For iter-100 this helper ships as a typed sorry; iter-101+ fills
+the body. -/
+private lemma per_coord_polynomial_of_charpoly_descent
+    (A B : Type*) [CommRing A] [HenselianLocalRing A] [IsNoetherianRing A]
+    [CommRing B] [Algebra A B] [Module.Finite A B]
+    [Module.Free A B] [IsLocalRing B]
+    (g : Polynomial B) (b₀ : B)
+    (h_unit : IsUnit (g.derivative.eval b₀))
+    (k : ℕ) (basis : Fin k → B)
+    (hspan : Submodule.span A (Set.range basis) = ⊤)
+    (hlin : LinearIndependent A basis)
+    (γ : ℕ → Fin k → A)
+    (hγ_zero : γ 0 = fun _ => 0)
+    (hγ_mem : ∀ n i, γ n i ∈ IsLocalRing.maximalIdeal A)
+    (hγ_diff : ∀ n i, γ (n + 1) i - γ n i ∈
+      (IsLocalRing.maximalIdeal A) ^ (n + 1))
+    (hg_eval : ∀ n, g.eval (b₀ + ∑ i, algebraMap A B (γ n i) * basis i) ∈
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A B)) ^ (n + 1))
+    (p : Polynomial A) (hp_monic : p.Monic)
+    (hp_coeff : ∀ j, p.coeff j ∈
+      (IsLocalRing.maximalIdeal A) ^ (p.natDegree - j))
+    (hp_aeval : Polynomial.aeval
+        (∑ i, algebraMap A B (γ 1 i) * basis i) p = 0)
+    (α : Fin k → A)
+    (hα_mem : ∀ i,
+      α i ∈ (IsLocalRing.maximalIdeal A) ^ (p.natDegree + 1))
+    (hα_eq : g.eval (b₀ + ∑ i,
+        algebraMap A B (γ p.natDegree i) * basis i) =
+      ∑ i, algebraMap A B (α i) * basis i)
+    (αHi : ℕ → Fin k → A)
+    (hαHi_mem : ∀ m i,
+      αHi m i ∈ (IsLocalRing.maximalIdeal A) ^ (p.natDegree + m + 2))
+    (hαHi_eq : ∀ m, g.eval (b₀ +
+        ∑ i, algebraMap A B (γ (p.natDegree + m + 1) i) * basis i) =
+      ∑ i, algebraMap A B (αHi m i) * basis i)
+    (hδ_mem : ∀ m, (∑ i,
+        algebraMap A B (γ (p.natDegree + m + 1) i -
+          γ (p.natDegree + m) i) * basis i) ∈
+      ((IsLocalRing.maximalIdeal A).map (algebraMap A B)) ^
+        (p.natDegree + m + 1))
+    (hTaylor : ∀ m, g.eval (b₀ +
+        ∑ i, algebraMap A B (γ (p.natDegree + m + 1) i) * basis i) -
+        (g.eval (b₀ +
+          ∑ i, algebraMap A B (γ (p.natDegree + m) i) * basis i) +
+         g.derivative.eval (b₀ +
+          ∑ i, algebraMap A B (γ (p.natDegree + m) i) * basis i) *
+         (∑ i,
+          algebraMap A B (γ (p.natDegree + m + 1) i -
+            γ (p.natDegree + m) i) * basis i)) ∈
+        ((IsLocalRing.maximalIdeal A).map (algebraMap A B)) ^
+          (2 * (p.natDegree + m + 1))) :
+    ∃ q : Fin k → Polynomial A,
+        (∀ i, (X * q i).Monic) ∧
+        (∀ i, (X * q i).eval (α i) = 0) ∧
+        (∀ i, IsUnit (Ideal.Quotient.mk (IsLocalRing.maximalIdeal A)
+            ((X * q i).derivative.eval (α i)))) := by
+  -- iter-101 substantive banking: re-derive the parent's banked η, ε,
+  -- hα0_rec, hα_succ_rec, htele, cCH coefficient-extraction chain
+  -- (chapter §A.3 Steps Q5+Q6 carriers) inside the helper, then
+  -- introduce the Q1 matrix M := Algebra.leftMulMatrix mBasis r1
+  -- and its adjugate as the Q3-Q7 carriers for iter-102+ closure.
+  -- The final ∃ q construction (Q7 + P1–P5 substantive eval-zero
+  -- chain) is the iter-102+ obligation.
+  classical
+  set mA : Ideal A := IsLocalRing.maximalIdeal A with hmA_def
+  set d : ℕ := p.natDegree with hd_def
+  set r : ℕ → B := fun n => ∑ i, algebraMap A B (γ n i) * basis i with hr_def
+  set mAB : Ideal B := mA.map (algebraMap A B) with hmAB_def
+  -- Newton-increment identity: telescoping the basis sums per coordinate.
+  have hr_diff : ∀ m, r (m + 1) - r m =
+      ∑ i, algebraMap A B (γ (m + 1) i - γ m i) * basis i := by
+    intro m
+    simp only [hr_def, ← Finset.sum_sub_distrib, ← sub_mul, ← map_sub]
+  -- Each Newton increment lies in `mAB^(m+1)`.
+  have hr_diff_mem : ∀ m, r (m + 1) - r m ∈ mAB ^ (m + 1) := by
+    intro m
+    rw [hr_diff]
+    refine Submodule.sum_mem _ fun i _ => ?_
+    refine Ideal.mul_mem_right _ _ ?_
+    rw [hmAB_def, ← Ideal.map_pow]
+    exact Ideal.mem_map_of_mem _ (hγ_diff m i)
+  -- Derivative-cross-increment at each level `m` lies in mAB^(d+m+1).
+  have hgd_δ_mem : ∀ m, g.derivative.eval
+      (b₀ + ∑ i, algebraMap A B (γ (d + m) i) * basis i) *
+      (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) ∈
+      mAB ^ (d + m + 1) := by
+    intro m
+    refine Ideal.mul_mem_left _ _ ?_
+    have := hδ_mem m
+    simpa [hmAB_def] using this
+  -- Basis-decompose the derivative-cross-increment term (η_m carrier).
+  have hη_decomp : ∀ m, ∃ η : Fin k → A,
+      (∀ i, η i ∈ mA ^ (d + m + 1)) ∧
+      g.derivative.eval (b₀ +
+          ∑ i, algebraMap A B (γ (d + m) i) * basis i) *
+        (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) =
+      ∑ i, algebraMap A B (η i) * basis i := by
+    intro m
+    exact exists_mAB_pow_decomposition_in_basis A B k basis hspan (d + m)
+      _ (hgd_δ_mem m)
+  choose η hη_mem hη_eq using hη_decomp
+  -- Level-0 descent residual.
+  have hlevel0_res : (∑ i, algebraMap A B (αHi 0 i - α i - η 0 i) * basis i) ∈
+      mAB ^ (2 * (d + 1)) := by
+    have hT0 := hTaylor 0
+    have hαHi0 := hαHi_eq 0
+    have hη0 := hη_eq 0
+    simp only [Nat.add_zero] at hT0 hαHi0 hη0
+    rw [hαHi0, hα_eq, hη0] at hT0
+    convert hT0 using 2
+    simp only [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [show αHi 0 i - α i - η 0 i = αHi 0 i - (α i + η 0 i) from by ring,
+        map_sub, map_add, sub_mul, add_mul]
+  -- Level-(m+1) descent residual.
+  have hlevel_succ_res : ∀ m,
+      (∑ i, algebraMap A B (αHi (m + 1) i - αHi m i - η (m + 1) i) * basis i) ∈
+      mAB ^ (2 * (d + m + 2)) := by
+    intro m
+    have hT : eval (b₀ + ∑ i, algebraMap A B (γ (d + m + 2) i) * basis i) g -
+        (eval (b₀ + ∑ i, algebraMap A B (γ (d + m + 1) i) * basis i) g +
+         eval (b₀ + ∑ i, algebraMap A B (γ (d + m + 1) i) * basis i) (derivative g) *
+          (∑ i, algebraMap A B
+            (γ (d + m + 2) i - γ (d + m + 1) i) * basis i)) ∈
+        mAB ^ (2 * (d + m + 2)) := hTaylor (m + 1)
+    have hαHi_next : eval (b₀ +
+        ∑ i, algebraMap A B (γ (d + m + 2) i) * basis i) g =
+        ∑ i, algebraMap A B (αHi (m + 1) i) * basis i := hαHi_eq (m + 1)
+    have hαHi_curr := hαHi_eq m
+    have hη_next : eval (b₀ +
+          ∑ i, algebraMap A B (γ (d + m + 1) i) * basis i) g.derivative *
+        (∑ i, algebraMap A B
+          (γ (d + m + 2) i - γ (d + m + 1) i) * basis i) =
+        ∑ i, algebraMap A B (η (m + 1) i) * basis i := hη_eq (m + 1)
+    rw [hαHi_next, hαHi_curr, hη_next] at hT
+    convert hT using 2
+    simp only [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [show αHi (m + 1) i - αHi m i - η (m + 1) i =
+          αHi (m + 1) i - (αHi m i + η (m + 1) i) from by ring,
+        map_sub, map_add, sub_mul, add_mul]
+  -- Per-coord A-coefficient witness ε (level-0).
+  have hε0_decomp : ∃ ε : Fin k → A,
+      (∀ i, ε i ∈ (IsLocalRing.maximalIdeal A) ^ (2 * (d + 1))) ∧
+      (∑ i, algebraMap A B (αHi 0 i - α i - η 0 i) * basis i) =
+        ∑ i, algebraMap A B (ε i) * basis i := by
+    have hexp0 : 2 * (d + 1) = (2 * d + 1) + 1 := by ring
+    rw [hexp0] at hlevel0_res ⊢
+    exact exists_mAB_pow_decomposition_in_basis A B k basis hspan
+      (2 * d + 1) _ hlevel0_res
+  have hε_succ_decomp : ∀ m, ∃ ε : Fin k → A,
+      (∀ i, ε i ∈ (IsLocalRing.maximalIdeal A) ^ (2 * (d + m + 2))) ∧
+      (∑ i, algebraMap A B (αHi (m + 1) i - αHi m i - η (m + 1) i) * basis i) =
+        ∑ i, algebraMap A B (ε i) * basis i := by
+    intro m
+    have hexp : 2 * (d + m + 2) = (2 * d + 2 * m + 3) + 1 := by ring
+    have hres := hlevel_succ_res m
+    rw [hexp] at hres
+    have := exists_mAB_pow_decomposition_in_basis A B k basis hspan
+      (2 * d + 2 * m + 3) _ hres
+    obtain ⟨ε, hε_mem, hε_eq⟩ := this
+    refine ⟨ε, ?_, hε_eq⟩
+    intro i
+    have hexp' : (2 * d + 2 * m + 3) + 1 = 2 * (d + m + 2) := by ring
+    rw [← hexp']
+    exact hε_mem i
+  obtain ⟨ε0, hε0_mem, hε0_eq⟩ := hε0_decomp
+  choose ε hε_mem hε_eq using hε_succ_decomp
+  -- Per-coord A-recurrence via linear independence (level 0).
+  have hα0_rec : ∀ i, αHi 0 i = α i + η 0 i + ε0 i := by
+    have hzero : ∑ i, (αHi 0 i - α i - η 0 i - ε0 i) • basis i = 0 := by
+      have hcombine : ∑ i, algebraMap A B (αHi 0 i - α i - η 0 i - ε0 i) *
+          basis i = 0 := by
+        have heq : ∑ i, algebraMap A B (αHi 0 i - α i - η 0 i - ε0 i) *
+              basis i =
+            (∑ i, algebraMap A B (αHi 0 i - α i - η 0 i) * basis i) -
+            (∑ i, algebraMap A B (ε0 i) * basis i) := by
+          rw [← Finset.sum_sub_distrib]
+          refine Finset.sum_congr rfl fun i _ => ?_
+          rw [show αHi 0 i - α i - η 0 i - ε0 i =
+                (αHi 0 i - α i - η 0 i) - ε0 i from by ring,
+              map_sub, sub_mul]
+        rw [heq, hε0_eq, sub_self]
+      have hconv : ∀ c : A, ∀ b : B, algebraMap A B c * b = c • b :=
+        fun c b => (Algebra.smul_def c b).symm
+      simp_rw [hconv] at hcombine
+      exact hcombine
+    intro i
+    have hi := Fintype.linearIndependent_iff.mp hlin _ hzero i
+    linear_combination hi
+  have hα_succ_rec : ∀ m i, αHi (m + 1) i = αHi m i + η (m + 1) i + ε m i := by
+    intro m
+    have hzero : ∑ i, (αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i) •
+        basis i = 0 := by
+      have hcombine : ∑ i, algebraMap A B
+          (αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i) * basis i = 0 := by
+        have heq : ∑ i, algebraMap A B
+            (αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i) * basis i =
+            (∑ i, algebraMap A B
+              (αHi (m + 1) i - αHi m i - η (m + 1) i) * basis i) -
+            (∑ i, algebraMap A B (ε m i) * basis i) := by
+          rw [← Finset.sum_sub_distrib]
+          refine Finset.sum_congr rfl fun i _ => ?_
+          rw [show αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i =
+                (αHi (m + 1) i - αHi m i - η (m + 1) i) - ε m i from by ring,
+              map_sub, sub_mul]
+        rw [heq, hε_eq m, sub_self]
+      have hconv : ∀ c : A, ∀ b : B, algebraMap A B c * b = c • b :=
+        fun c b => (Algebra.smul_def c b).symm
+      simp_rw [hconv] at hcombine
+      exact hcombine
+    intro i
+    have hi := Fintype.linearIndependent_iff.mp hlin _ hzero i
+    linear_combination hi
+  -- Cayley–Hamilton power expansion carrier `cCH`.
+  have hCH : ∀ m, ∃ c : Fin d → A,
+      (∀ j : Fin d, c j ∈ mA ^ (d + m - (j : ℕ))) ∧
+      (∑ i, algebraMap A B (γ 1 i) * basis i) ^ (d + m) =
+        ∑ j : Fin d,
+          algebraMap A B (c j) *
+            (∑ i, algebraMap A B (γ 1 i) * basis i) ^ (j : ℕ) :=
+    cayley_hamilton_power_expansion A mA B p hp_monic hp_coeff
+      (∑ i, algebraMap A B (γ 1 i) * basis i) hp_aeval
+  choose cCH hcCH_mem hcCH_eq using hCH
+  -- Telescoping identity for αHi.
+  have htele : ∀ m i,
+      αHi m i = α i + (∑ j ∈ Finset.range (m + 1), η j i) +
+        ε0 i + (∑ j ∈ Finset.range m, ε j i) := by
+    intro m i
+    induction m with
+    | zero =>
+      simp only [zero_add, Finset.sum_range_one, Finset.sum_range_zero, add_zero]
+      exact hα0_rec i
+    | succ m ih =>
+      have heq1 : ∑ j ∈ Finset.range (m + 1 + 1), η j i =
+          (∑ j ∈ Finset.range (m + 1), η j i) + η (m + 1) i :=
+        Finset.sum_range_succ _ _
+      have heq2 : ∑ j ∈ Finset.range (m + 1), ε j i =
+          (∑ j ∈ Finset.range m, ε j i) + ε m i :=
+        Finset.sum_range_succ _ _
+      rw [heq1, heq2, hα_succ_rec m i, ih]
+      ring
+  -- iter-101 Q1 banking: form the Module.Basis from hlin + hspan,
+  -- define the Newton iterate r1 := r 1, and form the multiplication
+  -- matrix M := Algebra.leftMulMatrix mBasis r1 with its adjugate
+  -- adjM := Matrix.adjugate M. The adjugate-mul identities
+  -- `adjM * M = M.det • 1` and `M * adjM = M.det • 1` are the
+  -- Mathlib carriers for Steps Q3–Q4 (adjugate-row multiplication
+  -- of the Newton-step identity).
+  let mBasis : Module.Basis (Fin k) A B := Module.Basis.mk hlin hspan.ge
+  -- `r1` is kept for the Q6 Cayley–Hamilton power expansion (input to
+  -- `cayley_hamilton_power_expansion`); it is no longer the
+  -- left-multiplication element of the Q1 matrix.
+  set r1 : B := ∑ i, algebraMap A B (γ 1 i) * basis i with hr1_def
+  -- **Q1.a (chapter §A.3, Option (Y-1)).** Ground the multiplication
+  -- matrix on `g'(b₀)`, not on `r1`. The basis-coordinate entries of
+  -- `g'(b₀) · b_j` are well-defined by `Module.Basis.repr`; nothing
+  -- requires `g'(b₀) · b_j` to lie in `mA · B`.
+  set M : Matrix (Fin k) (Fin k) A :=
+    Algebra.leftMulMatrix mBasis (g.derivative.eval b₀) with hM_def
+  set adjM : Matrix (Fin k) (Fin k) A := Matrix.adjugate M with hadjM_def
+  -- **Q1.b.** Adjugate identities (Mathlib carriers for Steps Q3–Q4).
+  have hadjM_mul : adjM * M = M.det • (1 : Matrix (Fin k) (Fin k) A) :=
+    Matrix.adjugate_mul M
+  have hmul_adjM : M * adjM = M.det • (1 : Matrix (Fin k) (Fin k) A) :=
+    Matrix.mul_adjugate M
+  -- **Q1.c (chapter §A.3 Step Q1.c, items (i)–(ii)).** Discharge
+  -- `IsUnit (det M)` via the iter-100 banked bridge.
+  -- (i) The residue of `g'(b₀)` modulo `mAB` is a unit, because the
+  --     quotient map sends units to units.
+  have hg'_unit_residue :
+      IsUnit (Ideal.Quotient.mk mAB (g.derivative.eval b₀)) :=
+    h_unit.map (Ideal.Quotient.mk mAB)
+  -- (ii) Apply `mult_det_isUnit_of_isUnit_mod_maximal` at
+  --      `u := g'(b₀)` with `Module.Basis := mBasis`.
+  have hdet_unit : IsUnit M.det :=
+    mult_det_isUnit_of_isUnit_mod_maximal A B mBasis
+      (g.derivative.eval b₀) hg'_unit_residue
+  -- **Q2 (chapter §A.3 Step Q2 at L1852–L1899). Cramer reformulation
+  -- as exact `A`-identity at level 0.** Bank
+  -- `αHi 0 i = α i + ∑_j M_{ij}(γ(d+1) j - γ d j) + ρ_0(i)` with
+  -- `ρ_0(i) ∈ mA^{d+2}`. The accumulated bound `r d ∈ mAB^1` forces
+  -- the matrix-base-change correction to land in `mAB^{d+2}` (the
+  -- iter-103-corrected band; the higher-order Taylor residual `ε0` is
+  -- in `mA^{2(d+1)} ⊆ mA^{d+2}`).
+  -- **Q2.a.** Bank `r n ∈ mAB` for all `n` (each `γ n i ∈ mA`).
+  have hr_mem : ∀ n, r n ∈ mAB := by
+    intro n
+    refine Submodule.sum_mem _ fun i _ => ?_
+    refine Ideal.mul_mem_right _ _ ?_
+    rw [hmAB_def]
+    exact Ideal.mem_map_of_mem _ (hγ_mem n i)
+  -- **Q2.b.** `g'(b₀ + r d) - g'(b₀) ∈ mAB` (single-variable Taylor at `b₀`
+  -- in direction `r d ∈ mAB`).
+  have hg'_diff_mem :
+      g.derivative.eval (b₀ + r d) - g.derivative.eval b₀ ∈ mAB := by
+    obtain ⟨c, hc⟩ := g.derivative.binomExpansion b₀ (r d)
+    have heq : g.derivative.eval (b₀ + r d) - g.derivative.eval b₀ =
+        g.derivative.derivative.eval b₀ * r d + c * (r d) ^ 2 := by
+      rw [hc]; ring
+    rw [heq]
+    refine Submodule.add_mem _ (Ideal.mul_mem_left _ _ (hr_mem d)) ?_
+    refine Ideal.mul_mem_left _ _ ?_
+    have h2 : (r d) ^ 2 = r d * r d := by ring
+    rw [h2]
+    exact Ideal.mul_mem_left _ _ (hr_mem d)
+  -- **Q2.c.** Matrix-base-change correction
+  -- `μ_0 := (g'(b₀+r d) - g'(b₀)) · Δ_d ∈ mAB^{d+2}`.
+  have hΔd_basis_mem : (∑ i, algebraMap A B (γ (d + 1) i - γ d i) * basis i) ∈
+      mAB ^ (d + 1) := by
+    rw [← hr_diff d]
+    exact hr_diff_mem d
+  have hμ0_raw_mem :
+      (g.derivative.eval (b₀ + r d) - g.derivative.eval b₀) *
+        (∑ i, algebraMap A B (γ (d + 1) i - γ d i) * basis i) ∈
+      mAB ^ (d + 2) := by
+    rw [show d + 2 = 1 + (d + 1) from by ring, pow_add, pow_one]
+    exact Ideal.mul_mem_mul hg'_diff_mem hΔd_basis_mem
+  -- Basis-decompose `μ_0` in `A` along `(basis i)`.
+  have hμ0_decomp : ∃ μ : Fin k → A,
+      (∀ i, μ i ∈ mA ^ (d + 2)) ∧
+      (g.derivative.eval (b₀ + r d) - g.derivative.eval b₀) *
+        (∑ i, algebraMap A B (γ (d + 1) i - γ d i) * basis i) =
+      ∑ i, algebraMap A B (μ i) * basis i := by
+    have hexp : d + 2 = (d + 1) + 1 := by ring
+    have hμ0' := hμ0_raw_mem
+    rw [hexp] at hμ0'
+    obtain ⟨μ, hμ_mem, hμ_eq⟩ :=
+      exists_mAB_pow_decomposition_in_basis A B k basis hspan (d + 1) _ hμ0'
+    refine ⟨μ, ?_, hμ_eq⟩
+    intro i
+    have := hμ_mem i
+    rwa [← hexp] at this
+  obtain ⟨μ0, hμ0_mem, hμ0_eq⟩ := hμ0_decomp
+  -- **Q2.d.** `M` acts on the basis: `g'(b₀) · basis j = ∑_i M_{ij} • basis i`.
+  have hmBasis_eq : ∀ i, (mBasis : Fin k → B) i = basis i :=
+    fun i => Module.Basis.mk_apply hlin hspan.ge i
+  have hM_action : ∀ j, g.derivative.eval b₀ * basis j =
+      ∑ i, algebraMap A B (M i j) * basis i := by
+    intro j
+    have hcoord : ∀ i, mBasis.repr (g.derivative.eval b₀ * basis j) i = M i j := by
+      intro i
+      rw [hM_def, Algebra.leftMulMatrix_eq_repr_mul, hmBasis_eq j]
+    have hsum := mBasis.sum_repr (g.derivative.eval b₀ * basis j)
+    conv_lhs => rw [← hsum]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [hcoord, hmBasis_eq i, Algebra.smul_def]
+  -- Cross-multiplication:
+  -- `g'(b₀) · Δ_d = ∑_i algebraMap (∑_j M_{ij}(γ(d+1) j - γ d j)) · basis i`.
+  have hgb0_Δd : g.derivative.eval b₀ *
+      (∑ j, algebraMap A B (γ (d + 1) j - γ d j) * basis j) =
+      ∑ i, algebraMap A B
+        (∑ j, M i j * (γ (d + 1) j - γ d j)) * basis i := by
+    rw [Finset.mul_sum]
+    have hexp1 : ∀ j, g.derivative.eval b₀ *
+        (algebraMap A B (γ (d + 1) j - γ d j) * basis j) =
+        algebraMap A B (γ (d + 1) j - γ d j) *
+          (g.derivative.eval b₀ * basis j) := fun j => by ring
+    simp_rw [hexp1, hM_action, Finset.mul_sum]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [map_sum, Finset.sum_mul]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [map_mul]; ring
+  -- **Q2.e.** Transfer the `B`-identity to `A` via `Fintype.linearIndependent_iff`:
+  -- `η 0 i = ∑_j M_{ij}(γ(d+1) j - γ d j) + μ_0(i)`.
+  have hη0_decomp_A : ∀ i, η 0 i =
+      (∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i := by
+    have hη0_eq := hη_eq 0
+    simp only [Nat.add_zero] at hη0_eq
+    -- LHS of hη_eq: `g'(b₀+r d) * Δ_d = ∑ algebraMap(η 0 i) * basis i`.
+    -- Split: `g'(b₀+r d) = g'(b₀) + (g'(b₀+r d) - g'(b₀))`.
+    have hsplit : g.derivative.eval (b₀ + r d) *
+        (∑ i, algebraMap A B (γ (d + 1) i - γ d i) * basis i) =
+        ∑ i, algebraMap A B
+          ((∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i) * basis i := by
+      have hadd : g.derivative.eval (b₀ + r d) =
+          g.derivative.eval b₀ +
+            (g.derivative.eval (b₀ + r d) - g.derivative.eval b₀) := by ring
+      rw [hadd, add_mul, hgb0_Δd, hμ0_eq, ← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl fun i _ => ?_
+      rw [map_add, add_mul]
+    have hsum_eq : ∑ i, algebraMap A B (η 0 i) * basis i =
+        ∑ i, algebraMap A B
+          ((∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i) * basis i := by
+      rw [← hη0_eq, hsplit]
+    -- LinearIndependent transfer.
+    have hdiff_zero : ∑ i,
+        (η 0 i - ((∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i)) • basis i = 0 := by
+      have hreduce : ∑ i, algebraMap A B
+          (η 0 i - ((∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i)) * basis i =
+          (∑ i, algebraMap A B (η 0 i) * basis i) -
+          (∑ i, algebraMap A B
+            ((∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i) * basis i) := by
+        rw [← Finset.sum_sub_distrib]
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [map_sub, sub_mul]
+      have hzero_B : ∑ i, algebraMap A B
+          (η 0 i - ((∑ j, M i j * (γ (d + 1) j - γ d j)) + μ0 i)) * basis i = 0 := by
+        rw [hreduce, hsum_eq, sub_self]
+      simp_rw [show ∀ (c : A) (b : B), algebraMap A B c * b = c • b from
+        fun c b => (Algebra.smul_def c b).symm] at hzero_B
+      exact hzero_B
+    intro i
+    have hi := Fintype.linearIndependent_iff.mp hlin _ hdiff_zero i
+    linear_combination hi
+  -- **Q2 (final).** `αHi 0 i = α i + ∑_j M_{ij}(γ(d+1) j - γ d j) + ρ_0(i)`
+  -- with `ρ_0(i) := μ_0(i) + ε_0(i) ∈ mA^{d+2}`.
+  have hρ0_mem : ∀ i, μ0 i + ε0 i ∈ mA ^ (d + 2) := by
+    intro i
+    refine Submodule.add_mem _ (hμ0_mem i) ?_
+    -- `ε0 i ∈ mA^{2(d+1)}`; need `ε0 i ∈ mA^{d+2}`. `2(d+1) ≥ d+2` since `d ≥ 0`.
+    exact Ideal.pow_le_pow_right (by omega) (hε0_mem i)
+  have hQ2 : ∀ i, αHi 0 i =
+      α i + (∑ j, M i j * (γ (d + 1) j - γ d j)) + (μ0 i + ε0 i) := by
+    intro i
+    rw [hα0_rec i, hη0_decomp_A i]; ring
+  -- **Q3 (chapter §A.3 Step Q3 at L1902–L1925). Adjugate-row multiplication.**
+  -- `det M · (γ(d+1) i - γ d i) = ∑_l adjM_{il} · (αHi 0 l - α l - ρ_0(l))`.
+  have hQ3 : ∀ i, M.det * (γ (d + 1) i - γ d i) =
+      ∑ l, adjM i l * (αHi 0 l - α l - (μ0 l + ε0 l)) := by
+    intro i
+    have hQ2_diff : ∀ l, αHi 0 l - α l - (μ0 l + ε0 l) =
+        ∑ j, M l j * (γ (d + 1) j - γ d j) := fun l => by
+      rw [hQ2 l]; ring
+    have step1 : ∑ l, adjM i l * (αHi 0 l - α l - (μ0 l + ε0 l)) =
+        ∑ l, ∑ j, adjM i l * (M l j * (γ (d + 1) j - γ d j)) := by
+      refine Finset.sum_congr rfl fun l _ => ?_
+      rw [hQ2_diff l, Finset.mul_sum]
+    have step2 : ∑ l, ∑ j, adjM i l * (M l j * (γ (d + 1) j - γ d j)) =
+        ∑ j, (adjM * M) i j * (γ (d + 1) j - γ d j) := by
+      rw [Finset.sum_comm]
+      refine Finset.sum_congr rfl fun j _ => ?_
+      rw [Matrix.mul_apply, Finset.sum_mul]
+      refine Finset.sum_congr rfl fun l _ => ?_
+      ring
+    rw [step1, step2, hadjM_mul]
+    simp only [Matrix.smul_apply, Matrix.one_apply, smul_eq_mul]
+    rw [Finset.sum_eq_single i]
+    · simp
+    · intro j _ hij
+      rw [if_neg (Ne.symm hij)]; ring
+    · intro h; exact absurd (Finset.mem_univ i) h
+  -- Keep carriers in scope for the iter-104+ Q4–Q7 + P1–P5 closure.
+  -- (iter-109 pin prune: identifiers with downstream consumers in the
+  -- body need no pin; only the genuinely otherwise-unused ones survive.)
+  let _ := htele; let _ := hmul_adjM
+  let _ := hadjM_def; let _ := hd_def; let _ := hmA_def
+  let _ := hγ_zero; let _ := hα_mem
+  let _ := hρ0_mem
+  -- **Q4 (chapter §A.3 Strategy B at tex L1925–L2003). Level-$m$
+  -- Cramer reformulation carriers.** Generalise the iter-103 level-0
+  -- (`hg'_diff_mem`, `hμ0_raw_mem`, `hμ0_decomp`, `hη0_decomp_A`) chain
+  -- to arbitrary level `m`, reusing the same matrix `M` at `b₀` for
+  -- the matrix action (Strategy B: no `M^{(m)}`).
+  -- **Q4.b.** `g'(b₀ + r(d+m)) - g'(b₀) ∈ mAB` for all `m`.
+  have hg'_diff_mem_lvl : ∀ m,
+      g.derivative.eval (b₀ + r (d + m)) - g.derivative.eval b₀ ∈ mAB := by
+    intro m
+    obtain ⟨c, hc⟩ := g.derivative.binomExpansion b₀ (r (d + m))
+    have heq : g.derivative.eval (b₀ + r (d + m)) - g.derivative.eval b₀ =
+        g.derivative.derivative.eval b₀ * r (d + m) + c * (r (d + m)) ^ 2 := by
+      rw [hc]; ring
+    rw [heq]
+    refine Submodule.add_mem _ (Ideal.mul_mem_left _ _ (hr_mem _)) ?_
+    refine Ideal.mul_mem_left _ _ ?_
+    have h2 : (r (d + m)) ^ 2 = r (d + m) * r (d + m) := by ring
+    rw [h2]
+    exact Ideal.mul_mem_left _ _ (hr_mem _)
+  -- **Q4.c.** `Δ_{d+m} ∈ mAB^(d+m+1)` via banked `hr_diff_mem`.
+  have hΔdm_basis_mem : ∀ m,
+      (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) ∈
+      mAB ^ (d + m + 1) := by
+    intro m
+    rw [← hr_diff (d + m)]
+    exact hr_diff_mem (d + m)
+  -- **Q4.d.** `μ_m_raw := (g'(b₀+r(d+m)) - g'(b₀)) * Δ_{d+m} ∈ mAB^(d+m+2)`.
+  have hμm_raw_mem : ∀ m,
+      (g.derivative.eval (b₀ + r (d + m)) - g.derivative.eval b₀) *
+        (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) ∈
+      mAB ^ (d + m + 2) := by
+    intro m
+    rw [show d + m + 2 = 1 + (d + m + 1) from by ring, pow_add, pow_one]
+    exact Ideal.mul_mem_mul (hg'_diff_mem_lvl m) (hΔdm_basis_mem m)
+  -- **Q4.e.** Basis-decompose `μ_m_raw` in `A` along `(basis i)`.
+  have hμm_decomp : ∀ m, ∃ μ : Fin k → A,
+      (∀ i, μ i ∈ mA ^ (d + m + 2)) ∧
+      (g.derivative.eval (b₀ + r (d + m)) - g.derivative.eval b₀) *
+        (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) =
+      ∑ i, algebraMap A B (μ i) * basis i := by
+    intro m
+    have hexp : d + m + 2 = (d + m + 1) + 1 := by ring
+    have hμm' := hμm_raw_mem m
+    rw [hexp] at hμm'
+    obtain ⟨μ, hμ_mem, hμ_eq⟩ :=
+      exists_mAB_pow_decomposition_in_basis A B k basis hspan (d + m + 1) _ hμm'
+    refine ⟨μ, ?_, hμ_eq⟩
+    intro i
+    have := hμ_mem i
+    rwa [← hexp] at this
+  choose μm hμm_mem hμm_eq using hμm_decomp
+  -- **Q4.f (Step Q2 at level m).** Per-step level-$m$ identity
+  -- `η m i = ∑_j M_{ij}(γ(d+m+1) j - γ(d+m) j) + μm m i`, paralleling
+  -- iter-103 `hη0_decomp_A` at $m = 0$. The Strategy-B claim: the same
+  -- matrix `M` at `b₀` acts at every level, with `μm m` absorbing the
+  -- matrix-base-change gap.
+  have hηm_decomp_A : ∀ m i, η m i =
+      (∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i := by
+    intro m
+    have hηm_eq := hη_eq m
+    have hgb0_Δdm : g.derivative.eval b₀ *
+        (∑ j, algebraMap A B (γ (d + m + 1) j - γ (d + m) j) * basis j) =
+        ∑ i, algebraMap A B
+          (∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) * basis i := by
+      rw [Finset.mul_sum]
+      have hexp1 : ∀ j, g.derivative.eval b₀ *
+          (algebraMap A B (γ (d + m + 1) j - γ (d + m) j) * basis j) =
+          algebraMap A B (γ (d + m + 1) j - γ (d + m) j) *
+            (g.derivative.eval b₀ * basis j) := fun j => by ring
+      simp_rw [hexp1, hM_action, Finset.mul_sum]
+      rw [Finset.sum_comm]
+      refine Finset.sum_congr rfl fun i _ => ?_
+      rw [map_sum, Finset.sum_mul]
+      refine Finset.sum_congr rfl fun j _ => ?_
+      rw [map_mul]; ring
+    have hsplit : g.derivative.eval (b₀ + r (d + m)) *
+        (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) =
+        ∑ i, algebraMap A B
+          ((∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i) * basis i := by
+      have hadd : g.derivative.eval (b₀ + r (d + m)) =
+          g.derivative.eval b₀ +
+            (g.derivative.eval (b₀ + r (d + m)) - g.derivative.eval b₀) := by ring
+      rw [hadd, add_mul, hgb0_Δdm, hμm_eq m, ← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl fun i _ => ?_
+      rw [map_add, add_mul]
+    have hsum_eq : ∑ i, algebraMap A B (η m i) * basis i =
+        ∑ i, algebraMap A B
+          ((∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i) * basis i := by
+      rw [← hηm_eq, hsplit]
+    have hdiff_zero : ∑ i,
+        (η m i - ((∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i)) •
+          basis i = 0 := by
+      have hreduce : ∑ i, algebraMap A B
+          (η m i - ((∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i)) *
+            basis i =
+          (∑ i, algebraMap A B (η m i) * basis i) -
+          (∑ i, algebraMap A B
+            ((∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i) * basis i) := by
+        rw [← Finset.sum_sub_distrib]
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [map_sub, sub_mul]
+      have hzero_B : ∑ i, algebraMap A B
+          (η m i - ((∑ j, M i j * (γ (d + m + 1) j - γ (d + m) j)) + μm m i)) *
+            basis i = 0 := by
+        rw [hreduce, hsum_eq, sub_self]
+      simp_rw [show ∀ (c : A) (b : B), algebraMap A B c * b = c • b from
+        fun c b => (Algebra.smul_def c b).symm] at hzero_B
+      exact hzero_B
+    intro i
+    have hi := Fintype.linearIndependent_iff.mp hlin _ hdiff_zero i
+    linear_combination hi
+  -- **Q4.g (Step Q3 at level m ≥ 1).** Adjugate-row Q3 identity for
+  -- the Newton step at level (m+1), paralleling iter-103 `hQ3` at the
+  -- m = 0 step. Uses per-step recurrence `hα_succ_rec` plus
+  -- `hηm_decomp_A` to express the per-step increment via M+μ+ε.
+  have hQ3_lvl_succ : ∀ m i,
+      M.det * (γ (d + m + 1 + 1) i - γ (d + m + 1) i) =
+      ∑ l, adjM i l * (αHi (m + 1) l - αHi m l - (μm (m + 1) l + ε m l)) := by
+    intro m i
+    have hQ2_diff : ∀ l,
+        αHi (m + 1) l - αHi m l - (μm (m + 1) l + ε m l) =
+        ∑ j, M l j * (γ (d + m + 1 + 1) j - γ (d + m + 1) j) := fun l => by
+      have hr_l := hα_succ_rec m l
+      have hηm := hηm_decomp_A (m + 1) l
+      rw [hr_l, hηm]; ring
+    have step1 : ∑ l, adjM i l *
+          (αHi (m + 1) l - αHi m l - (μm (m + 1) l + ε m l)) =
+        ∑ l, ∑ j, adjM i l *
+          (M l j * (γ (d + m + 1 + 1) j - γ (d + m + 1) j)) := by
+      refine Finset.sum_congr rfl fun l _ => ?_
+      rw [hQ2_diff l, Finset.mul_sum]
+    have step2 : ∑ l, ∑ j, adjM i l *
+          (M l j * (γ (d + m + 1 + 1) j - γ (d + m + 1) j)) =
+        ∑ j, (adjM * M) i j * (γ (d + m + 1 + 1) j - γ (d + m + 1) j) := by
+      rw [Finset.sum_comm]
+      refine Finset.sum_congr rfl fun j _ => ?_
+      rw [Matrix.mul_apply, Finset.sum_mul]
+      refine Finset.sum_congr rfl fun l _ => ?_
+      ring
+    rw [step1, step2, hadjM_mul]
+    simp only [Matrix.smul_apply, Matrix.one_apply, smul_eq_mul]
+    rw [Finset.sum_eq_single i]
+    · simp
+    · intro j _ hij
+      rw [if_neg (Ne.symm hij)]; ring
+    · intro h; exact absurd (Finset.mem_univ i) h
+  -- **Q5 (chapter §A.3 at tex L2005–L2024). Telescope via `htele`.**
+  -- Specialise the Q3 level-0 identity to express the right-hand side
+  -- purely in terms of η, ε, μ (via the m = 0 instance of `htele`,
+  -- equivalently `hα0_rec`). At level $m = 0$:
+  --     `M.det · (γ(d+1) i - γ d i) = ∑_l adjM_{il}(η 0 l - μ0 l)`,
+  -- because `αHi 0 l - α l - (μ0 l + ε0 l) = η 0 l - μ0 l` (the
+  -- `ε0` summand cancels). This is the level-0 form of Step P2 in
+  -- the chapter and matches the Q5 telescope at $m = 0$.
+  have hTele_Q3_lvl_zero : ∀ i,
+      M.det * (γ (d + 1) i - γ d i) =
+      ∑ l, adjM i l * (η 0 l - μ0 l) := by
+    intro i
+    have h := hQ3 i
+    have hsub : ∀ l,
+        αHi 0 l - α l - (μ0 l + ε0 l) = η 0 l - μ0 l := fun l => by
+      have hr := hα0_rec l
+      rw [hr]; ring
+    rw [h]
+    refine Finset.sum_congr rfl fun l _ => ?_
+    rw [hsub l]
+  -- **Q5-general (chapter §A.3 tex L2071–L2106, iter-105 floor banking).**
+  -- Telescoped Q3 identity at every level $m \ge 0$: substitute
+  -- `hα_succ_rec m l` into `hQ3_lvl_succ m i` to collapse
+  -- `αHi (m+1) l - αHi m l - (μm (m+1) l + ε m l)` to
+  -- `η (m+1) l - μm (m+1) l` (the $\varepsilon_m$ summand on the right
+  -- cancels the $\varepsilon_m$ contribution of the per-step recurrence).
+  -- Reindexing $m + 1 \rightsquigarrow m$, this is the level-$m$
+  -- specialisation matching the blueprint Q5 display. The level-0
+  -- companion `hTele_Q3_lvl_zero` banks the $m = 0$ statement.
+  have hTele_Q3_lvl_succ : ∀ m i,
+      M.det * (γ (d + m + 1 + 1) i - γ (d + m + 1) i) =
+      ∑ l, adjM i l * (η (m + 1) l - μm (m + 1) l) := by
+    intro m i
+    rw [hQ3_lvl_succ m i]
+    refine Finset.sum_congr rfl fun l _ => ?_
+    have hr := hα_succ_rec m l
+    have hsub : αHi (m + 1) l - αHi m l - (μm (m + 1) l + ε m l) =
+        η (m + 1) l - μm (m + 1) l := by
+      rw [hr]; ring
+    rw [hsub]
+  -- Keep the iter-104 Q4+Q5 carriers in scope for iter-105+ Q6/Q7/P1–P5
+  -- consumption.
+  let _ := hTele_Q3_lvl_zero
+  -- **Q6 partial (chapter §A.3 tex L2112–L2130, iter-107 floor banking).**
+  -- Pre-substitution carriers for the Cayley–Hamilton bridge. We bank the
+  -- band-controlled membership of every C–H summand `algebraMap (cCH m j) *
+  -- r1^j ∈ mAB^(d+m)`. These are the band-control inputs that the
+  -- downstream Q6 finite-collapse + Q7 + P1–P5 chain consumes when
+  -- substituting `hcCH_eq m` into the level-`m` telescoped Q3 identity
+  -- `hTele_Q3_lvl_succ`. Strategy-B (uniform `M` at `b₀`) means the same
+  -- `cCH` is used at every level; no level-indexed C–H coefficients.
+  --
+  -- **Q6.a.** `r1 ∈ mAB`: each `γ 1 i ∈ mA` (banked via `hγ_mem`).
+  have hr1_mem : r1 ∈ mAB := by
+    rw [hr1_def]
+    refine Submodule.sum_mem _ fun i _ => ?_
+    refine Ideal.mul_mem_right _ _ ?_
+    rw [hmAB_def]
+    exact Ideal.mem_map_of_mem _ (hγ_mem 1 i)
+  -- **Q6.b.** `r1 ^ n ∈ mAB ^ n` for every `n` (basic ideal-power membership).
+  have hr1_pow_mem : ∀ n, r1 ^ n ∈ mAB ^ n := by
+    intro n
+    induction n with
+    | zero => simp
+    | succ n ih =>
+      rw [pow_succ, pow_succ]
+      exact Ideal.mul_mem_mul ih hr1_mem
+  -- **Q6.c.** Each C–H summand at level `m` has band `mAB ^ (d + m)`:
+  -- `algebraMap (cCH m j) ∈ mAB ^ (d + m - j)` (from `hcCH_mem`),
+  -- `r1 ^ j ∈ mAB ^ j`, so the product is in `mAB ^ (d + m - j + j) =
+  -- mAB ^ (d + m)` (using `j < d ≤ d + m`).
+  have hcCH_pow_mem : ∀ m, ∀ j : Fin d,
+      algebraMap A B (cCH m j) * r1 ^ (j : ℕ) ∈ mAB ^ (d + m) := by
+    intro m j
+    have hjle : (j : ℕ) ≤ d + m := le_trans j.is_lt.le (Nat.le_add_right _ _)
+    have hsum : d + m - (j : ℕ) + (j : ℕ) = d + m := Nat.sub_add_cancel hjle
+    have hcoeff : algebraMap A B (cCH m j) ∈ mAB ^ (d + m - (j : ℕ)) := by
+      rw [hmAB_def, ← Ideal.map_pow]
+      exact Ideal.mem_map_of_mem _ (hcCH_mem m j)
+    have hprod := Ideal.mul_mem_mul hcoeff (hr1_pow_mem (j : ℕ))
+    rw [← pow_add, hsum] at hprod
+    exact hprod
+  -- **Q6.d.** Total band: the C–H sum `Σ_j algebraMap (cCH m j) * r1^j` lies
+  -- in `mAB ^ (d + m)`. This is the band-aggregated form of `hcCH_eq m`'s
+  -- RHS, used in the Q6 finite-collapse step to feed `hTele_Q3_lvl_succ`'s
+  -- LHS `M.det · (γ(d+m+1) - γ(d+m))` into a finite polynomial chain
+  -- bounded by `mA ^ (d + m)`.
+  have hcCH_sum_mem : ∀ m,
+      (∑ j : Fin d, algebraMap A B (cCH m j) * r1 ^ (j : ℕ)) ∈
+        mAB ^ (d + m) :=
+    fun m => Submodule.sum_mem _ fun j _ => hcCH_pow_mem m j
+  -- **Q6.e.** `r1 ^ (d + m) ∈ mAB ^ (d + m)`: the band-aggregated C–H
+  -- identity. This is the universal C–H consequence (independent of basis
+  -- decomposition): substituting `hcCH_eq m` into `r1^(d+m)` rewrites to the
+  -- bounded sum from Q6.d, transferring the band.
+  have hr1_dpm_mem : ∀ m, r1 ^ (d + m) ∈ mAB ^ (d + m) := by
+    intro m
+    rw [hr1_def] at hcCH_sum_mem ⊢
+    rw [hcCH_eq m]
+    exact hcCH_sum_mem m
+  -- **Q6 finite-collapse opener (chapter §A.3 tex L2112–L2130 + Q7 prose
+  -- L2132–L2160, iter-107 modal banking).**
+  -- Substitute the band bounds on η/μm into `hTele_Q3_lvl_succ` to extract
+  -- the membership consequence: `M.det · (γ(d+m+1) - γ(d+m)) ∈ mA^(d+m+2)`.
+  -- Combined with `IsUnit M.det` (banked `hdet_unit`), this gives the
+  -- per-level gain `γ(d+m+1) i - γ(d+m) i ∈ mA^(d+m+2)`, one band stronger
+  -- than the input `hγ_diff` (which gives `mA^(d+m+1)`). This gain-by-one
+  -- per Newton step is the key inductive structure that the Q6 + Q7 + P1–P5
+  -- chain leverages to collapse the infinite telescope to a finite
+  -- polynomial.
+  --
+  -- **Q6.f.** RHS membership of `hTele_Q3_lvl_succ`: each summand
+  -- `adjM_{il} * (η(m+1) l - μm(m+1) l)` lies in `mA^(d+m+2)`, since
+  -- `η(m+1) l ∈ mA^(d+m+2)` (`hη_mem (m+1) l`) and
+  -- `μm(m+1) l ∈ mA^(d+m+3)` (`hμm_mem (m+1) l`); the latter is
+  -- absorbed by `Ideal.pow_le_pow_right` since `d+m+3 ≥ d+m+2`.
+  have hTele_rhs_mem : ∀ m i,
+      (∑ l, adjM i l * (η (m + 1) l - μm (m + 1) l)) ∈ mA ^ (d + m + 2) := by
+    intro m i
+    refine Submodule.sum_mem _ fun l _ => ?_
+    refine Ideal.mul_mem_left _ _ ?_
+    refine Submodule.sub_mem _ ?_ ?_
+    · exact hη_mem (m + 1) l
+    · exact Ideal.pow_le_pow_right (by omega) (hμm_mem (m + 1) l)
+  -- **Q6.g.** LHS membership transferred via `hTele_Q3_lvl_succ`:
+  -- `M.det · (γ(d+m+1) i - γ(d+m) i) ∈ mA^(d+m+2)`.
+  have hTele_lhs_mem : ∀ m i,
+      M.det * (γ (d + m + 1 + 1) i - γ (d + m + 1) i) ∈ mA ^ (d + m + 2) := by
+    intro m i
+    rw [hTele_Q3_lvl_succ m i]
+    exact hTele_rhs_mem m i
+  -- **Q6.h.** Divide by `IsUnit M.det` to extract the per-level gain:
+  -- `γ(d+m+1) i - γ(d+m) i ∈ mA^(d+m+2)`, one band stronger than the input.
+  -- Proof: if `u * x ∈ I` and `IsUnit u`, then
+  -- `x = u⁻¹ * (u * x) ∈ I` by `Ideal.mul_mem_left`.
+  have hγ_diff_gain : ∀ m i,
+      γ (d + m + 1 + 1) i - γ (d + m + 1) i ∈ mA ^ (d + m + 2) := by
+    intro m i
+    obtain ⟨u, hu⟩ := hdet_unit
+    have hxeq : γ (d + m + 1 + 1) i - γ (d + m + 1) i =
+        (u⁻¹ : Aˣ) * (M.det * (γ (d + m + 1 + 1) i - γ (d + m + 1) i)) := by
+      rw [← mul_assoc, ← hu, Units.inv_mul, one_mul]
+    rw [hxeq]
+    exact Ideal.mul_mem_left _ _ (hTele_lhs_mem m i)
+  -- **Q6.i–k (iter-109 extraction).** The three Q6 finite-collapse
+  -- closure carriers — `hγ_telescope`, `hγ_cumulative_mem`, and
+  -- `hγ_finite_chain_mem` — are produced by the named sibling
+  -- `per_coord_q6_finite_collapse_closure`. See its docstring for the
+  -- mathematical content; here we just destructure the result.
+  have ⟨hγ_telescope, hγ_cumulative_mem, hγ_finite_chain_mem⟩ :=
+    per_coord_q6_finite_collapse_closure mA d M γ hγ_diff hTele_lhs_mem
+  -- Keep iter-107 Q6 partial + Q6 finite-collapse opener carriers in scope
+  -- for the iter-108+ Q6 finite-collapse closure + Q7 + P1–P5 chain.
+  let _ := hr1_dpm_mem; let _ := hγ_diff_gain
+  -- iter-108+ obligation: Q6 finite-collapse closure (substitute `hcCH_eq m`
+  -- into the level-`m` chain via `hγ_diff_gain` to express the LHS as a
+  -- finite polynomial chain in `A[α_i]` of degree `≤ d+1`), then define
+  -- `q_i` via Q7, then verify `(X * q i).eval (α i) = 0` via the P1–P5
+  -- chain. Q2 + Q3 (level 0) banked iter-103, Q4 + Q5 (level m ≥ 1) banked
+  -- iter-104, Q5-general banked iter-105, Q6 partial + Q6 finite-collapse
+  -- opener banked iter-107 above; the residual sorry below encodes the
+  -- remaining Q6 closure + Q7 + P1–P5.
+  sorry
+
 /-- **L3c-charpoly Cayley–Hamilton multiples-fold sub-sub-sub-helper
 (iter-083 extraction).**
 
@@ -1555,6 +2595,7 @@ private lemma exists_root_descent_charpoly_multiples
     [CommRing B] [Algebra A B] [Module.Finite A B]
     [Module.Free A B] [IsLocalRing B]
     (g : Polynomial B) (b₀ : B)
+    (h_unit : IsUnit (g.derivative.eval b₀))
     (k : ℕ) (basis : Fin k → B)
     (hspan : Submodule.span A (Set.range basis) = ⊤)
     (hlin : LinearIndependent A basis)
@@ -1615,325 +2656,25 @@ private lemma exists_root_descent_charpoly_multiples
   -- `task_results/Proetale_Mathlib_RingTheory_Etale_HenselianPair.lean.md`
   -- for the precise obstruction analysis.
   classical
-  set mA : Ideal A := IsLocalRing.maximalIdeal A with hmA_def
-  set d : ℕ := p.natDegree with hd_def
-  set r : ℕ → B := fun n => ∑ i, algebraMap A B (γ n i) * basis i with hr_def
-  set mAB : Ideal B := mA.map (algebraMap A B) with hmAB_def
-  -- Newton-increment identity: telescoping the basis sums per coordinate
-  -- and absorbing the algebraMap collapse via `map_sub`.
-  have hr_diff : ∀ m, r (m + 1) - r m =
-      ∑ i, algebraMap A B (γ (m + 1) i - γ m i) * basis i := by
-    intro m
-    simp only [hr_def, ← Finset.sum_sub_distrib, ← sub_mul, ← map_sub]
-  -- Banked: each Newton increment lies in `mAB^(m+1)` (already encoded
-  -- inside `hδ_mem` after re-indexing m ↦ d + m + 1; the `hr_diff` form
-  -- exposes it uniformly).
-  have hr_diff_mem : ∀ m, r (m + 1) - r m ∈ mAB ^ (m + 1) := by
-    intro m
-    rw [hr_diff]
-    refine Submodule.sum_mem _ fun i _ => ?_
-    refine Ideal.mul_mem_right _ _ ?_
-    rw [hmAB_def, ← Ideal.map_pow]
-    exact Ideal.mem_map_of_mem _ (hγ_diff m i)
-  -- Banked: the derivative-cross-increment term at each level `m`
-  -- lies in `mAB^(d+m+1)` (since `mAB^(d+m+1)` is a two-sided ideal of
-  -- `B` and absorbs left multiplication by any element of `B`). Uses the
-  -- sum form of the Newton increment δ_m to match `hTaylor m` exactly.
-  have hgd_δ_mem : ∀ m, g.derivative.eval
-      (b₀ + ∑ i, algebraMap A B (γ (d + m) i) * basis i) *
-      (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) ∈
-      mAB ^ (d + m + 1) := by
-    intro m
-    refine Ideal.mul_mem_left _ _ ?_
-    -- this is exactly the iter-082 banked `hδ_mem m`, modulo `mAB` notation.
-    have := hδ_mem m
-    -- rewrite mAB ↦ mA.map (algebraMap A B)
-    simpa [hmAB_def] using this
-  -- Banked: by `exists_mAB_pow_decomposition_in_basis` at exponent
-  -- `d + m`, the derivative-cross-increment term decomposes along the
-  -- basis with coefficients in `mA^(d+m+1)`. This is the first step of
-  -- the C-H multiples fold: the "η^(m)" coefficients of the level-`m`
-  -- Taylor identity.
-  have hη_decomp : ∀ m, ∃ η : Fin k → A,
-      (∀ i, η i ∈ mA ^ (d + m + 1)) ∧
-      g.derivative.eval (b₀ +
-          ∑ i, algebraMap A B (γ (d + m) i) * basis i) *
-        (∑ i, algebraMap A B (γ (d + m + 1) i - γ (d + m) i) * basis i) =
-      ∑ i, algebraMap A B (η i) * basis i := by
-    intro m
-    exact exists_mAB_pow_decomposition_in_basis A B k basis hspan (d + m)
-      _ (hgd_δ_mem m)
-  choose η hη_mem hη_eq using hη_decomp
-  -- Banked: the level-0 descent residual identity. Substituting
-  -- hα_eq, hαHi_eq 0, hη_eq 0 into hTaylor 0, after sign rearrangement,
-  -- yields the per-coord "Newton-corrected" descent residual:
-  --   ∑ i, algMap (αHi 0 i - α i - η 0 i) * basis i ∈ mAB^(2(d+1)).
-  -- This is the seed of the C-H multiples fold: it relates the level-`d`
-  -- coefficients α to αHi 0 via η 0 plus a quadratic residual.
-  have hlevel0_res : (∑ i, algebraMap A B (αHi 0 i - α i - η 0 i) * basis i) ∈
-      mAB ^ (2 * (d + 1)) := by
-    have hT0 := hTaylor 0
-    have hαHi0 := hαHi_eq 0
-    have hη0 := hη_eq 0
-    -- Normalize `p.natDegree + 0 → d`, `d + 0 → d`, etc.
-    simp only [Nat.add_zero] at hT0 hαHi0 hη0
-    rw [hαHi0, hα_eq, hη0] at hT0
-    -- Now hT0 : ∑ algMap (αHi 0 i) - (∑ algMap (α i) + ∑ algMap (η 0 i)) ∈ mAB^(2*(d+1)).
-    -- Rearrange under the sum to αHi 0 i - α i - η 0 i per coordinate.
-    convert hT0 using 2
-    simp only [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [show αHi 0 i - α i - η 0 i = αHi 0 i - (α i + η 0 i) from by ring,
-        map_sub, map_add, sub_mul, add_mul]
-  -- iter-085 Step 1 (substantive continuation): generalise `hlevel0_res`
-  -- to the level-(m+1) analogue. Same pattern as the level-0 banking,
-  -- with `hα_eq` replaced by `hαHi_eq m` (the previous-level basis
-  -- decomposition) and the substitution feeding `hTaylor (m+1)`.
-  -- Sign rearrangement yields the per-coord descent residual:
-  --   ∑ algMap (αHi (m+1) i - αHi m i - η (m+1) i) * basis i ∈
-  --     mAB^(2*(d+m+2)).
-  -- Together with `hlevel0_res` this is the complete level-indexed
-  -- residual chain feeding Step 2 (linear-independence collapse).
-  have hlevel_succ_res : ∀ m,
-      (∑ i, algebraMap A B (αHi (m + 1) i - αHi m i - η (m + 1) i) * basis i) ∈
-      mAB ^ (2 * (d + m + 2)) := by
-    intro m
-    -- Normalize `d + (m+1) → d + m + 1`, `d + (m+1) + 1 → d + m + 2` by
-    -- restating `hTaylor (m+1)` in the explicit normalized form (defeq).
-    have hT : eval (b₀ + ∑ i, algebraMap A B (γ (d + m + 2) i) * basis i) g -
-        (eval (b₀ + ∑ i, algebraMap A B (γ (d + m + 1) i) * basis i) g +
-         eval (b₀ + ∑ i, algebraMap A B (γ (d + m + 1) i) * basis i) (derivative g) *
-          (∑ i, algebraMap A B
-            (γ (d + m + 2) i - γ (d + m + 1) i) * basis i)) ∈
-        mAB ^ (2 * (d + m + 2)) := hTaylor (m + 1)
-    have hαHi_next : eval (b₀ +
-        ∑ i, algebraMap A B (γ (d + m + 2) i) * basis i) g =
-        ∑ i, algebraMap A B (αHi (m + 1) i) * basis i := hαHi_eq (m + 1)
-    have hαHi_curr := hαHi_eq m
-    have hη_next : eval (b₀ +
-          ∑ i, algebraMap A B (γ (d + m + 1) i) * basis i) g.derivative *
-        (∑ i, algebraMap A B
-          (γ (d + m + 2) i - γ (d + m + 1) i) * basis i) =
-        ∑ i, algebraMap A B (η (m + 1) i) * basis i := hη_eq (m + 1)
-    rw [hαHi_next, hαHi_curr, hη_next] at hT
-    -- Now hT : ∑ algMap (αHi (m+1) i) - (∑ algMap (αHi m i) + ∑ algMap (η (m+1) i))
-    --   ∈ mAB^(2*(d+m+2)).
-    -- Rearrange under the sum to αHi (m+1) i - αHi m i - η (m+1) i per coord.
-    convert hT using 2
-    simp only [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [show αHi (m + 1) i - αHi m i - η (m + 1) i =
-          αHi (m + 1) i - (αHi m i + η (m + 1) i) from by ring,
-        map_sub, map_add, sub_mul, add_mul]
-  -- iter-085 Step 2 (linear-independence collapse): for each level ℓ ≥ 0,
-  -- the residual identity above lies in `mAB^(2*(d+ℓ+1))`, hence (by the
-  -- iter-076 power-decomposition helper at exponent `2*(d+ℓ+1) - 1`)
-  -- admits an A-coefficient witness `ε^(ℓ) : Fin k → A` with each
-  -- `ε^(ℓ) i ∈ mA^(2*(d+ℓ+1))` and the equality
-  --   ∑ algMap (αHi ℓ i - prev ℓ i - η ℓ i) * basis i =
-  --   ∑ algMap (ε^(ℓ) i) * basis i
-  -- where `prev 0 = α` and `prev (ℓ+1) = αHi ℓ`. Subtracting and
-  -- applying `hlin` + `Algebra.smul_def` + `Fintype.linearIndependent_iff`
-  -- yields the per-coord A-recurrence
-  --   αHi ℓ i = prev ℓ i + η ℓ i + ε^(ℓ) i  (in A).
-  -- Bank the existential form of ε at all levels via `choose`:
-  -- two separate families (level-0 and level-(m+1)) since `prev` differs.
-  have hε0_decomp : ∃ ε : Fin k → A,
-      (∀ i, ε i ∈ (IsLocalRing.maximalIdeal A) ^ (2 * (d + 1))) ∧
-      (∑ i, algebraMap A B (αHi 0 i - α i - η 0 i) * basis i) =
-        ∑ i, algebraMap A B (ε i) * basis i := by
-    have hexp0 : 2 * (d + 1) = (2 * d + 1) + 1 := by ring
-    rw [hexp0] at hlevel0_res ⊢
-    exact exists_mAB_pow_decomposition_in_basis A B k basis hspan
-      (2 * d + 1) _ hlevel0_res
-  have hε_succ_decomp : ∀ m, ∃ ε : Fin k → A,
-      (∀ i, ε i ∈ (IsLocalRing.maximalIdeal A) ^ (2 * (d + m + 2))) ∧
-      (∑ i, algebraMap A B (αHi (m + 1) i - αHi m i - η (m + 1) i) * basis i) =
-        ∑ i, algebraMap A B (ε i) * basis i := by
-    intro m
-    have hexp : 2 * (d + m + 2) = (2 * d + 2 * m + 3) + 1 := by ring
-    have hres := hlevel_succ_res m
-    rw [hexp] at hres
-    have := exists_mAB_pow_decomposition_in_basis A B k basis hspan
-      (2 * d + 2 * m + 3) _ hres
-    obtain ⟨ε, hε_mem, hε_eq⟩ := this
-    refine ⟨ε, ?_, hε_eq⟩
+  -- iter-102 refactor `l3c-h-unit-rethread-banking-consolidation`:
+  -- parent's dead carrier banking removed; the named helper
+  -- `per_coord_polynomial_of_charpoly_descent` owns the η/ε/cCH/htele
+  -- construction inside its own body. The parent only discharges
+  -- ∃q via `alpha_zero_via_per_coord_henselian`.
+  suffices hex : ∃ q : Fin k → Polynomial A,
+      (∀ i, (X * q i).Monic) ∧
+      (∀ i, (X * q i).eval (α i) = 0) ∧
+      (∀ i, IsUnit (Ideal.Quotient.mk (IsLocalRing.maximalIdeal A)
+        ((X * q i).derivative.eval (α i)))) by
+    obtain ⟨q, hmonic, hα0_exact, hderiv⟩ := hex
+    refine alpha_zero_via_per_coord_henselian (A := A) (B := B)
+      (d := p.natDegree) hα_mem (fun i => X * q i)
+      hmonic hα0_exact ?_ hderiv
     intro i
-    have hexp' : (2 * d + 2 * m + 3) + 1 = 2 * (d + m + 2) := by ring
-    rw [← hexp']
-    exact hε_mem i
-  obtain ⟨ε0, hε0_mem, hε0_eq⟩ := hε0_decomp
-  choose ε hε_mem hε_eq using hε_succ_decomp
-  -- iter-085 Step 2 finalisation: per-coord A-recurrence via
-  -- linear independence. Convert each B-equality
-  -- `∑ algMap (αHi ℓ i - prev ℓ i - η ℓ i) * basis i = ∑ algMap (ε^(ℓ) i)
-  -- * basis i` to per-coord identities `αHi ℓ i = prev ℓ i + η ℓ i +
-  -- ε^(ℓ) i` in A, via `Algebra.smul_def` + `Fintype.linearIndependent_iff`.
-  have hα0_rec : ∀ i, αHi 0 i = α i + η 0 i + ε0 i := by
-    have hzero : ∑ i, (αHi 0 i - α i - η 0 i - ε0 i) • basis i = 0 := by
-      have hcombine : ∑ i, algebraMap A B (αHi 0 i - α i - η 0 i - ε0 i) *
-          basis i = 0 := by
-        have heq : ∑ i, algebraMap A B (αHi 0 i - α i - η 0 i - ε0 i) *
-              basis i =
-            (∑ i, algebraMap A B (αHi 0 i - α i - η 0 i) * basis i) -
-            (∑ i, algebraMap A B (ε0 i) * basis i) := by
-          rw [← Finset.sum_sub_distrib]
-          refine Finset.sum_congr rfl fun i _ => ?_
-          rw [show αHi 0 i - α i - η 0 i - ε0 i =
-                (αHi 0 i - α i - η 0 i) - ε0 i from by ring,
-              map_sub, sub_mul]
-        rw [heq, hε0_eq, sub_self]
-      have hconv : ∀ c : A, ∀ b : B, algebraMap A B c * b = c • b :=
-        fun c b => (Algebra.smul_def c b).symm
-      simp_rw [hconv] at hcombine
-      exact hcombine
-    intro i
-    have hi := Fintype.linearIndependent_iff.mp hlin _ hzero i
-    linear_combination hi
-  have hα_succ_rec : ∀ m i, αHi (m + 1) i = αHi m i + η (m + 1) i + ε m i := by
-    intro m
-    have hzero : ∑ i, (αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i) •
-        basis i = 0 := by
-      have hcombine : ∑ i, algebraMap A B
-          (αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i) * basis i = 0 := by
-        have heq : ∑ i, algebraMap A B
-            (αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i) * basis i =
-            (∑ i, algebraMap A B
-              (αHi (m + 1) i - αHi m i - η (m + 1) i) * basis i) -
-            (∑ i, algebraMap A B (ε m i) * basis i) := by
-          rw [← Finset.sum_sub_distrib]
-          refine Finset.sum_congr rfl fun i _ => ?_
-          rw [show αHi (m + 1) i - αHi m i - η (m + 1) i - ε m i =
-                (αHi (m + 1) i - αHi m i - η (m + 1) i) - ε m i from by ring,
-              map_sub, sub_mul]
-        rw [heq, hε_eq m, sub_self]
-      have hconv : ∀ c : A, ∀ b : B, algebraMap A B c * b = c • b :=
-        fun c b => (Algebra.smul_def c b).symm
-      simp_rw [hconv] at hcombine
-      exact hcombine
-    intro i
-    have hi := Fintype.linearIndependent_iff.mp hlin _ hzero i
-    linear_combination hi
-  -- iter-086 Step 3 banking: invoke the 5th-tier helper
-  -- `cayley_hamilton_power_expansion` at the C-H annihilator
-  -- `hp_aeval : aeval (∑ i, algMap (γ 1 i) * basis i) p = 0` to extract
-  -- the per-level power expansion family `cCH : ℕ → Fin d → A` with
-  -- each `cCH m j ∈ mA ^ (d + m - j.val)` and
-  --   (r 1)^(d + m) = ∑ j : Fin d, algMap (cCH m j) * (r 1)^j.val.
-  -- This is the Step 3 structural carrier that Step 4 (henselian
-  -- per-coord termination) consumes to derive the per-coord polynomial
-  -- `h_i ∈ A[X]` with `h_i.eval (α i) = 0` and unit derivative at 0.
-  have hCH : ∀ m, ∃ c : Fin d → A,
-      (∀ j : Fin d, c j ∈ mA ^ (d + m - (j : ℕ))) ∧
-      (∑ i, algebraMap A B (γ 1 i) * basis i) ^ (d + m) =
-        ∑ j : Fin d,
-          algebraMap A B (c j) *
-            (∑ i, algebraMap A B (γ 1 i) * basis i) ^ (j : ℕ) :=
-    cayley_hamilton_power_expansion A mA B p hp_monic hp_coeff
-      (∑ i, algebraMap A B (γ 1 i) * basis i) hp_aeval
-  choose cCH hcCH_mem hcCH_eq using hCH
-  -- The substantive Step 4 closure must (after the iter-085 Steps 1+2
-  -- banking above and the iter-086 Step 3 banking just above):
-  --   (a) Use the iter-085 per-coord A-recurrences `hα0_rec` /
-  --       `hα_succ_rec` together with the Step 3 C-H power expansion
-  --       `hcCH_eq` to derive a per-coord polynomial `h_i ∈ A[X]` with
-  --       `h_i.eval (α i) = 0` (Step 4a: per-coord polynomial).
-  --   (b) Verify `h_i.derivative.eval 0` is a unit modulo `mA` (from
-  --       `hp_monic` and the iter-085 construction's monicness
-  --       preservation) and apply `HenselianLocalRing.is_henselian` to
-  --       lift the residue-class `0`-root uniquely; both `α i` and `0`
-  --       satisfy `h_i.eval _ = 0` and both lie in `mA`; uniqueness
-  --       forces `α i = 0` (Step 4b: henselian per-coord termination).
-  -- See `task_results/Proetale_Mathlib_RingTheory_Etale_HenselianPair.lean.md`
-  -- for the precise iter-087+ continuation plan.
-  -- iter-087 banking: telescoping identity for αHi.
-  -- Combining the per-coord A-recurrences `hα0_rec` and `hα_succ_rec`, induct
-  -- on `m` to obtain
-  --   αHi m i = α i + (∑ j ∈ range (m+1), η j i) + ε0 i + (∑ j ∈ range m, ε j i)
-  -- for every `m i`. This expresses α i as
-  --   α i = αHi m i - (∑ j ∈ range (m+1), η j i) - ε0 i - (∑ j ∈ range m, ε j i).
-  -- Since αHi m i ∈ mA^(d+m+2), η j i ∈ mA^(d+j+1), ε0 i ∈ mA^(2(d+1)),
-  -- ε j i ∈ mA^(2(d+j+2)), this expresses α i (which is in mA^(d+1)) as a
-  -- sum of terms whose membership depths increase with `m`. The remaining
-  -- substantive content (Step 4a/4b/4c) folds these terms through the C-H
-  -- power expansion `hcCH_eq` to a finite per-coord polynomial.
-  have htele : ∀ m i,
-      αHi m i = α i + (∑ j ∈ Finset.range (m + 1), η j i) +
-        ε0 i + (∑ j ∈ Finset.range m, ε j i) := by
-    intro m i
-    induction m with
-    | zero =>
-      simp only [zero_add, Finset.sum_range_one, Finset.sum_range_zero, add_zero]
-      exact hα0_rec i
-    | succ m ih =>
-      have heq1 : ∑ j ∈ Finset.range (m + 1 + 1), η j i =
-          (∑ j ∈ Finset.range (m + 1), η j i) + η (m + 1) i :=
-        Finset.sum_range_succ _ _
-      have heq2 : ∑ j ∈ Finset.range (m + 1), ε j i =
-          (∑ j ∈ Finset.range m, ε j i) + ε m i :=
-        Finset.sum_range_succ _ _
-      rw [heq1, heq2, hα_succ_rec m i, ih]
-      ring
-  let _ := cCH; let _ := hcCH_mem; let _ := hcCH_eq
-  let _ := αHi; let _ := hαHi_mem; let _ := hαHi_eq
-  let _ := hδ_mem; let _ := hTaylor
-  let _ := hlin; let _ := hγ_zero
-  let _ := hg_eval; let _ := hp_monic; let _ := hp_coeff
-  let _ := hp_aeval; let _ := hα_eq; let _ := hγ_mem
-  let _ := hr_diff; let _ := hd_def
-  let _ := hmAB_def; let _ := hr_diff_mem
-  let _ := η; let _ := hη_mem; let _ := hη_eq
-  let _ := hlevel0_res; let _ := hlevel_succ_res
-  let _ := ε0; let _ := hε0_mem; let _ := hε0_eq
-  let _ := ε; let _ := hε_mem; let _ := hε_eq
-  let _ := hα0_rec; let _ := hα_succ_rec
-  let _ := htele
-  -- iter-088 Acceptable-partial banking, route (c) Krull-on-A:
-  -- with `[IsNoetherianRing A]` now in scope (post `add-noetherian-l3c`
-  -- refactor), the canonical Stacks 04GG/0DXB Krull-intersection closure
-  -- on `A` becomes available. Banked here:
-  --   (a) `hjacA : mA ⊆ jacobson ⊥` (`IsLocalRing.maximalIdeal_le_jacobson`).
-  --   (b) `hbot : ⨅ N, mA^N = ⊥` (`Ideal.iInf_pow_smul_eq_bot_of_le_jacobson`;
-  --       precedent L110 `maximalIdeal_map_iInf_pow_eq_bot` for B-side).
-  --   (c) Reduction: it suffices to prove `∀ N, ∀ i, α i ∈ mA^N`; then
-  --       `α i ∈ ⨅ N, mA^N = ⊥`, hence `α i = 0` via `Submodule.mem_bot`.
-  -- The residual sorry is the strong-induction bootstrap
-  -- (`hα_deep : ∀ N, ∀ i, α i ∈ mA^N`). Base case `N ≤ d + 1` is `hα_mem`
-  -- (since `mA^(d+1) ≤ mA^N` for `N ≤ d+1` by `Ideal.pow_le_pow_right`).
-  -- Inductive step N ≥ d + 1: pick `m := N - d - 2`, apply `htele m`
-  -- (so `αHi m i ∈ mA^(N+1)`), refold the level-0 anchored η₀ + ε₀ terms
-  -- via the iter-086 C-H power expansion `hcCH_eq` against `hp_coeff` to
-  -- deepen their effective depths into `mA^(N+1)`, then absorb the
-  -- mid-level η_j, ε_j terms via the depths
-  -- `η j i ∈ mA^(d+j+1)`, `ε j i ∈ mA^(2(d+j+2))`. iter-089+ continuation.
-  have hjacA : mA ≤ Ideal.jacobson (⊥ : Ideal A) :=
-    IsLocalRing.maximalIdeal_le_jacobson _
-  have hbot : ⨅ N : ℕ, mA ^ N = ⊥ := by
-    convert! Ideal.iInf_pow_smul_eq_bot_of_le_jacobson
-      (I := mA) (M := A) hjacA
-    ext i
-    rw [smul_eq_mul, ← Ideal.one_eq_top, mul_one]
-  -- Strong-induction bootstrap: residual sorry; structurally banks the
-  -- Krull setup so the next iter only needs the bootstrap.
-  have hα_deep : ∀ N : ℕ, ∀ i, α i ∈ mA ^ N := by
-    intro N i
-    -- Easy direction: for `N ≤ d + 1`, `α i ∈ mA^(d+1) ≤ mA^N`.
-    by_cases hN : N ≤ p.natDegree + 1
-    · exact Ideal.pow_le_pow_right hN (hα_mem i)
-    · -- Inductive case N ≥ d + 2: requires the iter-089+ bootstrap.
-      have hN' : p.natDegree + 1 < N := Nat.lt_of_not_ge hN
-      let _ := hN'
-      -- iter-089+ continuation target: derive `α i ∈ mA^N` from
-      -- `htele (N - d - 2) i`, `hαHi_mem`, the C-H deepening of η₀ + ε₀
-      -- via `hcCH_eq`, and the depths of η_j, ε_j.
-      sorry
-  intro i
-  have hmem : α i ∈ (⨅ N : ℕ, mA ^ N) := by
-    simp only [Submodule.mem_iInf]
-    intro N
-    exact hα_deep N i
-  rw [hbot] at hmem
-  exact (Submodule.mem_bot _).mp hmem
+    simp
+  exact per_coord_polynomial_of_charpoly_descent A B g b₀ h_unit k basis hspan hlin
+    γ hγ_zero hγ_mem hγ_diff hg_eval p hp_monic hp_coeff hp_aeval
+    α hα_mem hα_eq αHi hαHi_mem hαHi_eq hδ_mem hTaylor
 
 /-- **L3c-charpoly per-coord zero collapse sub-sub-sub-helper
 (iter-081 extraction).**
@@ -1964,6 +2705,7 @@ private lemma exists_root_descent_charpoly_collapse
     [CommRing B] [Algebra A B] [Module.Finite A B]
     [Module.Free A B] [IsLocalRing B]
     (g : Polynomial B) (b₀ : B)
+    (h_unit : IsUnit (g.derivative.eval b₀))
     (k : ℕ) (basis : Fin k → B)
     (hspan : Submodule.span A (Set.range basis) = ⊤)
     (hlin : LinearIndependent A basis)
@@ -2098,7 +2840,7 @@ private lemma exists_root_descent_charpoly_collapse
   -- sub-sub-sub-helper `exists_root_descent_charpoly_multiples`
   -- (defined immediately before this lemma). The current body now
   -- consumes the iter-082 banked data and delegates the residual.
-  exact exists_root_descent_charpoly_multiples A B g b₀ k basis hspan hlin
+  exact exists_root_descent_charpoly_multiples A B g b₀ h_unit k basis hspan hlin
     γ hγ_zero hγ_mem hγ_diff hg_eval p hp_monic hp_coeff hp_aeval
     α hα_mem hα_eq αHi hαHi_mem hαHi_eq hδ_mem hTaylor
 
@@ -2134,6 +2876,7 @@ private lemma exists_root_descent_from_mAB2_charpoly_bound
     [CommRing B] [Algebra A B] [Module.Finite A B]
     [Module.Free A B] [IsLocalRing B]
     (g : Polynomial B) (b₀ : B)
+    (h_unit : IsUnit (g.derivative.eval b₀))
     (k : ℕ) (basis : Fin k → B)
     (hspan : Submodule.span A (Set.range basis) = ⊤)
     (hlin : LinearIndependent A basis)
@@ -2192,7 +2935,7 @@ private lemma exists_root_descent_from_mAB2_charpoly_bound
         (g.eval (b₀ + r d)) hg_eval_d
     -- Step 2: per-coord Cayley–Hamilton collapse (typed sub-sub-helper).
     have hα_zero : ∀ i, α i = 0 :=
-      exists_root_descent_charpoly_collapse A B g b₀ k basis hspan hlin
+      exists_root_descent_charpoly_collapse A B g b₀ h_unit k basis hspan hlin
         γ hγ_zero hγ_mem hγ_diff hg_eval p hp_monic hp_coeff hp_aeval
         α hα_mem hα_eq
     -- Step 3: per-coord zero collapses the basis decomposition to `0`.
@@ -2249,10 +2992,10 @@ private lemma exists_root_descent_from_mAB2
   -- internally (it builds `r n := ∑ i, algebraMap A B (γ n i) * basis i`
   -- and derives its own Cayley–Hamilton annihilator on `r 1`).
   classical
-  let _ := hg; let _ := h_unit
+  let _ := hg
   let _ := r₁; let _ := hr₁_mem; let _ := hr₁_eval
   exact exists_root_descent_from_mAB2_charpoly_bound
-    A B g b₀ k basis hspan hlin γ hγ_zero hγ_mem hγ_diff hg_eval
+    A B g b₀ h_unit k basis hspan hlin γ hγ_zero hγ_mem hγ_diff hg_eval
 
 /-- **L3c-charpoly per-coordinate Hensel-manufacture + reassembly
 sub-sub-sub-sub-sub-sub-sub-helper (iter-067 extraction).**

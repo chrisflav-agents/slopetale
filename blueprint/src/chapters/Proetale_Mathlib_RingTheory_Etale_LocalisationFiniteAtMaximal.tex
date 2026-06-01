@@ -1,0 +1,317 @@
+\chapter{Localisation of étale algebras at maximals over Henselian local rings}
+\label{ch:Proetale_Mathlib_RingTheory_Etale_LocalisationFiniteAtMaximal}
+
+\section{Overview}
+
+This chapter formalises the at-the-fibre form of Stacks~04GG that
+is needed by the four \S3-cluster downstream consumers of
+\cref{thm:henselianRing-map-maximalIdeal}: for $B$ étale over a
+local Henselian ring $A$ with maximal ideal $\mathfrak m_A$, and
+$\mathfrak n \subset B$ a maximal lying above $\mathfrak m_A$,
+the localisation $B_{\mathfrak n}$ is \emph{finite} and étale as
+an $A$-module.
+
+\textbf{Routing choice.} The Stacks Project records this result
+along two routes: (A) lift the residue-product isolating
+idempotent into $B$ via the henselian-pair idempotent lift, and
+(B) invoke the textbook fact that a finite algebra over a
+henselian local ring decomposes into a product of local algebras
+(Stacks~0DXB). Route (B) requires Mathlib infrastructure
+(\texttt{IsLocalRing}-product decomposition for module-finite
+algebras over henselian locals) that is not yet available.
+Route~(A) reuses the already-banked project lemma
+\cref{thm:etale-henselian-cop-lift} (the complete-orthogonal
+idempotent lift) and therefore opens no new Mathlib gap. This
+chapter formalises Route~(A); Route~(B) is intentionally not
+pursued here and is recorded only to document the choice.
+
+\textbf{Downstream wiring.} The four typed-sorry call sites for
+the lemmas of this chapter are enumerated in
+\Cref{chap:Mathlib_RingTheory_Etale_HenselianPair}~\S\,Downstream
+consumers (\cref{thm:henselianRing-map-maximalIdeal}). Each one
+splits, per the iter-054 audit, into (a) a
+\texttt{Module.Finite A B'} obligation for the localisation $B' :=
+B_{\mathfrak n}$ at the relevant maximal $\mathfrak n$, and (b) a
+mechanical application of
+\cref{thm:henselianRing-map-maximalIdeal}. The producer for
+piece~(a) is \cref{thm:localisation-finite-at-maximal}; the
+producer for the étale-preservation half (needed when piece~(b)
+is reapplied at the next layer) is
+\cref{lem:localisation-etale-at-maximal}.
+
+\textbf{Sources (informal pointers).} Stacks~04GG provides the
+at-the-fibre statement (finite-étale on the fibre upgrades to
+finite-étale on the localisation under Henselianness).
+Stacks~00U7 supplies the étale-over-field residue-product
+decomposition used as the first step. Stacks~0DXB is the
+orthogonal-idempotent lift route packaged in the present project
+as \cref{thm:etale-henselian-cop-lift}.
+
+\section{Residue-product decomposition}
+
+\begin{lemma}
+\label{lem:etale-fibre-product-decomposition}
+\lean{Algebra.Etale.residue_product_decomposition}
+[Étale residue product decomposition]
+Let $A$ be a local ring with maximal ideal $\mathfrak m_A$ and
+residue field $k := A/\mathfrak m_A$, and let $B$ be a
+module-finite étale $A$-algebra. Then there exists a finite index
+set $I$, a finite separable field extension $k_i / k$ for each
+$i \in I$, and an isomorphism of $k$-algebras
+\[
+  \varphi : k \otimes_A B \;\xrightarrow{\,\simeq\,}\; \prod_{i \in I} k_i.
+\]
+Under $\varphi$, the canonical orthogonal idempotents
+$\{\bar e_i\}_{i \in I}$ of the product (with
+$\bar e_i = (0,\ldots,0,1,0,\ldots,0)$ at position $i$) correspond
+to the indecomposable factor projections of $k \otimes_A B$, and
+each $\bar e_i$ is an idempotent of $k \otimes_A B$.
+\end{lemma}
+
+\begin{proof}
+The base change $k \otimes_A B$ is a finite étale $k$-algebra
+(étaleness is preserved under base change, finiteness from
+$\mathrm{Module.Finite}\,A\,B$). A finite étale algebra over a
+field decomposes as a finite product of finite separable field
+extensions of the base field
+(Mathlib: \texttt{Algebra.Etale.iff\_exists\_algEquiv\_prod} or
+equivalently the étale-over-field structure theorem, Stacks~00U7);
+this packages the existence of the index set $I$, the family
+$(k_i)_{i \in I}$, and the algebra isomorphism $\varphi$. The
+componentwise idempotents of the right-hand product are
+orthogonal and sum to $1$ by construction; transporting them
+along $\varphi^{-1}$ produces orthogonal idempotents
+$\bar e_i \in k \otimes_A B$ projecting onto the indecomposable
+factors.
+\end{proof}
+
+\section{Isolating idempotent at a fibre maximal}
+
+\begin{lemma}
+\label{lem:etale-isolating-idempotent-fibre}
+\lean{Algebra.Etale.exists_isolating_idempotent_at_maxIdeal}
+\uses{lem:etale-fibre-product-decomposition,
+      lem:henselianPair-l3a-idempotent-lift}
+[Lift of fibre-isolating idempotent]
+Let $A$ be a Noetherian local Henselian ring with maximal ideal
+$\mathfrak m_A$, let $B$ be a module-finite étale $A$-algebra,
+and let $\mathfrak n \subset B$ be a maximal ideal lying above
+$\mathfrak m_A$ (equivalently: a maximal contracting to
+$\mathfrak m_A$, equivalently: a point of the special fibre).
+Let
+$\varphi : k \otimes_A B \simeq \prod_{i \in I} k_i$ be the
+residue-product decomposition of
+\cref{lem:etale-fibre-product-decomposition}, and let
+$i_{\mathfrak n} \in I$ be the index of the component of
+$k \otimes_A B$ corresponding to $\mathfrak n$ (i.e.\ the unique
+$i$ such that the image of $\mathfrak n$ in $k \otimes_A B$
+contains the kernel of the projection
+$\prod_j k_j \twoheadrightarrow k_{i_{\mathfrak n}}$).
+
+Then there exists an idempotent $e \in B$ with the following two
+properties.
+
+\begin{enumerate}
+\item \textbf{(Residue match.)} The image of $e$ in
+  $k \otimes_A B$ equals $\varphi^{-1}(\bar e_{i_{\mathfrak n}})$,
+  where $\bar e_{i_{\mathfrak n}}$ is the isolating idempotent of
+  the $i_{\mathfrak n}$-component of $\prod_{i \in I} k_i$.
+\item \textbf{(Spectral isolation.)} For a maximal
+  $\mathfrak m \subset B$ above $\mathfrak m_A$, $e \notin
+  \mathfrak m$ iff $\mathfrak m = \mathfrak n$. Equivalently, the
+  localisation $B[1/e]$ has $\mathfrak n B[1/e]$ as its unique
+  maximal lying above $\mathfrak m_A$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\uses{lem:etale-fibre-product-decomposition,
+      lem:henselianPair-l3a-idempotent-lift}
+By \cref{lem:etale-fibre-product-decomposition} the element
+$\bar e_{i_{\mathfrak n}} \in k \otimes_A B$ obtained by
+transporting the canonical $i_{\mathfrak n}$-coordinate idempotent
+along $\varphi^{-1}$ is an idempotent of $k \otimes_A B$. Identify
+$k \otimes_A B \simeq B/\mathfrak m_A B$ (canonical natural
+isomorphism); thus $\bar e_{i_{\mathfrak n}}$ is an idempotent of
+the quotient ring $B / \mathfrak m_A B$.
+
+Since $A$ is Noetherian local Henselian and $B$ is module-finite
+étale over $A$, the residue idempotent lift
+\cref{lem:henselianPair-l3a-idempotent-lift} applies: there
+exists an idempotent $e \in B$ with $e \bmod \mathfrak m_A B =
+\bar e_{i_{\mathfrak n}}$. This proves~(1).
+
+For~(2), let $\mathfrak m \subset B$ be a maximal above
+$\mathfrak m_A$. Under the canonical identification of the set
+of maximals of $B$ above $\mathfrak m_A$ with the set of maximals
+of $B/\mathfrak m_A B$ (equivalently the index set $I$, via
+$\varphi$), $\mathfrak m$ corresponds to some
+$i_{\mathfrak m} \in I$, and $\mathfrak m = \mathfrak n$ iff
+$i_{\mathfrak m} = i_{\mathfrak n}$. The image of $e$ in
+$B/\mathfrak m$ is the $i_{\mathfrak m}$-component of
+$\bar e_{i_{\mathfrak n}}$ in $\prod_i k_i$, which is $1 \in
+k_{i_{\mathfrak m}}$ if $i_{\mathfrak m} = i_{\mathfrak n}$ and
+$0$ otherwise. Hence $e \notin \mathfrak m$ iff $\mathfrak m =
+\mathfrak n$. The equivalent reformulation in terms of $B[1/e]$
+follows from the standard correspondence between maximals of
+$B[1/e]$ and maximals of $B$ not containing $e$.
+\end{proof}
+
+\section{Finiteness of the localisation at a maximal}
+
+\begin{theorem}
+\label{thm:localisation-finite-at-maximal}
+\lean{Algebra.Etale.localisation_finite_at_maximal}
+\uses{lem:etale-fibre-product-decomposition,
+      lem:etale-isolating-idempotent-fibre}
+[Stacks 04GG, at-the-fibre form: finiteness]
+Let $A$ be a Noetherian local Henselian ring with maximal ideal
+$\mathfrak m_A$ and residue field $k$, let $B$ be a module-finite
+étale $A$-algebra, and let $\mathfrak n \subset B$ be a maximal
+ideal lying above $\mathfrak m_A$. Then the localisation
+$B_{\mathfrak n}$ is finite as an $A$-module:
+\[
+  \mathrm{Module.Finite}\;A\;B_{\mathfrak n}.
+\]
+\end{theorem}
+
+\begin{proof}
+\uses{lem:etale-fibre-product-decomposition,
+      lem:etale-isolating-idempotent-fibre}
+Let $\varphi : k \otimes_A B \simeq \prod_{i \in I} k_i$ be the
+residue-product decomposition
+(\cref{lem:etale-fibre-product-decomposition}) and let
+$i_{\mathfrak n} \in I$ be the index attached to $\mathfrak n$.
+By \cref{lem:etale-isolating-idempotent-fibre} there exists an
+idempotent $e \in B$ such that
+
+\begin{itemize}
+\item the image of $e$ in $k \otimes_A B$ equals
+  $\varphi^{-1}(\bar e_{i_{\mathfrak n}})$, and
+\item the only maximal of $B$ above $\mathfrak m_A$ that does
+  \emph{not} contain $e$ is $\mathfrak n$.
+\end{itemize}
+
+\emph{Step 1: $B[1/e] \simeq B_{\mathfrak n}$ over $A$.} The
+localisation $B[1/e]$ is the localisation of $B$ at the powers of
+$e$; since $e$ is idempotent, $B[1/e] \simeq e B$ (the principal
+component), and a maximal of $B[1/e]$ above $\mathfrak m_A$
+corresponds bijectively to a maximal of $B$ above $\mathfrak m_A$
+that does not contain $e$. By the isolation property
+above, this set is the singleton $\{\mathfrak n\}$. Hence
+$B[1/e]$ has a unique maximal above $\mathfrak m_A$, namely
+$\mathfrak n B[1/e]$. Both $B[1/e]$ and $B_{\mathfrak n}$ are
+$A$-algebra localisations of $B$ at multiplicatively closed sets
+whose images in $k \otimes_A B$ generate the same prime-avoidance
+condition (avoiding the kernel of the $i_{\mathfrak n}$-th
+projection); a standard universal-property argument (Mathlib:
+\texttt{IsLocalization.isLocalization\_of\_isLocalRing\_of\_unique\_maximal}-style
+identification, plus the étaleness-preservation lemma in
+\S~``Étaleness preservation'' below) provides a canonical
+$A$-algebra isomorphism $B[1/e] \simeq B_{\mathfrak n}$. In
+particular, $B[1/e]$ is module-finite over $A$ iff
+$B_{\mathfrak n}$ is.
+
+\emph{Step 2: $B[1/e]$ is module-finite over $A$.} The base
+change of $B[1/e]$ to $k$ is the $i_{\mathfrak n}$-component
+$k_{i_{\mathfrak n}}$ of the residue-product decomposition:
+\[
+  k \otimes_A B[1/e] \;=\; (k \otimes_A B)[1/\bar e]
+   \;\simeq\; \Bigl(\prod_{i \in I} k_i\Bigr)\bigl[1/\bar e_{i_{\mathfrak n}}\bigr]
+   \;\simeq\; k_{i_{\mathfrak n}}.
+\]
+The first equality is base-change-of-localisation; the middle
+isomorphism is $\varphi$ applied to the localised image; the last
+identifies the localisation of a finite product at a coordinate
+idempotent with the corresponding coordinate factor.
+$k_{i_{\mathfrak n}}$ is a finite separable extension of $k$, in
+particular finite-dimensional as a $k$-vector space. Etaleness is
+preserved under localisation at idempotents
+(\texttt{Algebra.Etale.of\_isLocalizationAway} composed with
+$B/A$ étale), so $B[1/e]$ is étale over $A$.
+
+The descent step is Stacks~04GG (at-the-fibre form): for a
+Noetherian local ring $A$, a finitely-presented flat $A$-algebra
+$B'$ whose special fibre $k \otimes_A B'$ is a finite-dimensional
+$k$-vector space is itself module-finite over $A$. The standing
+hypotheses (module-finite étale $B$, idempotent localisation $e$)
+give $B' := B[1/e]$ finitely-presented flat (étale algebras are
+flat and finitely presented, and localisation at an idempotent
+preserves both). The special fibre $k \otimes_A B[1/e] \simeq
+k_{i_{\mathfrak n}}$ is finite-dimensional over $k$ by the
+preceding paragraph. Hence $B[1/e]$ is module-finite over $A$.
+
+Combining Steps~1 and~2 yields
+$\mathrm{Module.Finite}\,A\,B_{\mathfrak n}$.
+\end{proof}
+
+\section{Étaleness preservation}
+
+\begin{lemma}
+\label{lem:localisation-etale-at-maximal}
+\lean{Algebra.Etale.localisation_etale_at_maximal}
+\uses{thm:localisation-finite-at-maximal}
+[Stacks 04GG, at-the-fibre form: étaleness]
+Let $A$ be a Noetherian local Henselian ring, $B$ a module-finite
+étale $A$-algebra, and $\mathfrak n \subset B$ a maximal ideal
+lying above the maximal ideal $\mathfrak m_A$ of $A$. Then
+$B_{\mathfrak n}$ is étale over $A$:
+\[
+  \mathrm{Algebra.Etale}\;A\;B_{\mathfrak n}.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{thm:localisation-finite-at-maximal}
+$B$ is étale over $A$ by hypothesis. The localisation
+$B \to B_{\mathfrak n}$ identifies (by Step~1 of the proof of
+\cref{thm:localisation-finite-at-maximal}) with the localisation
+$B \to B[1/e]$ at a single idempotent $e \in B$, which is a
+localisation away from $1-e$ in the sense of
+\texttt{IsLocalization.Away}. Étaleness is preserved by
+\texttt{Algebra.Etale.of\_isLocalizationAway}: $B[1/e]$ is étale
+over $B$. Composition of étale $A$-algebra structures
+(\texttt{Algebra.Etale.comp} or \texttt{Algebra.Etale.trans})
+gives $B[1/e]$ étale over $A$, hence $B_{\mathfrak n}$ étale
+over $A$ via the identification above.
+\end{proof}
+
+\section{Consumers}
+
+The four $\mathrm{Module.Finite}\,A\,B'$ obligations inside the
+L3c downstream-consumer chain consume the producer
+\cref{thm:localisation-finite-at-maximal} (for the finiteness
+half) and \cref{lem:localisation-etale-at-maximal} (for the
+étaleness-preservation half, needed when the producer is
+composed with downstream étale-only constructions). See
+\Cref{chap:Mathlib_RingTheory_Etale_HenselianPair} \S\,Downstream
+consumers for the precise wiring points; the four call sites
+listed there each split, per the iter-054 audit, into a
+$\mathrm{Module.Finite}\,A\,B'$ step (this chapter's producers)
+plus a \cref{thm:henselianRing-map-maximalIdeal} step.
+
+\section{References}
+
+\begin{itemize}
+\item Stacks Project, Tag~\href{https://stacks.math.columbia.edu/tag/04GG}{04GG} —
+  the at-the-fibre statement: a finitely presented flat algebra
+  over a Noetherian local ring whose special fibre is finite
+  becomes module-finite. The primary source of
+  \cref{thm:localisation-finite-at-maximal}.
+\item Stacks Project, Tag~\href{https://stacks.math.columbia.edu/tag/00U7}{00U7} —
+  étale-over-field structure theorem: every finite étale algebra
+  over a field decomposes as a finite product of finite separable
+  field extensions. The source of
+  \cref{lem:etale-fibre-product-decomposition}.
+\item Stacks Project, Tag~\href{https://stacks.math.columbia.edu/tag/0DXB}{0DXB} —
+  orthogonal-idempotent decomposition mechanism. Not used
+  directly; relevant only to the (rejected) Route~(B) of the
+  preamble.
+\item \Cref{chap:Mathlib_RingTheory_Etale_HenselianPair},
+  \S\,Downstream consumers — the four call sites consuming the
+  producers of this chapter.
+\item \Cref{chap:Mathlib_RingTheory_Etale_HenselianIdempotentLift}
+  — \cref{thm:etale-henselian-cop-lift}, the Mathlib-PR-target
+  complete-orthogonal-idempotent lift used internally by
+  \cref{lem:henselianPair-l3a-idempotent-lift}.
+\end{itemize}

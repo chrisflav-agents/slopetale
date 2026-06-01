@@ -1,4 +1,5 @@
 \chapter{Henselian pair for étale algebras over henselian local rings}
+\label{chap:Mathlib_RingTheory_Etale_HenselianPair}
 
 This chapter formalises the headline statement underpinning the
 Stacks~04GG / 09XK ``Henselian pair'' fragment used throughout
@@ -1325,7 +1326,68 @@ powers of $r_1$, but $r_m = \sum_i \mathrm{algebraMap}(\gamma_m(i))
 \,e_i$ differs from $r_1^m$ for $m \ge 2$, so the Cayley--Hamilton
 fold does not directly inject into the $\alpha^{(m)}$-recursion.
 
-\textit{Iter-088 plan: route~(c) opened.} The iter-088 plan
+\textit{iter-097 reassessment: route~(c) REJECTED, pivot to
+route~(A) Newton-direct.} The iter-088$\to$iter-096 sub-arc that
+opens immediately below pursued route~(c) Krull-on-$A$ + the
+``iter-088 KB-46 cCH-bridge'' recipe (substitute $h_{c^{\mathrm{CH}}
+\mathrm{eq}}\,0$ into $h_{\mathrm{level} 0\mathrm{res}}$, collapse
+via $\mathrm{Fintype.linearIndependent\_iff}$, deepen via the
+inductive hypothesis $\alpha_i \in \mathfrak m_A^N$, close via Krull
+intersection on $A$). At iter-097 this recipe is REJECTED on the
+basis of three converging verdicts:
+\begin{itemize}
+\item \textbf{Progress-critic (slug \texttt{l3c-charpoly-iter097})
+verdict STUCK.} Five consecutive iters (088, 091, 094, 095, 096)
+named the KB-46 recipe as the imminent closure mechanism and
+instantiated it into Lean zero times. Declaration sorries flat
+$3 \to 3 \to 3 \to 3$ across the audit window; raw tokens
+oscillated $3 \to 5 \to 3 \to 5$ (the extract-then-bank
+oscillation fingerprint). Phase elapsed $9$ iters against a
+2--4 estimate set at iter-088 entry.
+\item \textbf{Mathlib-analogist (slug \texttt{l3c-cch-bridge-iter097})
+verdict INVALID on Step~1.} The recipe's Step~1 ``substitute
+$h_{c^{\mathrm{CH}}\mathrm{eq}}\,0$ into $h_{\mathrm{level} 0
+\mathrm{res}}$'' is not type-checkable. The residual identity
+$h_{\mathrm{level} 0\mathrm{res}}$ is a membership of
+$\sum_i \mathrm{algebraMap}(\alpha^{(\mathrm{Hi})}_0\,i - \alpha_i
+- \eta_0\,i)\,e_i$ in $(\mathfrak m_A \cdot B)^{2(d+1)}$; it
+contains no $r_1^d$ subterm into which the cCH expansion
+$r_1^d = \sum_j \mathrm{algebraMap}(c^{\mathrm{CH}}_0\,j)\,
+r_1^{\,j}$ could be substituted. The carriers
+$\eta, \varepsilon_0, \varepsilon$ have FIXED depths from the
+Newton construction and are not $\alpha$-dependent, so the
+inductive hypothesis cannot directly deepen them. The recipe's
+``Step~1'' has been a fact-free claim throughout.
+\item \textbf{Strategy-critic (slug \texttt{l3c-route-c-iter097})
+verdict REJECT, CHALLENGE on infrastructure-deferral.} The
+\emph{Newton-convergence carrier} ($g'(b_0)$ a unit modulo
+$\mathfrak m_A$, implicit in the henselian hypothesis but never
+extracted) is required by the goal; route~(c) silently presumes
+it without extracting it. The cCH expansion of $r_1^{d+m}$ was
+the right tool for the L1--L2 charpoly-multiplicity bounds
+(closed iter-074) but is the \emph{wrong tool} for the
+convergence step.
+\item \textbf{Mathlib search NEGATIVE clearance.} One cycle of
+\texttt{lean\_leansearch} / \texttt{lean\_loogle} on
+``henselian local ring $+$ finite étale extension'' produced no
+transfer lemma. There is no shortcut.
+\end{itemize}
+The route pivots to \textbf{route~(A) Newton-direct}, which is the
+standard Stacks~0DXB / 09XK closure: re-use
+$\mathrm{HenselianLocalRing.is\_henselian}$ of $A$ \emph{directly}
+on a per-coordinate $A$-valued polynomial derived from $g$, $b_0$,
+the basis decomposition, and the C--H annihilator $p$, gated by
+the unit-derivative hypothesis $g'(b_0) \notin \mathfrak m_A$
+extracted as an explicit carrier (see ``Route~(A) Newton-direct
+closure plan'' below). All paragraphs from ``Iter-088 plan:
+route~(c) opened.'' through the ``Iter-095 closure plan.''
+paragraph are RETAINED FOR HISTORICAL CONTEXT only; their
+mathematical recipe does not survive the iter-097 audits and is
+not the closure mechanism going forward.
+
+\textit{Iter-088 plan: route~(c) opened.} \textit{Status:
+iter-097 SUPERSEDED. Retained for historical context.}
+The iter-088 plan
 dispatched a \texttt{refactor} subagent
 (\texttt{add-noetherian-l3c}) to add \texttt{[IsNoetherianRing A]}
 to the 11-helper L3c chain
@@ -1347,6 +1409,8 @@ showing $\alpha_i \in \mathfrak m_A^N$ for every $N$, hence
 $\alpha_i = 0$.
 
 \textit{Iter-088 Step~(iv)$'$ closure recipe (Krull-on-$A$).}
+\textit{Status: iter-097 SUPERSEDED. Retained for historical
+context.}
 \begin{itemize}
 \item \textbf{Telescoping step.} Use the iter-087 banked
 $h_{\mathrm{tele}}$:
@@ -1391,6 +1455,1622 @@ decomposition), the prover may extract it as a 6th-tier sub-helper
 $\texttt{alpha\_in\_deeper\_mA\_pow}$ analogous to the previous
 extractions. Total residual budget for iter-088: $\sim 80$--$150$
 LOC of induction bookkeeping plus the final Krull invocation.
+
+\textit{Formalisation progress note (iter-088).} \textit{Status:
+iter-097 SUPERSEDED. Retained for historical context.}
+Lane~A banked the
+Krull-on-$A$ setup sorry-free ($\sim 25$ LOC inline):
+$h_{\mathrm{jacA}} : \mathfrak m_A \le \mathrm{jacobson}\,\bot$
+via $\texttt{IsLocalRing.maximalIdeal\_le\_jacobson}$;
+$h_{\mathrm{bot}} : \bigcap_N \mathfrak m_A^N = (0)$ via
+$\texttt{convert!\,Ideal.iInf\_pow\_smul\_eq\_bot\_of\_le\_jacobson}$
+plus $\texttt{ext + smul\_eq\_mul + Ideal.one\_eq\_top + mul\_one}$;
+base case $N \le d + 1$ via $\texttt{Ideal.pow\_le\_pow\_right\,hN
+\,(h_\alpha\_mem\,i)}$; final reduction $\alpha_i = 0$ via
+$\texttt{Submodule.mem\_iInf} + \texttt{Submodule.mem\_bot}$.
+Residual sorry is now the strong-induction bootstrap inside the
+nested helper $h_{\alpha\,deep} : \forall N, \forall i,
+\alpha_i \in \mathfrak m_A^N$ for the inductive case
+$N \ge d + 2$ only.
+
+The iter-088 prover documented a structural obstruction: the
+$\eta_j$ and $\varepsilon_j$ carriers are constructed via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis}
+applied to fixed terms involving $\gamma$ and the $\gamma$-Cauchy
+increments. They do NOT intrinsically depend on $\alpha$, so a
+naive induction hypothesis $\alpha_i \in \mathfrak m_A^N$ does NOT
+deepen $\eta_j$ or $\varepsilon_j$ memberships directly. The
+substantive bridge has to go through one of: (i) the explicit
+base-case $c^{\mathrm{CH}}_0(j) = -p_j$ substitution into the
+level-$0$ residual identity $h_{\mathrm{level0\_res}}$ to pull
+$p_j$ factors through; or (ii) a longer chain that deepens the
+LEFT side of $h_{\alpha\,eq}$ via $h_{g\,eval} + h_{r\,diff}$ to
+track Newton-iterate increments.
+
+\textit{Iter-089 closure plan.} \textit{Status: iter-097
+SUPERSEDED. Retained for historical context.}
+Lane~A continues the bootstrap.
+Restructure the residual sorry as $\texttt{induction N with |
+zero => Submodule.mem\_top | succ N ih => bootstrap}$, with the
+$\texttt{succ}$ case case-splitting on $N + 1 \le d + 1$ (easy
+direction handled iter-088) vs.\ $N + 1 \ge d + 2$ (substantive).
+For the substantive direction, pick $m := N - d - 1$ so $\alpha^{(m)}_i
+\in \mathfrak m_A^{N+1}$ via $h_{\alpha^{(\cdot)}\,mem}$, apply
+$h_{\mathrm{tele}}\,m\,i$ to express $\alpha_i = \alpha^{(m)}_i -
+\sum \eta - \varepsilon_0 - \sum \varepsilon$, and use the level-$0$
+$c^{\mathrm{CH}}_0$ substitution to deepen the low-$j$
+$\eta_j, \varepsilon_j$ terms via the $p_j$ factors of the
+Cayley--Hamilton annihilator.
+
+If the bootstrap exceeds $\sim 50$ LOC of inline bookkeeping, the
+prover extracts it as a 6th-tier sub-helper
+$\texttt{alpha\_in\_deeper\_mA\_pow}$ carrying all iter-079$\to$
+iter-088 enriched data plus the IH; the parent body then becomes
+a clean $\texttt{induction N with | zero => \ldots | succ N ih =>
+alpha\_in\_deeper\_mA\_pow \ldots ih}$. Authorised per iter-083
+four-tier extraction depth criterion.
+
+\textit{Formalisation progress note (iter-091 + iter-094).}
+\textit{Status: iter-097 SUPERSEDED. Retained for historical
+context.}
+The
+iter-091 prover restructured the bootstrap as $\texttt{induction N
+with | zero => \ldots | succ N ih => \ldots}$; the $\texttt{zero}$
+case is sorry-free via $\texttt{rw\,[pow\_zero,
+Ideal.one\_eq\_top]; exact Submodule.mem\_top}$, and the easy
+$\texttt{succ}$ direction $N + 1 \le d + 1$ via
+$\texttt{Ideal.pow\_le\_pow\_right\,hN\,(h_\alpha\_mem\,i)}$. The
+substantive $\texttt{succ}$ direction banks the witness
+$m := N - d - 1$ so $h_{\alpha^{(\cdot)}\,mem}\,m\,i :
+\alpha^{(m)}_i \in \mathfrak m_A^{N+1}$, applies
+$\texttt{linear\_combination\,}{-}h_{\mathrm{tele}}\,m\,i$ to expose
+$\alpha_i = \alpha^{(m)}_i - \sum \eta - \varepsilon_0 - \sum
+\varepsilon$, and splits the goal via
+$\texttt{refine sub\_mem (sub\_mem (sub\_mem h_{\alpha^{(m)}\,mem}
+\,?\_)\,?\_)\,?\_}$. The iter-094 prover replaced the resulting
+$\texttt{all\_goals sorry}$ with three focused per-subgoal blocks,
+partitioning each into a HIGH-DEPTH band (closed sorry-free via
+$\texttt{Ideal.pow\_le\_pow\_right}$ + $h_{\eta\,mem}$ /
+$h_{\varepsilon_0\,mem}$ / $h_{\varepsilon\,mem}$) and a LOW-DEPTH
+band (residual $c^{\mathrm{CH}}_0$-substitution bridge). Subgoal~1
+($\sum \eta_j$) is structurally entirely LOW-DEPTH for the witness
+$m = N - d - 1$, so its HIGH-DEPTH bracket is vacuous and the
+per-element $\texttt{Submodule.sum\_mem}$ decomposition exposes the
+$c^{\mathrm{CH}}_0$ bridge obligation directly. Subgoals~2 and~3
+absorb their HIGH-DEPTH bands ($N + 1 \le 2(d+1)$ for $\varepsilon_0$,
+$N + 1 \le 2(d+j+2)$ per-term for $\sum \varepsilon_j$) sorry-free.
+The residual is three precisely-typed LOW-DEPTH sorries, all sharing
+the same $c^{\mathrm{CH}}_0$ substitution recipe: substitute the
+explicit base-case identity $c^{\mathrm{CH}}_0(j) = -p_j$ (from the
+now sorry-free
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}) into
+$h_{\mathrm{level0\_res}}$, combine with
+$h_{\alpha^{(0)}\,rec} : \alpha^{(0)}_i = \alpha_i + \eta_0(i) +
+\varepsilon_0(i)$ and the IH $\alpha_i \in \mathfrak m_A^N$, and
+iterate via $h_{\alpha^{(\cdot)}\,succ\,rec}$ for higher levels.
+
+\textit{Iter-095 closure plan.} \textit{Status: iter-097
+SUPERSEDED. Retained for historical context.}
+Lane~A targets the three LOW-DEPTH
+residual sorries at L1969 (subgoal~1, per-element $\eta_j$ bridge),
+L1978 (subgoal~2, $\varepsilon_0$ bridge for $m \ge d + 1$), and
+L1990 (subgoal~3, per-element $\varepsilon_j$ bridge). All three
+share the same $c^{\mathrm{CH}}_0$ recipe sketched above; the
+prover discharges them in one of two granularities:
+(i) inline closure of all three via a shared per-element lemma
+constructed once at the top of the $\texttt{succ}$ case, or
+(ii) extraction of the 6th-tier helper
+$\texttt{alpha\_in\_deeper\_mA\_pow}$ if the inline closure exceeds
+$\sim 80$ LOC (authorised per iter-083 four-tier extraction depth
+criterion). The bridge mechanics: use $h_{cCH\,eq}\,0\,i$ to
+substitute $r_1^d = \sum_{j : \mathrm{Fin}\,d}
+\mathrm{algMap}(c^{\mathrm{CH}}_0(j))\,r_1^j$ with each
+$c^{\mathrm{CH}}_0(j) = -p_j \in \mathfrak m_A^{d - j}$; combine
+with $h_{\mathrm{level0\_res}}$ to pull $p_j$ factors through the
+basis decomposition $\sum \mathrm{algMap}(\alpha^{(0)}_i - \alpha_i
+- \eta_0(i))\,e_i$; collapse via
+$\texttt{Fintype.linearIndependent\_iff}$ (iter-085 KB-B bridge) +
+$\texttt{Algebra.smul\_def.symm}$ to a per-coord A-recurrence;
+apply the IH on the $\alpha_i$ side to absorb $\eta_0 + \varepsilon_0$
+into $\mathfrak m_A^{N+1}$; iterate over $h_{\alpha^{(\cdot)}\,succ\,
+rec}$ for higher-level contributions.
+
+\bigskip
+
+\textit{Route~(A) Newton-direct closure plan (iter-097+).} The
+following section replaces the iter-088$\to$iter-096 route~(c)
+recipe whose paragraphs immediately above are now marked
+SUPERSEDED. The plan is given at tactic granularity so a
+prover dispatch in iter-098+ has a concrete construction to
+formalise.
+
+\textbf{A.1. Why route~(A) works.} Route~(A) closes Step~(iv) of
+the parent's Stacks~0DXB recipe by working with a per-coordinate
+polynomial in $A[X]$ derived from $g$, $b_0$, the basis
+decomposition, and the Cayley--Hamilton annihilator $p$. The key
+structural insight is that the basis decomposition $r_n = \sum_i
+\mathrm{algebraMap}(\gamma_n(i))\,b_i$ provides a map between
+$B$-side Newton iterations and $A$-side per-coordinate
+polynomials: the residual identity $g(b_0 + r_d) = \sum_i
+\mathrm{algebraMap}(\alpha_i)\,b_i$ expresses each $\alpha_i$ as
+the $A$-side projection of a $B$-Newton-iterate. The
+\emph{usage pattern} of henselianness in route~(A) is concentrated
+in the \emph{parent's} construction of the per-coord polynomial
+$p_i$ (the parent uses $\mathrm{HenselianLocalRing.is\_henselian}$
+of $A$ on suitably-chosen polynomials derived from $g, b_0$ and
+the basis projection to assemble $p_i$ with the exact-evaluation
+properties recorded in \textbf{A.3}). The \emph{helper's} closure
+step is, under the iter-099 Option~(Y) refinement (\textbf{A.4}),
+a purely ring-theoretic argument in the local ring $A$ that
+exploits the polynomial factorisation $p_i = X \cdot q_i$
+(from $p_i.\mathrm{eval}\,0 = 0$) together with the local-ring
+identification of units mod $\mathfrak m_A$ with non-members of
+$\mathfrak m_A$. This bypasses both the Krull intersection on
+$A$ and the cCH-bridge entirely; no $[\mathrm{IsNoetherianRing}\,A]$
+is needed for the closure itself, although the headline theorem
+still carries the hypothesis for the L1 separation step. The
+overall mechanism matches Stacks~0DXB / 09XK in its spirit (the
+$A$-side discharge of the per-coordinate equation modulo a
+hierarchy of $\mathfrak m_A$-powers); the structural distinction
+from the source is that the iter-099 helper boundary sits at the
+\emph{exact-evaluation} polynomial bundle rather than at a
+``henselian root with deep-residue congruence'' bundle, because
+Mathlib's $\mathrm{HenselianLocalRing.is\_henselian}$ field
+exports existence only ($\exists a$, not $\exists!\,a$) — see the
+discussion at the end of \textbf{A.4}.
+
+\textbf{A.2. The unit-bridge: status, counterexample, and
+corrected formulation.} The closure obligation requires the
+carrier
+\[
+h_{g'\mathrm{unit}\,A}\,:\,\mathrm{IsUnit}\,
+\bigl(\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,
+   \bigl(\text{some $A$-valued shadow of $g'(b_0)$}\bigr)\bigr).
+\]
+The natural ``shadow'' candidate suggested by iter-096--iter-098
+prose was the \emph{first basis coefficient} of $g'(b_0)$ under a
+basis $(b_1,\ldots,b_k)$ chosen with $b_1 = 1$: if
+$g'(b_0) = \sum_i \mathrm{algebraMap}(c_i)\,b_i$ with $b_1 = 1$,
+take $h_{g'\mathrm{unit}\,A}$ on $c_1$. We now show this candidate
+is \emph{mathematically false} and replace it with the
+determinant of the multiplication matrix, which IS valid and IS
+the right carrier for \textbf{A.3}.
+
+\textbf{Why the naive basis-coefficient bridge is FALSIFIED.}
+Consider the residue picture obtained by reducing modulo
+$\mathfrak m_A$. Let $k := A / \mathfrak m_A$ and
+$C := B \otimes_A k = B / \mathfrak m_A \cdot B$. Then $C$ is a
+finite étale $k$-algebra and the $k$-basis $(\bar b_1, \ldots,
+\bar b_k)$ of $C$ inherits $\bar b_1 = 1$. The proposed bridge
+asserts: if $\bar u \in C$ is a unit then its first coefficient
+$\bar c_1$ in this basis is non-zero in $k$.
+
+\emph{Counterexample.} Take $A = k = \mathbb{F}_3$ (a field; the
+maximal ideal is zero), $B = C = \mathbb{F}_3 \times \mathbb{F}_3$
+(a rank-$2$ finite étale algebra, in fact étale over the field),
+and the $\mathbb{F}_3$-basis
+$(b_1, b_2) := \bigl(\,(1,1),\,(1,2)\,\bigr)$ of $B$. The basis
+satisfies $b_1 = 1$ and is linearly independent
+($a\,(1,1) + b\,(1,2) = 0$ forces $a = b = 0$ in $\mathbb{F}_3$).
+The element $u := (1, 2) = b_2$ satisfies
+$u \cdot u = (1, 4) = (1, 1) = 1$ in $B$, so $u$ is a unit.
+However, in the basis expansion $u = 0 \cdot b_1 + 1 \cdot b_2$,
+the first coefficient $c_1 = 0$ is \emph{not} a unit in $A$.
+The bridge ``$\bar u$ unit in $C \Rightarrow \bar c_1$ unit in
+$k$'' is therefore false in the generality stated.
+
+\emph{Diagnosis.} The bridge cannot hold in this generality
+because choosing $b_1 = 1$ pins only the \emph{first row} (or
+column) of the multiplication-by-$\bar u$ matrix to read off
+$\bar c_1, \ldots, \bar c_k$; nothing forces the diagonal entry
+$\bar c_1$ to be the determinant or any other invariant of the
+matrix. The invertibility of the matrix only forces \emph{its
+determinant} to be non-zero, not any specific entry. So the
+``basis-projection of a $B$-unit'' is a per-entry datum, while
+$B$-unitness is a determinantal datum; the two are not the same.
+
+\textbf{Corrected bridge: the determinant of the
+multiplication matrix.} The right $A$-side shadow of
+$\mathrm{IsUnit}\,(\bar u)$ is the determinant of the
+$A$-linear endomorphism ``multiplication by $u$'' on the free
+$A$-module $B$. Concretely, choose any $A$-basis
+$(b_1, \ldots, b_k)$ of $B$ (no $b_1 = 1$ constraint needed),
+form the matrix $M_u \in \mathrm{Mat}_{k\times k}(A)$ with
+$M_u\,e_i = $ basis-coordinates of $u \cdot b_i$, and take
+$\det(M_u) \in A$ as the $A$-side shadow. The bridge then reads:
+\begin{quote}
+\emph{If $\mathrm{Ideal.Quotient.mk}\,(\mathfrak m_A \cdot B)\,
+u$ is a unit in $B / \mathfrak m_A \cdot B$, then
+$\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,(\det M_u)$ is a unit
+in $A / \mathfrak m_A$, equivalently
+$\det M_u \notin \mathfrak m_A$, equivalently
+$\mathrm{IsUnit}\,(\det M_u)$ in $A$ (the latter by
+\texttt{IsLocalRing.notMem\_maximalIdeal}).}
+\end{quote}
+The proof is one line: reduction mod $\mathfrak m_A$ commutes with
+determinant, $\det \bar M_u = \overline{\det M_u}$, and a square
+matrix over a field is invertible iff its determinant is
+non-zero. The bridge is banked as
+\cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
+below (after the parent proof's end); we use it in \textbf{A.3}.
+
+\textbf{Choice taken: derive in the parent and pass through.}
+The B-side unit hypothesis already sits in scope at the parent
+(it is the henselian-hypothesis input
+$\mathrm{IsUnit}(\mathrm{Ideal.Quotient.mk}\,(\mathfrak m_A B)\,
+(g'(b_0)))$ inherited from the consumer's
+\texttt{is\_henselian} application). The parent invokes
+\cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
+at $u := g'(b_0)$ to obtain
+$h_{\det g'\mathrm{unit}\,A}\,:\,\mathrm{IsUnit}\,(\det
+M_{g'(b_0)})$ in $A$, and threads this single binder into the
+6th-tier helper. The route-(c) cCH-bridge carriers ($cCH,
+h_{c^{\mathrm{CH}}\mathrm{eq}}, h_{\mathrm{level} 0\mathrm{res}},
+h_{\mathrm{level\,succ\,res}}$) are no longer needed at the
+helper boundary.
+
+\textit{Note on the iter-079 basis-choice prose.} The prior
+chapter remark ``the basis can be chosen with $b_1 = 1$ via
+\texttt{Module.Free.exists\_basis}'' is correct as a basis-choice
+fact, but the basis-with-$b_1 = 1$ does \emph{not} suffice for
+the original bridge formulation, as the counterexample above
+shows. The basis-augmentation hypothesis $b_1 = 1$ remains
+\emph{useful} for the \textbf{A.3} construction (it lets the
+parent express ``the constant term of $g(b_0)$'' as a single
+coordinate in the basis), but it cannot be loaded with the
+unit-bridge claim that it was previously asked to support.
+
+\textbf{A.3. Construction of the per-coordinate polynomial.}
+Under the corrected unit-bridge of \textbf{A.2}, the per-coordinate
+polynomial $p_i \in A[X]$ takes the form
+\[
+p_i(X)\ :=\ X \cdot q_i(X),
+\]
+i.e.\ with constant term zero by construction. The substantive
+content is the recipe for $q_i \in A[X]$ that makes
+$p_i.\mathrm{eval}\,\alpha_i = 0$ \emph{exactly} in $A$ while
+ensuring $p_i'(\alpha_i) \equiv \det M_{g'(b_0)} \pmod{\mathfrak m_A}$
+(hence a unit mod $\mathfrak m_A$ by \textbf{A.2}). We give the
+recipe for $q_i$ at named-step granularity, then justify the
+identity $\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i = 0$ in $A$
+by a numbered chain over the in-scope carriers.
+
+\paragraph{Construction of $q_i$ (named steps).}
+
+\textbf{Step Q1.} \emph{Form the multiplication matrix, the
+adjugate, and the unit-determinant carrier (Option (Y-1)).}
+The chapter commits to the following unambiguous specification
+of the Q1 matrix $M$:
+
+\textbf{Q1.a.} \emph{Choice of $M$.}
+Let $M := M_{g'(b_0)} \in \mathrm{Mat}_{k \times k}(A)$ be the
+matrix of left-multiplication by $g'(b_0)$ in the basis
+$(b_1, \ldots, b_k)$: the $(i, j)$ entry $M_{ij}$ is the
+$i$-th basis-coordinate of $g'(b_0) \cdot b_j$, extracted by
+$\mathrm{Module.Basis.repr}$ applied to
+$g'(b_0) \cdot b_j \in B$ as an element of the finite free
+$A$-module $B$. (No $\mathfrak m_A \cdot B$-depth assumption on
+$g'(b_0) \cdot b_j$ is needed; the basis representation is
+unique by linear independence of $(b_j)$.) Equivalently,
+$M = \mathrm{Algebra.leftMulMatrix}\,\mathrm{mBasis}\,(g'(b_0))$,
+where $\mathrm{mBasis}$ is the
+$\mathrm{Module.Basis}\,(\mathrm{Fin}\,k)\,A\,B$ built from
+$\mathrm{hlin}$ and $\mathrm{hspan}$ via
+$\mathrm{Module.Basis.mk}$.
+
+\textbf{Q1.b.} \emph{Adjugate identities.}
+\texttt{Matrix.adjugate} produces $\mathrm{adj}(M) \in
+\mathrm{Mat}_{k\times k}(A)$ with $\mathrm{adj}(M) \cdot M =
+M \cdot \mathrm{adj}(M) = \det(M) \cdot \mathbf{1}_k$
+(\texttt{Matrix.adjugate\_mul},
+\texttt{Matrix.mul\_adjugate}).
+
+\textbf{Q1.c.} \emph{Derivation of $\mathrm{IsUnit}\,(\det M)$.}
+This is the substantive step of Q1: the entire Q3--Q7 + P1--P5
+chain hinges on $\det M$ being a unit (more precisely, a unit
+modulo $\mathfrak m_A$, which by
+\texttt{IsLocalRing.notMem\_maximalIdeal} is equivalent to being
+a unit in $A$). With $M = M_{g'(b_0)}$ chosen as in Q1.a, the
+discharge is:
+\begin{enumerate}
+\item[\textbf{(i)}] From the Q1.a-side carrier
+$h_{g'\mathrm{unit}}\,:\,\mathrm{IsUnit}\,(g'(b_0))$ in $B$ (see
+the strategy-modifying note below), the image of $g'(b_0)$ under
+$\mathrm{Ideal.Quotient.mk}\,((\mathfrak m_A) \cdot B)$ is a unit
+in $B / (\mathfrak m_A \cdot B)$. (Lemma: a ring map preserves
+units; concretely
+$h_{g'\mathrm{unit}}.\mathrm{map}\,(\mathrm{Ideal.Quotient.mk}\,
+(\mathfrak m_A \cdot B))$.)
+\item[\textbf{(ii)}] Apply
+\cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
+at $u := g'(b_0)$, with the $\mathrm{Module.Basis}$ being
+$\mathrm{mBasis}$ from Q1.a. The lemma's conclusion is
+$\mathrm{IsUnit}\,((\mathrm{Algebra.leftMulMatrix}\,
+\mathrm{mBasis}\,(g'(b_0))).\mathrm{det})
+= \mathrm{IsUnit}\,(\det M)$ in $A$.
+\end{enumerate}
+\emph{Critical observation.} The mathematically natural choice
+$M := M_{g'(b_0)}$ \emph{cannot} be discharged from the
+existing iter-100 helper signature alone: nothing in the
+in-scope tuple
+$(g, b_0, k, \mathrm{basis}, h_{\mathrm{span}}, h_{\mathrm{lin}},
+\gamma, h_{\gamma\mathrm{zero}}, h_{\gamma\mathrm{mem}},
+h_{\gamma\mathrm{diff}}, h_{g\mathrm{eval}}, p, h_{p\mathrm{monic}},
+h_{p\mathrm{coeff}}, h_{p\mathrm{aeval}}, \alpha, h_{\alpha\mathrm{mem}},
+h_{\alpha\mathrm{eq}}, \alpha^{(\mathrm{Hi})},
+h_{\alpha\mathrm{Hi}\mathrm{mem}}, h_{\alpha\mathrm{Hi}\mathrm{eq}},
+h_{\delta\mathrm{mem}}, h_{\mathrm{Taylor}})$
+constrains $g'(b_0)$'s residue mod $\mathfrak m_A \cdot B$ to be
+a unit. All Newton-iterate carriers $\gamma_n, \alpha,
+\alpha^{(\mathrm{Hi})}$ have entries in $\mathfrak m_A$ (so
+the associated elements $r_n = \sum_i \mathrm{algebraMap}(\gamma_n
+i) \cdot b_i$ lie in $\mathfrak m_A \cdot B$, hence
+$M_{r_n}$ has nilpotent residue and $\det M_{r_n} \in
+\mathfrak m_A$); the polynomial-side carrier $p$ has all
+non-leading coefficients in $\mathfrak m_A$ (so the
+characteristic-polynomial-style constant term
+$p.\mathrm{coeff}\,0 \in \mathfrak m_A^d$); the in-scope
+constants of $B$ (namely $1$ and any element of the form $1 +
+(\text{something in } \mathfrak m_A \cdot B)$) have determinant
+$M = \mathrm{Id}$ and hence make the Q3--Q7 adjugate chain
+vacuous. The étale carrier $\mathrm{IsUnit}\,(g'(b_0))$ is the
+sole minimal additional binder that supports the Q1.c
+derivation and the substantive Q3--Q7 + P1--P5 chain.
+
+\textbf{Strategy-modifying finding (signature widening).}
+The iter-100 helper signature of
+\cref{lem:henselianPair-per-coord-polynomial-of-charpoly-descent}
+must be widened to add the carrier
+\[
+h_{g'\mathrm{unit}}\,:\,\mathrm{IsUnit}\,(g.\mathrm{derivative}.\mathrm{eval}\,b_0)
+\quad\text{(unit in } B\text{).}
+\]
+This carrier is \emph{already in scope at the outer descent
+boundary}: the consumer
+\cref{lem:henselianPair-l3c-root-descent-from-mAB2} (Lean
+\texttt{exists\_root\_descent\_from\_mAB2}, signature at the
+\texttt{(h\_unit : IsUnit (g.derivative.eval b\_0))} binder)
+receives $h_{g'\mathrm{unit}}$ from its own consumer
+$\mathrm{HenselianLocalRing}.\mathrm{is\_henselian}$-style
+caller. The iter-080 refactor inadvertently dropped
+$h_{g'\mathrm{unit}}$ at the
+\texttt{\_charpoly\_bound} $\to$ \texttt{\_charpoly\_multiples}
+$\to$ \texttt{per\_coord\_polynomial\_of\_charpoly\_descent}
+chain (three intermediate signatures lose it). The iter-102+
+refactor must re-thread $h_{g'\mathrm{unit}}$ through these
+three signatures so that the helper has the carrier in scope to
+power Q1.c. \emph{No new mathematical content is introduced} —
+the carrier is the standard étale hypothesis, already used at
+\cref{lem:henselianPair-l3c-per-coord-hensel-polynomial}
+(Lean L1076) for the same purpose. The mod-$\mathfrak m_A \cdot
+B$ residue version
+($\mathrm{IsUnit}\,(\mathrm{Ideal.Quotient.mk}\,(\mathfrak m_A
+\cdot B)\,(g'(b_0)))$) is also acceptable as the carrier; the
+strong form is preferred because it matches the outer chain
+verbatim (no transport needed across the
+\texttt{\_charpoly\_bound} boundary).
+
+\textbf{Step Q2.} \emph{Cramer reformulation of one Newton step
+into an exact $A$-identity.}
+The Newton-step Taylor identity for $r_d \to r_{d+1}$
+(\cref{lem:henselianPair-polynomial-eval-taylor-residual-pow} at
+base $b_0 + r_d$ and direction
+$\Delta_d := r_{d+1} - r_d \in (\mathfrak m_A \cdot B)^{d+1}$)
+gives, after basis-projection via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis},
+an exact $A$-identity at each coordinate $i$:
+\[
+\alpha^{(\mathrm{Hi})}_0(i)
+\;=\;
+\alpha_i \;+\; \sum_j M_{ij}\,\bigl(\gamma_{d+1}(j) -
+\gamma_d(j)\bigr) \;+\; \rho_0(i),
+\]
+where the combined residual $\rho_0(i) \in \mathfrak m_A^{d+2}$
+is the $i$-th basis-coordinate of the sum of two contributions:
+\begin{itemize}
+\item the \emph{matrix-base-change correction} $\mu_0 :=
+\bigl(g'(b_0 + r_d) - g'(b_0)\bigr) \cdot \Delta_d$, lying in
+$(\mathfrak m_A \cdot B)^{d+2}$ — because $r_d \in (\mathfrak
+m_A \cdot B)^1$ (the in-scope strongest accumulated bound; see
+the next paragraph), so $g'(b_0 + r_d) - g'(b_0) \in \mathfrak
+m_A \cdot B$, multiplied by $\Delta_d \in (\mathfrak m_A
+B)^{d+1}$ gives $(\mathfrak m_A B)^{d+2}$; the basis-coordinate
+projection $\mu_0(i)$ lies in $\mathfrak m_A^{d+2}$;
+\item the \emph{higher-order Taylor residual} $\varepsilon_0$,
+the basis-coordinate of the Taylor residual at $n := 2(d+1) - 1$,
+lying in $\mathfrak m_A^{2(d+1)}$.
+\end{itemize}
+The combined bound is the minimum of the two band exponents,
+$\min(d+2,\, 2(d+1)) = d+2$ for all $d \ge 0$. The
+$\mathrm{algebraMap}$-form follows by injectivity of
+$\mathrm{algebraMap}\,A\,B$ on free $A$-modules with the chosen
+basis, i.e.\ $\mathrm{Fintype.linearIndependent\_iff}$ applied to
+the basis $\mathrm{hlin}$.
+
+\emph{Why the accumulated bound is $(\mathfrak m_A \cdot B)^1$.}
+The frozen carriers $h_{\gamma\,\mathrm{diff}}$ give the
+\emph{increment} membership $\gamma_{n+1}(i) - \gamma_n(i) \in
+\mathfrak m_A^{n+1}$, hence $r_{n+1} - r_n \in (\mathfrak m_A
+\cdot B)^{n+1}$. But the accumulated $r_d = \sum_{j < d} (r_{j+1}
+- r_j)$ inherits only the \emph{minimum} of these powers, namely
+$(\mathfrak m_A \cdot B)^1$, since the first increment $r_1 - r_0
+= r_1$ already only lies in $(\mathfrak m_A \cdot B)^1$. This is
+why the matrix-base-change correction term contributes at band
+$d + 2 = 1 + (d+1)$, not the naive $2(d+1)$.
+
+Note the use of the matrix $M$ \emph{at the base point $b_0$},
+not $b_0 + r_d$: the matrix-base-change correction $\mu_0$ above
+absorbs the gap.
+
+\textbf{Step Q3.} \emph{Multiply by the adjugate row.}
+Apply the $i$-th row of $\mathrm{adj}(M)$ to the Q2 identity
+(viewed as a $k$-vector in $\alpha^{(\mathrm{Hi})}_0$, $\alpha$,
+and $\Delta_d$-coords). By the adjugate identity (Step Q1),
+$\sum_l \mathrm{adj}(M)_{il}\,M_{lj} = \det(M)\,\delta_{ij}$, so
+\[
+\sum_l \mathrm{adj}(M)_{il}\,\bigl(\alpha^{(\mathrm{Hi})}_0(l)
+- \alpha_l - \rho_0(l)\bigr)
+\;=\;
+\det(M)\,\bigl(\gamma_{d+1}(i) - \gamma_d(i)\bigr).
+\]
+Rearrange:
+\[
+\det(M)\,\bigl(\gamma_{d+1}(i) - \gamma_d(i)\bigr)
+\;=\;
+\sum_l \mathrm{adj}(M)_{il}\,\alpha^{(\mathrm{Hi})}_0(l)
+\;-\; \sum_l \mathrm{adj}(M)_{il}\,\alpha_l
+\;-\; \sum_l \mathrm{adj}(M)_{il}\,\rho_0(l).
+\]
+This is an \emph{exact} identity in $A$, courtesy of the adjugate.
+
+\textbf{Step Q4.} \emph{Iterate Steps Q2--Q3 at level $m$
+(Strategy B: single matrix at $b_0$).}
+Generalise the level-$0$ Q2--Q3 chain to the level-$m$ Newton
+step $r_{d+m} \to r_{d+m+1}$, \emph{reusing the same matrix
+$M = M_{g'(b_0)}$ at every level} (no level-indexed matrix
+$M^{(m)}$ is introduced). The Taylor identity
+\cref{lem:henselianPair-polynomial-eval-taylor-residual-pow} at
+base $b_0 + r_{d+m}$ and direction
+$\Delta_{d+m} := r_{d+m+1} - r_{d+m} \in (\mathfrak m_A \cdot
+B)^{d+m+1}$, basis-projected via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis},
+gives the \emph{level-$m$ per-step Q2 identity} at each
+coordinate $i$:
+\[
+\eta_m(i)
+\;=\;
+\sum_j M_{ij}\,\bigl(\gamma_{d+m+1}(j) - \gamma_{d+m}(j)\bigr)
+\;+\; \mu_m(i),
+\]
+where
+\begin{itemize}
+\item $\eta_m(i)$ is the basis-coordinate witness of the
+linearised Newton step $g'(b_0 + r_{d+m}) \cdot \Delta_{d+m}$
+(banked iter-087 inside the helper body via
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis};
+membership $\eta_m(i) \in \mathfrak m_A^{d+m+1}$). It controls
+the per-step Hensel increment via the basis-direction recurrence
+$\alpha^{(\mathrm{Hi})}_{m+1}(i) - \alpha^{(\mathrm{Hi})}_m(i) =
+\eta_{m+1}(i) + \varepsilon_m(i)$ banked by
+$h_{\alpha\mathrm{\_succ\_rec}}$ (level-$0$ form
+$\alpha^{(\mathrm{Hi})}_0(i) - \alpha_i = \eta_0(i) +
+\varepsilon_0(i)$ banked by $h_{\alpha 0\mathrm{\_rec}}$);
+\item the \emph{level-$m$ matrix-base-change correction}
+$\mu_m := \bigl(g'(b_0 + r_{d+m}) - g'(b_0)\bigr) \cdot
+\Delta_{d+m}$ lies in $(\mathfrak m_A \cdot B)^{d+m+2}$: by the
+same min-of-bands reasoning as the level-$0$ accumulated bound
+above (\emph{Why the accumulated bound is $(\mathfrak m_A \cdot
+B)^1$}, the first increment $r_1 - r_0 = r_1$ caps the band at
+$1$), the accumulated $r_{d+m}$ still lies only in $(\mathfrak
+m_A \cdot B)^1$, so $g'(b_0 + r_{d+m}) - g'(b_0) \in \mathfrak
+m_A \cdot B$, multiplied by $\Delta_{d+m} \in (\mathfrak m_A
+B)^{d+m+1}$ gives $(\mathfrak m_A B)^{d+m+2}$; the
+basis-coordinate projection $\mu_m(i)$ lies in $\mathfrak
+m_A^{d+m+2}$;
+\item the \emph{higher-order Taylor residual} $\varepsilon_m$,
+the basis-coordinate of the Taylor residual at $n := 2(d+m+1) -
+1$, lies in $\mathfrak m_A^{2(d+m+1)}$, and is absorbed into
+$\eta_m$ on the left-hand side of the per-step identity above
+(it reappears in the cumulative form only after Q5
+telescoping).
+\end{itemize}
+The combined band of $\mu_m$ and $\varepsilon_m$,
+$\min(d+m+2,\, 2(d+m+1)) = d+m+2$ for all $d, m \ge 0$, still
+governs the downstream residual size in the cumulative form;
+the level-$m$ residual band exactly matches the level-$0$ band
+shifted by $m$.
+
+\emph{Cumulative form, recovered by telescoping.} The chapter's
+familiar cumulative shape
+$\alpha^{(\mathrm{Hi})}_m(i) = \alpha_i + \sum_{j \le m}
+\eta_j(i) + \varepsilon_0(i) + \sum_{j < m} \varepsilon_j(i)$
+is obtained by iterating the $\alpha$-recurrence and is banked
+in the helper body as $h_{\mathrm{tele}}$; it is the input to
+Step Q5 below. The per-step display above is the substantive
+identity that gets summed: the cumulative form
+$\alpha^{(\mathrm{Hi})}_m(i) = \alpha_i + \sum_j M_{ij}(\cdot)
++ \rho_m(i)$ used at level $m = 0$ does \emph{not} hold for
+$m \ge 1$ with a single increment $\gamma_{d+m+1} - \gamma_{d+m}$
+on the right; one would need the full telescoped sum
+$\sum_{j \le m} M(\gamma_{d+j+1} - \gamma_{d+j})$ plus a
+combined residual $\rho_m = \mu_m + \varepsilon_m$ accumulated
+across all $j \le m$. The per-step form is precisely what
+sidesteps this accumulation.
+
+Multiplying the level-$m$ per-step Q2 identity by the $i$-th
+row of $\mathrm{adj}(M)$ and collapsing via the \emph{same}
+adjugate identity $\mathrm{adj}(M) \cdot M = \det(M) \cdot
+\mathbf{1}_k$ from Step Q1.b (no level-dependence) yields the
+\emph{level-$m$ per-step Q3 identity}:
+\[
+\det(M)\,\bigl(\gamma_{d+m+1}(i) - \gamma_{d+m}(i)\bigr)
+\;=\;
+\sum_l \mathrm{adj}(M)_{il}\,\bigl(\eta_m(l) - \mu_m(l)\bigr).
+\]
+This is an \emph{exact} $A$-identity (courtesy of the adjugate),
+with uniform leading coefficient $\det(M)$ at every level. Note
+the absence of any $\alpha_l$ and $\varepsilon_m(l)$ terms on
+the right-hand side: in contrast with the cumulative Q3 form,
+the $\sum_l \mathrm{adj}(M)_{il}\,\alpha_l$ summand does not
+appear in the per-step subtraction
+$\alpha^{(\mathrm{Hi})}_{m+1} - \alpha^{(\mathrm{Hi})}_m$ (the
+$\alpha$-terms cancel), and the Taylor residual $\varepsilon_m$
+is absorbed into $\eta_m$ via the per-step $\alpha$-recurrence
+$h_{\alpha\mathrm{\_succ\_rec}}$ (so the per-step form has
+$\eta_m - \mu_m$ in place of the cumulative
+$\alpha^{(\mathrm{Hi})}_m - \alpha - \rho_m$).
+
+\emph{Level-$0$ specialisation.} At $m = 0$ the per-step Q3
+identity reads
+$\det(M)(\gamma_{d+1}(i) - \gamma_d(i)) = \sum_l
+\mathrm{adj}(M)_{il}(\eta_0(l) - \mu_0(l))$, which is exactly
+the form to which the iter-103 cumulative level-$0$ Q3 identity
+$\det(M)(\gamma_{d+1}(i) - \gamma_d(i)) = \sum_l
+\mathrm{adj}(M)_{il}(\alpha^{(\mathrm{Hi})}_0(l) - \alpha_l -
+\rho_0(l))$ collapses upon substituting
+$\alpha^{(\mathrm{Hi})}_0(l) - \alpha_l = \eta_0(l) +
+\varepsilon_0(l)$ (from $h_{\alpha 0\mathrm{\_rec}}$) and
+$\rho_0(l) = \mu_0(l) + \varepsilon_0(l)$: the
+$\varepsilon_0(l)$ terms cancel and the cumulative Step Q3
+prose at level $0$ is the per-step form here.
+
+\emph{No determinant bridge needed.} Because $M$ is reused
+verbatim across levels, no congruence
+$\det(M^{(m)}) \equiv \det(M) \pmod{\mathfrak m_A}$ — and in
+particular no \texttt{Matrix.det\_congr\_mod\_ideal}-style
+Lipschitz expansion of $\det$ — is required. The level-$m$
+matrix-base-change gap is absorbed by $\mu_m$ exactly as $\mu_0$
+absorbs it at level $0$.
+
+% NOTE (carrier inventory for the helper body, banked iter-104,
+% consumed iter-105+). Unicode names match
+% Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean:
+%   μm m i        : the level-$m$ matrix-base-change correction
+%                   (defined via `choose ... using hμm_decomp`);
+%   hμm_mem m i   : μm m i ∈ mA^(d+m+2);
+%   hμm_eq m      : basis-projection equation for μm m;
+%   hηm_decomp_A m i : the per-step Q2 identity above
+%                   (η m i = ∑_j M_{ij}(γ(d+m+1) j − γ(d+m) j)
+%                   + μm m i);
+%   hQ3_lvl_succ m i : the per-step Q3 identity for the Newton
+%                   step at level (m+1), reading
+%                   M.det · (γ(d+m+2) i − γ(d+m+1) i) = ∑_l
+%                   adjM_{i,l} · (αHi(m+1) l − αHi m l −
+%                   (μm(m+1) l + ε m l));
+%   hTele_Q3_lvl_zero i : the level-$0$ telescoped form
+%                   M.det · (γ(d+1) i − γ d i) = ∑_l adjM_{i,l} ·
+%                   (η 0 l − μ0 l) (substantively the per-step
+%                   form above at $m = 0$, banked iter-104).
+% No separate $\rho_m$ membership carrier is needed: the iter-104
+% Lean inlines the joint $\mu_m + \varepsilon_m$ inside
+% hQ3_lvl_succ. The single matrix $M = M_{g'(b_0)}$ stays in
+% scope unchanged across levels; only the base point
+% $b_0 + r_{d+m}$, the direction $\Delta_{d+m}$, the per-step
+% η m, and the cumulative iterate $\alpha^{(\mathrm{Hi})}_m$
+% vary with $m$.
+
+\textbf{Step Q5.} \emph{Telescope using $h_{\mathrm{tele}}$.}
+The telescoping identity
+\[
+\alpha^{(\mathrm{Hi})}_m(i)
+\;=\; \alpha_i + \sum_{j \le m} \eta_j(i) + \varepsilon_0(i)
++ \sum_{j < m} \varepsilon_j(i)
+\]
+(banked sorry-free by $h_{\mathrm{tele}}$ at iter-087 inside the
+parent's body) lets us rewrite the right-hand sides of the
+per-step Q3 identity by substituting the cumulative formula for
+$\alpha^{(\mathrm{Hi})}_{m+1}(l)$ and
+$\alpha^{(\mathrm{Hi})}_m(l)$ separately. The difference
+$\alpha^{(\mathrm{Hi})}_{m+1}(l) - \alpha^{(\mathrm{Hi})}_m(l) =
+\eta_{m+1}(l) + \varepsilon_m(l)$ collapses
+$\bigl(\alpha^{(\mathrm{Hi})}_{m+1}(l) -
+\alpha^{(\mathrm{Hi})}_m(l)\bigr) - \bigl(\mu_{m+1}(l) +
+\varepsilon_m(l)\bigr)$ to $\eta_{m+1}(l) - \mu_{m+1}(l)$; the
+$\varepsilon_m$-summand on the right cancels the
+$\varepsilon_m$-contribution accrued via $h_{\mathrm{tele}}$.
+Reindexing $m + 1 \rightsquigarrow m$, this yields the
+\emph{level-$m$ telescoped Q3 identity} (the iter-105
+\texttt{hTele\_Q3\_lvl\_succ} carrier banked uniformly across
+$m \ge 0$ in the helper body):
+\[
+\det(M)\,\bigl(\gamma_{d+m+1}(i) - \gamma_{d+m}(i)\bigr)
+\;=\;
+\sum_l \mathrm{adj}(M)_{il}\,\bigl(\eta_m(l) - \mu_m(l)\bigr).
+\]
+At $m = 0$ this is the iter-104 \texttt{hTele\_Q3\_lvl\_zero}
+specialisation banked inside the helper body; for $m \ge 1$ it
+is obtained by substituting $h_{\mathrm{tele}}$ into
+\texttt{hQ3\_lvl\_succ}\,$(m-1)$, with the $\varepsilon_{m-1}$
+cancellation just described. Because Strategy B uses the
+\emph{same} matrix $M$ at $b_0$ (hence the same
+$\mathrm{adj}(M)$ and $\det(M)$) at every level, this
+rewriting really does involve only $\alpha$, $\eta$,
+$\varepsilon$, $\mu$, and $\mathrm{adj}(M)$ — no level-indexed
+matrix $M^{(m)}$ or its adjugate appears anywhere in the
+telescope.
+
+\textbf{Step Q5.b.} \emph{Per-level gain-by-one for the
+$\gamma$-differences.} The telescoped Q5-general identity
+\[
+\det(M)\,\bigl(\gamma_{d+m+1}(i) - \gamma_{d+m}(i)\bigr)
+\;=\;
+\sum_l \mathrm{adj}(M)_{il}\,\bigl(\eta_{m+1}(l)
+- \mu_{m+1}(l)\bigr)
+\]
+has every right-hand side summand controlled in
+$\mathfrak m_A^{d+m+2}$: by the iter-103 band carriers,
+$\eta_{m+1}(l) \in \mathfrak m_A^{d+m+2}$
+($h_{\eta\,\mathrm{mem}}\,(m+1)\,l$) and
+$\mu_{m+1}(l) \in \mathfrak m_A^{d+m+3} \subseteq
+\mathfrak m_A^{d+m+2}$ ($h_{\mu m\,\mathrm{mem}}\,(m+1)\,l$,
+absorbed by ideal-power monotonicity). Hence
+\[
+\det(M)\,\bigl(\gamma_{d+m+1}(i) - \gamma_{d+m}(i)\bigr)
+\;\in\; \mathfrak m_A^{d+m+2}.
+\]
+Combined with $\mathrm{IsUnit}\,(\det(M))$ (the
+\texttt{hdet\_unit} carrier obtained from
+$\mathrm{IsUnit}\,(g'(b_0))$ via
+\cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}),
+multiplication by the inverse unit transfers the membership to
+the difference itself:
+\[
+\gamma_{d+m+1}(i) - \gamma_{d+m}(i) \;\in\;
+\mathfrak m_A^{d+m+2}.
+\]
+This is \emph{one band stronger} than the input
+$h_{\gamma\,\mathrm{diff}}$, which a priori only gives
+$\gamma_{n+1}(i) - \gamma_n(i) \in \mathfrak m_A^{n+1}$ at
+$n = d + m + 1$, i.e.\ $\mathfrak m_A^{d+m+2}$ \emph{minus one
+band}. The gain comes purely from inverting the uniform
+$\det(M)$ on a level-$m$ identity whose RHS already lies one
+band deeper than the LHS would dictate by $h_{\gamma\,\mathrm{diff}}$
+alone.
+
+This per-level gain-by-one is the \emph{engine} of the
+C--H collapse: it forces the level-$m$ contributions to the
+formal telescope $\sum_{m \ge 0} (\gamma_{d+m+1} - \gamma_{d+m})$
+to lie in deeper and deeper ideal powers, so that when we
+compress the $r_1^{d+m}$ subterms via
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}, the
+contribution of level $m$ to the coefficient of $\alpha_i^{m+1}$
+in the resulting polynomial chain becomes \emph{exactly} an
+$A$-valued expression bounded by
+$\mathfrak m_A^{d+m+2 - (m+1)} = \mathfrak m_A^{d+1}$. The
+sum-of-levels then telescopes to a finite polynomial in
+$\alpha_i$ (Step Q6 below) because levels $m \ge d$ contribute
+only to $\alpha_i^{j}$ for $j \ge d+1$, which collapse via
+C--H back into the levels-$0$-through-$d-1$ slots (Step P5
+below). The Lean side banks this gain-by-one as
+\texttt{hγ\_diff\_gain} inside the helper body.
+
+\textbf{Step Q6.} \emph{Use C--H expansion to bound polynomial
+degree.} The increments $\gamma_{d+m+1}(j) - \gamma_{d+m}(j)$ are
+extracted via the basis projection of $\Delta_{d+m} \in
+(\mathfrak m_A B)^{d+m+1}$. Their controlled membership lets us
+substitute the C--H power expansion
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}: by
+expressing the level-$(d+m+1)$ Newton increment as an $A$-linear
+combination of $\gamma_1(\cdot), \ldots, \gamma_d(\cdot)$-products
+weighted by $c^{(m)}_j$ (with $c^{(m)}_j \in
+\mathfrak m_A^{d+m-j}$), the infinitely-many level identities of
+Steps Q4--Q5 collapse to a \emph{finite} $d$-step polynomial
+chain in $A[\alpha_i]$. The degree bound for the resulting
+polynomial in $\alpha_i$ is $\le d + 1$. The C--H coefficients
+$c^{\mathrm{CH}}_*$ here are extracted from the characteristic
+polynomial of the \emph{single} matrix $M$ at $b_0$ (this is the
+iter-103 \texttt{cCH} carrier, see
+\cref{lem:henselianPair-cayley-hamilton-power-expansion} applied
+to $M = M_{g'(b_0)}$ — there is no level-indexed matrix in scope,
+so the C--H power-expansion step is independent of $m$).
+
+\textbf{Step Q7.} \emph{Define $q_i$.}
+Collect the finite polynomial chain produced by Steps Q3, Q5,
+Q5.b, Q6 and isolate the coefficient of $\alpha_i^{\,j}$ for
+each $j = 0, \ldots, d - 1$. Concretely, define $q_i$ by a
+finite $A$-linear assembly indexed by Newton level
+$m \in [0, M^*]$ (with $M^* = d - 1$, see Step P5 below) and
+polynomial degree $j \in [0, d - 1]$:
+\[
+q_i(X) \;:=\;
+\det(M)
+\;-\; X \cdot \!\!\!\sum_{j = 0}^{d-1}\!\!
+\kappa_{i,j} \cdot X^{j},
+\quad\text{where}\quad
+\kappa_{i,j} \;:=\; \sum_{m = 0}^{d - 1} \sum_l
+\mathrm{adj}(M)_{il}\,c^{\mathrm{CH}}_m(j)\,\xi_{m,j,l},
+\]
+and where:
+\begin{itemize}
+\item $c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$ is the
+iter-103 banked level-$m$ C--H coefficient (\texttt{cCH m j} in
+Lean) that fulfils the level-$m$ C--H identity
+$r_1^{d+m} = \sum_{j < d} \mathrm{algebraMap}(c^{\mathrm{CH}}_m(j))
+\,r_1^{\,j}$ (\texttt{hcCH\_eq m}).
+\item $\xi_{m,j,l} \in A$ is the \emph{basis-projection structure
+constant} obtained as the coefficient of $\alpha_i^{j+1}$ inside
+the $l$-th $A$-basis component of the level-$m$ packet
+$\eta_m(l) - \mu_{m+1}(l) - \rho_m(l)$ (more precisely: of the
+$r_n$-vs-$r_1$ bridged polynomial form
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp} applied
+to that packet, then reduced via $h_{cCH\,\mathrm{eq}}$). Its
+existence and concrete form are banked as a typed sub-helper at
+\cref{def:henselianPair-kappa-coefficient} below.
+\end{itemize}
+The level cap $m \le d - 1$ is justified in Step P5: levels
+$m \ge d$ contribute only to $\alpha_i^{j}$ with $j \ge d + 1$,
+which collapse back into the levels-$0$-through-$d-1$ slots by
+one more application of $h_{cCH\,\mathrm{eq}}$ at $r_1^{d+m}$,
+without enlarging the polynomial degree. The leading coefficient
+at $X^{d - 1}$ of the bracket inside $q_i$ matches the
+$c^{\mathrm{CH}}_0(d-1)$ term of the level-$0$ C--H expansion (up
+to sign and the adjugate prefactor), so $q_i$ has degree
+$\le d - 1$, and $p_i := X \cdot q_i$ has degree
+$\le d$. Furthermore:
+\[
+q_i.\mathrm{eval}\,0 \;=\; \det(M)
+\quad\Longrightarrow\quad
+\overline{q_i.\mathrm{eval}\,\alpha_i}
+\;=\; \overline{\det(M)} \pmod{\mathfrak m_A}
+\]
+(since each $\kappa_{i,j}\,\alpha_i^{j+1}$ for $j \ge 0$ lies in
+$\mathfrak m_A^{d+1} \subseteq \mathfrak m_A$ — the band comes
+from $c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d+m-j}$ multiplied
+by $\alpha_i^{j+1} \in \mathfrak m_A^{j+1}$).
+
+\begin{definition}
+\label{def:henselianPair-kappa-coefficient}
+\lean{Algebra.Etale.kappaCoefficient}
+\uses{lem:henselianPair-cayley-hamilton-power-expansion,
+      lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp}
+[Per-coordinate polynomial coefficient $\kappa_{i,j}$
+(iter-108 named sub-helper).]
+With the route-(A) carriers from
+\cref{lem:henselianPair-per-coord-polynomial-of-charpoly-descent}
+plus the iter-107 banked $\mathrm{adj}(M)$,
+$c^{\mathrm{CH}}_m$, $\eta_m$, $\mu_m$, $\rho_m$, and the
+$r_n$-vs-$r_1$ bridge structure constants
+$\xi_{m,j,l} \in A$ in scope, $\kappa_{i,j} \in A$ is the
+\emph{level-$m$-aggregated coefficient}
+\[
+\kappa_{i,j} \;:=\;
+\sum_{m = 0}^{d - 1} \sum_l
+\mathrm{adj}(M)_{il}\,c^{\mathrm{CH}}_m(j)\,\xi_{m,j,l},
+\]
+for $i \in \mathrm{Fin}\,k$ and $j \in \{0, \ldots, d - 1\}$.
+
+\paragraph{Pinned extraction recipe for $\xi_{m,j,l} \in A$
+(Route B; concrete extraction).} The structure constants
+$\xi_{m,j,l} \in A$ are \emph{not} given by an
+existence-quantified clause and a uniqueness argument; instead
+they are extracted concretely from the bridge witness of
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp} composed
+with the C--H expansion of
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}, as
+follows.
+
+\begin{enumerate}
+\item \emph{Basis-projection linear functional.} Fix the chosen
+$A$-basis $(\mathrm{basis}(l))_{l < k}$ of $B$ over $A$ provided
+by $(h_{\mathrm{span}}, h_{\mathrm{lin}})$. For each $l < k$ let
+\[
+\mathrm{BasisProj}_l : B \longrightarrow A,
+\qquad
+\mathrm{BasisProj}_l \Bigl(\sum_{l' < k}
+\mathrm{algebraMap}(a_{l'})\,\mathrm{basis}(l')\Bigr) := a_l,
+\]
+denote the $l$-th basis-coordinate functional (an $A$-linear
+map $B \to A$; the prover may unbundle the
+$A$-linearity to a plain function $B \to A$ if more convenient
+at the formalisation level).
+
+\item \emph{Level-$m$ Newton increment.} Define the
+per-step packet at level $m$ by
+\[
+\Delta_m(l) \;:=\; \eta_m(l) - \mu_{m+1}(l) - \rho_m(l) \;\in\; B,
+\qquad m \ge 0,\ l < k,
+\]
+using the route-(A) carriers $(\eta_m, \mu_m, \rho_m)$ already
+banked at the parent level. This is the level-$m$ instance of
+the Q5.b ``gain-by-one'' per-step packet.
+
+\item \emph{C--H collapse of the $r_1^{d+m}$ slot.} The packet
+$\Delta_m(l)$, viewed through the iterated $\gamma$-recursion
+and the bridge \cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp},
+is an $A$-polynomial in $r_1$. The $r_1$-monomials of degree
+$\ge d + m$ are folded down via the level-$m$ C--H identity
+$h_{cCH\,\mathrm{eq}}\,m$, which expresses
+$r_1^{d+m} = \sum_{j < d} \mathrm{algebraMap}\bigl(c^{\mathrm{CH}}_m(j)\bigr)\, r_1^{j}$
+inside $B$ and propagates the $\mathfrak m_A$-band depth via
+$c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$. After
+this fold, $\Delta_m(l)$ lies in the free $A$-submodule of
+$B$ spanned by $\{r_1^{j} : 0 \le j < d\}$.
+
+\item \emph{Coefficient extraction at the $r_1^{j+1}$ slot.}
+For each $j \in \{0, \ldots, d - 1\}$, define
+\[
+\xi_{m,j,l} \;:=\; \bigl[\text{coefficient of } r_1^{j+1}\bigr]
+\Bigl(\mathrm{BasisProj}_l(\Delta_m(l)) \text{ after } h_{cCH\,\mathrm{eq}}\,m\Bigr)
+\;\in\; A,
+\]
+i.e.\ $\xi_{m,j,l}$ is the $A$-coefficient of $r_1^{j+1}$ in
+the C--H-reduced expansion of the $l$-th basis-projection of
+$\Delta_m(l)$. By the bridge lemma's witness $\tau_{n, \cdot, \cdot}$
+(the $A$-tuple constructed in
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp}) this
+extraction is a finite $A$-linear combination of the
+$\tau_{m+1, \cdot, l}$ entries with rational coefficients arising
+from the basis structure constants $\xi_{j,l}$ of
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp} ---
+i.e.\ a concrete, computable formula.
+
+\item \emph{Membership $\xi_{m,j,l} \in A$ (not in
+$\mathfrak m_A^{\bullet}$).} The structure constants $\xi_{m,j,l}$
+live in $A$ as plain $A$-elements; their $\mathfrak m_A$-band
+depth is \emph{not} part of their definition. The
+$\mathfrak m_A$-power that controls the final
+$\kappa_{i,j} \alpha_i^{j+1}$ term is borne entirely by the
+factor $c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$
+in the $\kappa$ formula, not by $\xi_{m,j,l}$. The bridge
+lemma's depth carrier
+$\tau_{n,j,l} \in \mathfrak m_A^{j + 1}$ is consumed when
+$\Delta_m(l)$ is shown to be $A$-polynomial in $r_1$, not when
+its $r_1^{j+1}$ slot is read off.
+\end{enumerate}
+
+\paragraph{Implementation hint for the Lean prover.} The
+recipe above lets the prover write a concrete (Lean) signature
+\[
+\xi : \mathbb{N} \to \mathbb{N} \to \mathrm{Fin}\,k \to A,
+\qquad
+\kappa_{i,j} = \sum_{m < d} \sum_l
+\mathrm{adj}(M)_{il}\,c^{\mathrm{CH}}_m(j)\,\xi(m, j, l),
+\]
+with $\xi$ supplied as a separate input parameter (constructed
+once-and-for-all from the bridge witness $\tau$ inside the parent
+helper's body). This avoids any appeal to
+$\mathrm{Classical.choice}$ on the $\kappa$ definition itself:
+$\kappa$ is a plain $A$-linear combination of inputs already in
+scope, $\xi$ is concrete data extracted by the recipe of
+items (1)--(4), and the only existential step (the bridge
+lemma's $\tau$) is hidden inside the supplier of $\xi$.
+
+\paragraph{Membership $\kappa_{i,j} \in \mathfrak m_A^{d}$.}
+The membership $\kappa_{i,j} \in \mathfrak m_A^{d}$ follows from
+$c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$, the
+$A$-finiteness of the sum, and absorption of the
+$\mathrm{adj}(M)_{il}\,\xi_{m,j,l}$ structure constants (no
+ideal-power loss). The level cap $m \le d - 1$ is the
+P5 stabilisation $M^* = d - 1$ (see Step P5 below).
+\end{definition}
+
+\paragraph{Proof sketch of $(X \cdot q_i).\mathrm{eval}\,\alpha_i
+= 0$ in $A$ (the substantive \texttt{hpCoord\_eval\_α} carrier).}
+With $q_i$ as above, the claim $\alpha_i \cdot
+q_i.\mathrm{eval}\,\alpha_i = 0$ in $A$ chains as follows.
+
+\textbf{P1.} \emph{Start from the level-$0$ Newton identity
+multiplied by adjugate.} By Steps Q2--Q3,
+\[
+\det(M)\,\bigl(\gamma_{d+1}(i) - \gamma_d(i)\bigr)
+\;+\;
+\sum_l \mathrm{adj}(M)_{il}\,\alpha_l
+\;=\;
+\sum_l \mathrm{adj}(M)_{il}\,\alpha^{(\mathrm{Hi})}_0(l)
+\;-\; \sum_l \mathrm{adj}(M)_{il}\,\rho_0(l).
+\]
+
+\textbf{P2.} \emph{Telescope via $h_{\mathrm{tele}}$.} Substitute
+$\alpha^{(\mathrm{Hi})}_0(l) = \alpha_l + \eta_0(l) +
+\varepsilon_0(l)$ (the $m = 0$ instance of the telescoping
+identity, equivalently the level-$0$ per-coord recurrence
+$h\alpha_0^{\mathrm{rec}}$):
+\[
+\det(M)\,\bigl(\gamma_{d+1}(i) - \gamma_d(i)\bigr)
+\;=\;
+\sum_l \mathrm{adj}(M)_{il}\,\bigl(\eta_0(l) + \varepsilon_0(l)
+- \rho_0(l)\bigr).
+\]
+
+\textbf{P3.} \emph{Iterate over $m$ using $h\alpha_{\mathrm{succ}}^{\mathrm{rec}}$.}
+By Step Q4 (Strategy B), the symmetric calculation at each level
+$m \ge 1$ produces an analogous identity for
+$\det(M)\,(\gamma_{d+m+1}(i) - \gamma_{d+m}(i))$ in terms of the
+level-$m$ data $(\eta_m, \varepsilon_m, \rho_m)$, with the
+\emph{same} uniform leading coefficient $\det(M)$ at every level
+(no level-indexed $M^{(m)}$ appears, and no
+$\det \pmod{\mathfrak m_A}$ congruence is needed).
+
+\textbf{P4.} \emph{Sum the telescope and apply C--H expansion.}
+By the chain $r_{d+1} - r_d, r_{d+2} - r_{d+1}, \ldots$
+re-assembling to give $r_{d+m+1} - r_d$, summing the level
+identities of P3 gives
+\[
+\det(M)\,\bigl(\gamma_{d+m+1}(i) - \gamma_d(i)\bigr)
+\;=\;
+\sum_{j=0}^{m}\sum_l \mathrm{adj}(M)_{il}\,\bigl(\eta_j(l)
++ \varepsilon_j(l) - \rho_j(l)\bigr).
+\]
+Apply \cref{lem:henselianPair-cayley-hamilton-power-expansion}
+to compress the $r_1^{d+m}$ subterms appearing in $\eta_j,
+\varepsilon_j$ when these are expanded through the
+$\gamma$-recursion: at sufficiently large $m$, the right-hand side
+collapses to a finite polynomial in $\alpha_i$ (with all other
+indices summed out) of degree $\le d$, with coefficients in
+A.
+
+\textbf{P5.} \emph{Identify $\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i$
+with the stabilised identity at $m = M^*$.} The construction of
+$q_i$ in Step Q7 is exactly the polynomial-rearranged form of
+the right-hand-side of P4 minus $\det(M) \cdot \alpha_i$. The
+formal $m \to \infty$ limit is a notational device only — the
+right-hand side \emph{stabilises} at a concrete finite level
+\[
+M^* \;:=\; d - 1,
+\]
+not because of any convergence assumption on $A$, but
+mechanically by the C--H collapse: $q_i$ has degree $\le d - 1$
+in $X$, so its $A$-coefficients are determined by the
+$\alpha_i^0, \alpha_i^1, \ldots, \alpha_i^{d-1}$ slots, and each
+slot $\alpha_i^{j+1}$ ($j = 0, \ldots, d - 1$) accumulates a
+contribution from levels $m = 0, 1, \ldots, d - 1$ via the
+$\xi_{m,j,l}$ structure constants of
+\cref{def:henselianPair-kappa-coefficient}. Concretely:
+
+\emph{Reason for $M^* = d - 1$.} At level $m$, the per-step
+packet $\eta_m(l) - \mu_{m+1}(l) - \rho_m(l)$, after applying
+the $r_n$-vs-$r_1$ bridge
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp} and one
+application of the level-$m$ C--H identity
+$h_{cCH\,\mathrm{eq}}\,m$ on the resulting $r_1^{d+m}$
+subterms, contributes \emph{only} to the $\alpha_i^{m+1}$ slot
+of the final polynomial (the gain-by-one of Step Q5.b
+quantifies the depth in $\mathfrak m_A$ for the resulting
+$A$-coefficient). Hence levels $m = 0, 1, \ldots, d - 1$ fill
+exactly the $X^1, X^2, \ldots, X^d$ slots of
+$p_i = X \cdot q_i$, and levels $m \ge d$ contribute only to
+$\alpha_i^{m+1}$ with $m + 1 \ge d + 1$; \emph{but} one
+additional application of $h_{cCH\,\mathrm{eq}}\,(m - d + 1)$
+on $r_1^{m + 1} = r_1^{d + (m - d + 1)}$ folds these
+$\alpha_i^{m+1}$ terms back into the levels-$0$-through-$d-1$
+slots, producing no new polynomial degree. Iterating this
+re-folding (a terminating finite procedure because each
+re-fold strictly decreases the C--H-level by $1$ until the
+result lies in degree $\le d - 1$) absorbs every level-$m$
+contribution for $m \ge d$ into the $m \le d - 1$ slots. Hence
+the polynomial assembly stabilises at $M^* = d - 1$.
+
+\emph{Identification with $\alpha_i \cdot q_i.\mathrm{eval}\,
+\alpha_i$.} The right-hand side of P4 at $m = M^* = d - 1$,
+after the C--H collapse and the $r_n$-vs-$r_1$ bridge
+identifications above, equals $\sum_{j = 0}^{d - 1}
+\kappa_{i,j} \alpha_i^{j+1}$ for $\kappa_{i,j}$ as in
+\cref{def:henselianPair-kappa-coefficient}. Subtracting
+$\det(M) \cdot \alpha_i$ from both sides of the level-$M^*$
+P4 identity and re-collecting $A$-coefficients yields
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i$ on the left and
+the matched RHS on the right; both sides also pick up an
+honest correction
+$\det(M)(\gamma_{d+M^*+1}(i) - \gamma_d(i))$ that lives in
+$\mathfrak m_A^{d+1}$ by Step Q5.b, and the resulting equality
+in $A$ is
+\[
+\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i \;=\; 0 \quad\text{in } A.
+\]
+
+\paragraph{Substantive open content.}
+The chain above is at pseudo-Lean granularity but contains one
+genuinely substantive step that warrants its own typed sub-helper:
+the \emph{C--H-collapse identification} of the formal
+$m \to \infty$ telescope with a finite polynomial in $\alpha_i$
+(Steps Q6 + P4). The collapse rests on
+\cref{lem:henselianPair-cayley-hamilton-power-expansion} and the
+identity $r_n^{d+m} = \sum_{j < d} \mathrm{algebraMap}(c^{(m)}_j)
+\,r_n^j$ \emph{when} $r_n$ is replaced by $r_1$; but $r_n$ for
+$n \ge 2$ is \emph{not} a power of $r_1$, so the substitution
+involves a further step of bridging $r_n$ to a polynomial
+expression in $r_1$ via the iterated $\gamma$-data and the
+structure-constant matrix of $B$ over $A$. This bridging step is
+the heart of the construction; iter-108 banks it as a named
+typed sub-helper
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp} (see
+below), with a typed \texttt{sorry} body that the iter-109+
+prover discharges as follows.
+
+\emph{Primary recommended proof path (γ-only induction).} The
+banked Lean signature of the bridge lemma takes only the
+$\gamma$-carriers (no $\eta, \varepsilon, h\delta_{\mathrm{mem}}$
+inputs). Accordingly the intended proof is a clean,
+$n$-independent witness
+\[
+\tau_{n,j,l} \;:=\; \gamma_{j+1}(l) - \gamma_j(l)
+\qquad (1 \le j \le n - 1,\ l < k),
+\]
+whose membership $\tau_{n,j,l} \in \mathfrak m_A^{j + 1}$
+reduces \emph{directly} to the route-(A) carrier
+$h_{\gamma\,\mathrm{diff}}\,j\,l$, with no further infrastructure
+required. The basis-projection telescope identity
+\[
+\mathrm{BasisProj}_l(r_n - r_1)
+\;=\; \sum_{j = 1}^{n - 1}\bigl(\gamma_{j+1}(l) - \gamma_j(l)\bigr)
+\;=\; \sum_{j = 1}^{n - 1}\tau_{n,j,l}
+\]
+then follows by a one-line induction on $n \ge 1$, using
+$\mathrm{Finset.sum\_Ico\_succ\_top}$ to peel off the
+$j = n - 1$ summand at the induction step, and using the
+$A$-basis-coordinate decomposition of $r_n$ (definition of $r_n$
+as $\sum_i \mathrm{algebraMap}(\gamma_n(i))\,\mathrm{basis}(i)$)
+plus $A$-linearity of $\mathrm{BasisProj}_l$ to identify each
+slot. This route is recommended because it (i) matches the
+iter-108-banked Lean signature exactly (no extra binders), and
+(ii) does not require routing $\eta, \varepsilon, h\delta_{\mathrm{mem}}$
+through additional intermediate helpers.
+
+\emph{Alternative phrasing (η,ε,hδ route).} The bridge can also
+be discharged by an inline finite induction over $n$ using the
+$\eta, \varepsilon$ data and $h\delta_{\mathrm{mem}}$; this
+route is consistent with the strategy and produces the same
+witness $\tau$, but requires widening the bridge lemma's
+signature with $\eta, \varepsilon, h\delta_{\mathrm{mem}}$ as
+binders. Use the γ-only path unless the η,ε route is needed
+for a downstream reason.
+
+\begin{lemma}
+\label{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp}
+\lean{Algebra.Etale.r_n_minus_r_1_in_gamma_finsupp}
+\uses{lem:henselianPair-cayley-hamilton-power-expansion}
+[$r_n$-vs-$r_1$ bridge via $\gamma$-finsupp (iter-108 named
+sub-helper).]
+With the route-(A) carriers
+$(\gamma, h_{\gamma\,\mathrm{zero}}, h_{\gamma\,\mathrm{mem}},
+h_{\gamma\,\mathrm{diff}})$, the basis $(\mathrm{basis}, h_{\mathrm{span}},
+h_{\mathrm{lin}})$ of $B$ over $A$, and the C--H coefficients
+$c^{\mathrm{CH}}_m$ from
+\cref{lem:henselianPair-cayley-hamilton-power-expansion} in
+scope, the level-$n$ Newton iterate $r_n :=
+\sum_{i} \mathrm{algebraMap}(\gamma_n(i)) \cdot \mathrm{basis}(i)
+\in B$ admits a finite $A$-linear expansion of the difference
+$r_n - r_1$ through the iterated $\gamma$-data and the
+basis-structure constants $\xi_{j,l} \in A$ (the
+coefficients of $r_1^{j}$'s $l$-th basis coordinate in the
+$A$-basis of $B$): for every $n \ge 1$, there exist finitely
+many tuples
+$\bigl(\tau_{n,j,l} : A\bigr)_{1 \le j \le n - 1,\ l < k}$ such
+that
+\[
+r_n - r_1 \;=\; \sum_{j = 1}^{n - 1} \sum_{l < k}
+\mathrm{algebraMap}(\tau_{n,j,l})\,\mathrm{basis}(l),
+\qquad \tau_{n,j,l} \in \mathfrak m_A^{j + 1}.
+\]
+Equivalently, applied componentwise via the basis projection,
+the $l$-th basis coordinate of $r_n - r_1$ is the finite sum
+$\sum_{j = 1}^{n - 1} \tau_{n,j,l}$ where each $\tau_{n,j,l}$
+encodes the level-$j$ Newton increment
+$\gamma_{j+1}(l) - \gamma_j(l) \in \mathfrak m_A^{j+1}$ together
+with the structure constants $\xi_{j,l}$ of $B$ over $A$.
+Composing with C--H expansion at $r_1$ then gives, for every
+$n \ge 1$ and $m \ge 0$, a finite $A$-linear control of
+$r_n^{d + m}$ in terms of $r_1^{j}$ ($j < d$) and the
+$\tau_{n, \cdot, \cdot}$ structure constants, with the resulting
+$A$-coefficient on each $r_1^{j}$ inheriting the appropriate
+$\mathfrak m_A$-band from $c^{\mathrm{CH}}_m$ and the
+$\gamma$-difference depth carriers (Step Q5.b).
+\end{lemma}
+
+This is the missing carrier whose iter-108+ banking unlocks Q6
+finite-collapse closure: the parent's body will use it to
+substitute $r_n^{d+m}$ for $n \ge 2$ inside the level-$m$
+telescoped Q3 identity in a form compatible with the
+$\xi_{m,j,l}$ structure constants of
+\cref{def:henselianPair-kappa-coefficient}.
+
+If the construction or the verification of P1--P5 does not fit
+inline in the parent's body, the prover is authorised to extract
+the C--H-collapse step as a typed sub-sub-helper
+\texttt{Algebra.Etale.per\_coord\_polynomial\_of\_charpoly\_descent}
+(placeholder name; not yet a declared Lean target — the Lean
+prover will give it the canonical name during formalisation).
+The four polynomial-bundle properties consumed by the helper
+\cref{lem:henselianPair-alpha-zero-via-per-coord-henselian} are
+then satisfied as follows:
+\begin{enumerate}
+\item $p_i.\mathrm{Monic}$ — by construction of $q_i$ at Step Q7
+the leading coefficient of $p_i = X \cdot q_i$ at degree $d + 1$
+is the $X^d$-coefficient of $q_i$, which is $-\kappa_{i, d-1}$
+(or its sign-adjusted form); normalise by scaling
+$q_i \mapsto q_i / (\text{leading unit})$ if needed (the leading
+coefficient is a unit by inheritance from $\det M$ being a unit;
+scaling preserves Steps P1--P5).
+\item $p_i.\mathrm{eval}\,\alpha_i = 0$ exactly in $A$ — by the
+P1--P5 chain above.
+\item $p_i.\mathrm{eval}\,0 = 0$ — by construction $p_i = X \cdot
+q_i$.
+\item $\mathrm{IsUnit}\,(\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A
+\,(p_i'(\alpha_i)))$ — by Step Q7,
+$q_i.\mathrm{eval}\,\alpha_i \equiv \det(M) \pmod{\mathfrak m_A}$,
+and $p_i'(\alpha_i) = q_i.\mathrm{eval}\,\alpha_i + \alpha_i
+\cdot q_i'.\mathrm{eval}\,\alpha_i \equiv \det(M) \pmod{\mathfrak m_A}$
+(since $\alpha_i \in \mathfrak m_A$); use
+\cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
+to conclude $\det(M)$ is a unit mod $\mathfrak m_A$.
+\end{enumerate}
+
+\paragraph{Honest note on substantive content.} The recipe above
+is at pseudo-Lean granularity; nevertheless Step P4's
+collapse-via-C--H combined with the $r_n$-vs-$r_1^n$ structural
+gap (only $r_1$, not $r_n$, is what C--H annihilates) leaves a
+non-trivial bridging step that the parent's body must execute
+inline. Whether this step is shorter or longer than route~(c)'s
+iterative-deepening is not yet settled. If the bridging step turns
+out to require Krull intersection or $\mathrm{IsNoetherianRing}\,A$
+in the end (i.e.\ if the C--H-collapse does \emph{not} actually
+give a finite polynomial in $\alpha_i$ at any fixed $m$), then
+route-(A) Option~(Y) falls back to route-(c) Krull-collapse in
+disguise and the strategic pivot must reconsider route~(D)
+idempotent-lifting (see \textbf{A.1} commentary on this escape
+valve). The iter-100 strategy-critic flagged this exact concern;
+the recipe above commits to a specific structural form for $q_i$
+that the prover can attempt to formalise, with the
+strategy-critic's escape valve still in scope if the C--H-collapse
+proves intractable inline.
+
+\begin{lemma}
+\label{lem:henselianPair-per-coord-polynomial-of-charpoly-descent}
+\lean{Algebra.Etale.per_coord_polynomial_of_charpoly_descent}
+\uses{lem:henselianPair-cayley-hamilton-power-expansion,
+      lem:henselianPair-exists-mAB-pow-decomposition-in-basis,
+      lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal,
+      lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp,
+      def:henselianPair-kappa-coefficient}
+[Per-coordinate polynomial of the charpoly descent (iter-100 named
+contract).]
+With the route-(A) carriers $(g, b_0, k, \mathrm{basis}, h_{\mathrm{span}},
+h_{\mathrm{lin}}, \gamma, h_{\gamma\,\mathrm{zero}}, h_{\gamma\,\mathrm{mem}},
+h_{\gamma\,\mathrm{diff}}, h_{g\,\mathrm{eval}}, p, h_{p\,\mathrm{monic}},
+h_{p\,\mathrm{coeff}}, h_{p\,\mathrm{aeval}}, \alpha, h_{\alpha\,\mathrm{mem}},
+h_{\alpha\,\mathrm{eq}}, \alpha^{(\mathrm{Hi})}, h_{\alpha\mathrm{Hi}\,
+\mathrm{mem}}, h_{\alpha\mathrm{Hi}\,\mathrm{eq}}, h_{\delta\,\mathrm{mem}},
+h_{\mathrm{Taylor}})$ in scope, there exists a tuple of polynomials
+$q : \mathrm{Fin}\,k \to A[X]$ such that for every $i$:
+\begin{enumerate}
+\item $(X \cdot q_i).\mathrm{Monic}$;
+\item $(X \cdot q_i).\mathrm{eval}\,\alpha_i = 0$ in $A$;
+\item $\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,
+  ((X \cdot q_i)'.\mathrm{eval}\,\alpha_i)$ is a unit in $A/\mathfrak m_A$.
+\end{enumerate}
+The construction follows Steps Q1--Q7 (definition of $q_i$ via
+the adjugate of the multiplication matrix $M := M_{g'(b_0)}$ of
+left-multiplication by $g'(b_0)$, in the basis built from
+$\mathrm{hlin}$ + $\mathrm{hspan}$ via $\mathrm{Module.Basis.mk}$)
+and the eval-zero claim follows from the P1--P5 chain above. The
+derivative-unit claim follows from
+\cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
+applied to $u := g'(b_0)$, with input
+$h_{g'\mathrm{unit}}\,:\,\mathrm{IsUnit}\,(g'(b_0))$ in $B$
+(the étale carrier obtained by transporting along
+$\mathrm{Ideal.Quotient.mk}\,(\mathfrak m_A \cdot B)$).
+\textbf{Signature widening required:} the helper signature
+listed above does \emph{not} yet contain $h_{g'\mathrm{unit}}$;
+the iter-102+ refactor must add it as a binder (re-threading from
+\cref{lem:henselianPair-l3c-root-descent-from-mAB2}, where it is
+in scope as \texttt{h\_unit}), routed through the intermediate
+helpers \texttt{\_charpoly\_bound} and
+\texttt{\_charpoly\_multiples}. See \textbf{A.3} Q1.c
+(``Strategy-modifying finding'') for the detailed signature
+specification. Status: typed \texttt{sorry} body banked iter-100;
+substantive proof requires the signature widening above and is
+scheduled for iter-102+.
+\end{lemma}
+
+\textbf{A.4. Discharge step (iter-099 refinement).} The
+iter-098 helper installation discharged the parent's carriers
+with the trivial choice $p_i := X$, which satisfies the
+approximate-residual conditions vacuously but pushes the
+substantive obligation entirely into the helper body. Inspection
+revealed that the iter-097 prose described two contradictory
+discharge mechanisms — ``by uniqueness of the henselian lift
+$a_i = \alpha_i$'' (which requires $p_i.\mathrm{eval}\,\alpha_i
+= 0$ \emph{exactly}, not merely modulo $\mathfrak m_A^N$) and
+``the henselian iteration produces an exact root, not merely a
+limit'' (which collapses to a Krull-on-Noetherian intersection
+in disguise). Neither was cited to a Mathlib API. The iter-099
+refinement commits to a clean discharge mechanism with a
+verifiable target Mathlib API.
+
+\textbf{The chosen mechanism is Option (Y) of the iter-099
+deliberation: strengthen the per-coordinate polynomial carriers
+to enforce \emph{exact} roots at both $\alpha_i$ and $0$, then
+close by pure local-ring ring theory.}
+Concretely, the helper's
+polynomial-bundle carriers are revised from the iter-098 shape
+\[
+\bigl(\,\mathrm{Monic};\ p_i.\mathrm{eval}\,\alpha_i \in
+\mathfrak m_A^{d+1};\ \mathrm{IsUnit}\,(p_i'(\alpha_i)\bmod
+\mathfrak m_A)\,\bigr)
+\]
+to the iter-099 shape
+\[
+\bigl(\,\mathrm{Monic};\ p_i.\mathrm{eval}\,\alpha_i = 0;\
+p_i.\mathrm{eval}\,0 = 0;\ \mathrm{IsUnit}\,(p_i'(\alpha_i)\bmod
+\mathfrak m_A)\,\bigr).
+\]
+The \emph{eval-at-$\alpha$} hypothesis is now an exact equality
+in $A$; the new \emph{eval-at-$0$} hypothesis is the constant-term
+condition $p_i.\mathrm{coeff}\,0 = 0$.
+With these carriers the discharge is a four-line A-side argument
+that uses no henselian iteration, no Krull collapse, and no
+$[\mathrm{IsNoetherianRing}\,A]$:
+\begin{enumerate}
+\item From $p_i.\mathrm{eval}\,0 = 0$, factor $p_i = X \cdot q_i$
+in $A[X]$ for some $q_i \in A[X]$ of degree $\deg p_i - 1$.
+The Mathlib API is \texttt{Polynomial.X\_dvd\_iff} (which
+identifies $X \mid p_i$ with $p_i.\mathrm{coeff}\,0 = 0$,
+equivalently $p_i.\mathrm{eval}\,0 = 0$); concretely take
+$q_i := p_i.\mathrm{divX}$.
+\item Evaluating the factorisation at $\alpha_i$ together with
+$p_i.\mathrm{eval}\,\alpha_i = 0$ gives the identity
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i = 0$ in $A$.
+\item Differentiating the factorisation, $p_i'(X) = q_i(X) +
+X \cdot q_i'(X)$, so
+\[
+p_i'(\alpha_i) \;=\; q_i.\mathrm{eval}\,\alpha_i
+\;+\; \alpha_i \cdot q_i'.\mathrm{eval}\,\alpha_i.
+\]
+Reducing modulo $\mathfrak m_A$, the second summand vanishes
+(since $\alpha_i \in \mathfrak m_A^{d+1} \subseteq \mathfrak m_A$),
+hence $p_i'(\alpha_i) \equiv q_i.\mathrm{eval}\,\alpha_i \pmod
+{\mathfrak m_A}$. By the carrier
+$\mathrm{IsUnit}\,(p_i'(\alpha_i) \bmod \mathfrak m_A)$, the
+same holds for $q_i.\mathrm{eval}\,\alpha_i$: it is a unit modulo
+$\mathfrak m_A$, equivalently
+$q_i.\mathrm{eval}\,\alpha_i \notin \mathfrak m_A$.
+\item Since $A$ is a local ring,
+\texttt{IsLocalRing.notMem\_maximalIdeal} promotes
+$q_i.\mathrm{eval}\,\alpha_i \notin \mathfrak m_A$ to
+$\mathrm{IsUnit}\,(q_i.\mathrm{eval}\,\alpha_i)$ in $A$.
+Multiplying the identity of step~2 by the inverse of
+$q_i.\mathrm{eval}\,\alpha_i$ yields $\alpha_i = 0$.
+\end{enumerate}
+
+\textbf{Why this is not a route-(c) replay.}
+The structural shape of the iter-088$\to$iter-096 route~(c)
+recipe rejected by iter-097 was: (i)~thread a route-(c) carrier
+suite ($\eta, \varepsilon_0, \varepsilon, h_{\mathrm{tele}}, c^{\mathrm{CH}},
+h_{\mathrm{level} 0\mathrm{res}}, \ldots$) into the helper;
+(ii)~inductively deepen the per-coord depth bound $\alpha_i \in
+\mathfrak m_A^N$ one $N$ at a time using a Cayley--Hamilton
+substitution bridge that touches every level of the Newton
+iteration; (iii)~close by Krull intersection on the Noetherian
+local $A$. Route~(c)'s churn was driven by the per-level
+Cayley--Hamilton bridge — the bridge appeared at every $N$ and
+its bookkeeping coupled to every level carrier.
+The iter-099 Option~(Y) discharge above uses no Cayley--Hamilton
+bridge in the helper body, no inductive depth-bumping over $N$,
+no Krull intersection on $A$, and no $[\mathrm{IsNoetherianRing}\,A]$
+hypothesis. The four enumerated steps reduce the conclusion to
+the single ring-theoretic fact ``in a local ring, $x q = 0$ with
+$q \notin \mathfrak m$ implies $x = 0$.'' The Newton-iteration
+content (which the iter-094 route~(c) plan inlined as the depth
+bumping) is now \emph{entirely localised in the parent's
+construction of the per-coord polynomial} — see
+\textbf{A.3} as updated below for the strengthened parent
+obligation. The helper carries no infrastructure for iteration.
+
+\textbf{Parent obligation under Option~(Y).}
+The price paid is that the parent
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}
+must now construct $p_i \in A[X]$ with $p_i.\mathrm{eval}\,
+\alpha_i = 0$ \emph{exactly} (in addition to $p_i.\mathrm{eval}\,0
+= 0$). This is strictly stronger than the iter-097 A.3 informal
+description, which gave only the approximate
+$p_i.\mathrm{eval}\,\alpha_i \in \mathfrak m_A^{d+1}$. The exact
+identity is the structural shadow of the convergent Newton
+iteration on the $B$-side: the parent's higher-iterate carrier
+$\alpha^{(\mathrm{Hi})}$ + Cayley--Hamilton power expansion +
+basis projection together produce a polynomial identity in $A$
+whose $A$-side projection at $\alpha_i$ is exactly zero (not
+merely approximately so). \textbf{A.3} is updated to record this
+strengthened obligation. The substantive Newton-iteration content
+that route~(c) attempted to push into the helper is, under
+route~(A) Option~(Y), pushed into the parent's pCoord construction
+— this is a strict win in the structural-clarity ledger
+because the parent already needs the Newton iterates for the
+$B$-side residual identities, so adding the exact-evaluation
+projection re-uses existing data rather than introducing fresh
+inductive infrastructure.
+
+\textbf{Target Mathlib APIs cited by the discharge.}
+\begin{itemize}
+\item \texttt{Polynomial.X\_dvd\_iff}: identifies $X \mid p$
+with $p.\mathrm{coeff}\,0 = 0$; together with
+\texttt{Polynomial.divX\_mul\_X\_eq} or
+\texttt{Polynomial.X\_mul\_divByMonic} produces the explicit
+factorisation $p = X \cdot \mathrm{divX}\,p$ when the constant
+term vanishes.
+\item \texttt{Polynomial.derivative\_mul} (or
+\texttt{Polynomial.derivative\_X\_mul}): gives $p_i'(X) = q_i(X)
++ X \cdot q_i'(X)$ from $p_i = X \cdot q_i$.
+\item \texttt{Ideal.Quotient.eq\_zero\_iff\_mem} and the
+local-ring identification of units mod $\mathfrak m$ with
+non-members of $\mathfrak m$
+(\texttt{IsLocalRing.notMem\_maximalIdeal}, which states
+$x \notin \mathfrak m_A \Leftrightarrow \mathrm{IsUnit}\,x$
+for $A$ a local ring): together these convert the carrier
+$\mathrm{IsUnit}\,(p_i'(\alpha_i) \bmod \mathfrak m_A)$ into
+$\mathrm{IsUnit}\,(q_i.\mathrm{eval}\,\alpha_i)$ in $A$ proper.
+\item \texttt{IsUnit.mul\_left\_cancel} (or
+\texttt{IsUnit.mul\_right\_eq\_zero}): closes the final step
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i = 0$ with
+$q_i.\mathrm{eval}\,\alpha_i \in A^\times$ to $\alpha_i = 0$.
+\end{itemize}
+\textbf{Crucially, no Mathlib henselian-uniqueness lemma is
+needed.} Mathlib's
+$\mathrm{HenselianLocalRing.is\_henselian}$ provides existence
+only ($\exists a$, not $\exists!$); a separate uniqueness lemma
+along the lines of ``two roots in the same residue class with
+unit derivative agree'' is not currently exported from
+\texttt{Mathlib.RingTheory.Henselian}. Option~(Y)'s pure-ring
+discharge sidesteps this gap: the conclusion $\alpha_i = 0$
+follows from the local-ring structure and the polynomial
+factorisation, with no appeal to henselian existence or
+uniqueness at the closure step. The
+$[\mathrm{HenselianLocalRing}\,A]$ typeclass on the helper
+signature is retained for compatibility with the parent's
+hypothesis structure (and because the parent's construction of
+$p_i$ does use henselianness), but is unused inside the helper
+body.
+
+\textbf{A.5. Carrier hygiene: which iter-079$\to$iter-087
+carriers survive.} The 5-tier extraction
+($\texttt{exists\_root\_descent\_charpoly\_bound}
+\to \texttt{exists\_root\_descent\_charpoly\_collapse}
+\to \texttt{exists\_root\_descent\_charpoly\_multiples}$
+plus \cref{lem:henselianPair-cayley-hamilton-power-expansion} and
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis})
+splits cleanly under route~(A):
+\begin{itemize}
+\item \textbf{Reused (no change).} The four banked helpers
+through \texttt{exists\_root\_descent\_charpoly\_collapse} carry
+the basis-decomposition data $\alpha$ that route~(A) needs as
+the input to the per-coord polynomial $p_i$. The level-$d$
+descent identity $h_{\alpha\,eq}$ and the depth
+$h_{\alpha\,mem}\,i\,:\,\alpha_i \in \mathfrak m_A^{d+1}$ are
+both load-bearing.
+\item \textbf{Reused for Step~(iii) but not for the closure
+itself.} \cref{lem:henselianPair-cayley-hamilton-power-expansion}
+remains useful as the structural step that lets the per-coord
+$p_i$ be a polynomial of bounded degree $d$ in $A[X]$ rather than
+an infinite series in $B$. The cCH coefficients $c^{(0)}_j = -p_j$
+appear in the explicit formula for the $q_i$ in \textbf{A.3}, so
+the lemma is reused as a tool — but the substitution
+$h_{c^{\mathrm{CH}}\mathrm{eq}}$ into $h_{\mathrm{level} 0
+\mathrm{res}}$ that route~(c) attempted is not the use-pattern.
+The lemma's statement is unchanged.
+\item \textbf{Reused for $B$-side Newton iteration.} The
+higher-iterate carrier $\alpha^{(\mathrm{Hi})}$ and the residual
+$h_{\alpha\mathrm{Hi}\mathrm{mem}}$ are still relevant: they
+witness that the $B$-side Newton iterates converge into ever-deeper
+powers of $\mathfrak m_A B$. Route~(A) does not need them at
+the closure step, but the parent
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}'s
+body still constructs them to bank the convergence input that
+makes the henselian discharge at the per-coord level legitimate.
+\item \textbf{Obsolete in the helper signature; reused in the
+parent body.} The per-level decomposition carriers
+$\eta, \varepsilon_0, \varepsilon, h_{\alpha 0\mathrm{rec}},
+h_{\alpha\mathrm{succ}\mathrm{rec}}, h_{\mathrm{tele}}$ were
+introduced (iter-084--iter-087) to support the telescoping
+identity that route~(c) Krull-collapse needed. Route~(A)'s helper
+closes without telescoping: the four enumerated steps of
+\textbf{A.4} use only the polynomial-bundle carriers
+(monic, eval-$\alpha$-zero, eval-$0$-zero, deriv-unit). The
+telescoping carriers are therefore \emph{dead weight in the
+helper signature}. \emph{Iter-099 nuance}: the parent still needs
+some of this infrastructure to discharge the strengthened
+$p_i.\mathrm{eval}\,\alpha_i = 0$ \emph{exact} condition
+introduced by Option~(Y) — specifically, the telescoping identity
+relating $\alpha_i$ to the Newton iterates $\alpha^{(\mathrm{Hi})}$
+is what lets the parent assemble a polynomial that vanishes
+exactly at $\alpha_i$. So the carriers persist as \emph{parent
+in-body data}, not as helper binders.
+\item \textbf{Obsolete in the helper signature; reused in the
+parent body (cCH-bridge data).}
+The level residual identities $h_{\mathrm{level} 0\mathrm{res}},
+h_{\mathrm{level\,succ\,res}}$ and the iterated cCH coefficients
+$cCH\,m$ for $m \ge 1$ are removed from the helper's binder list
+under Option~(Y) — the helper does not consume them. They remain
+useful in the parent's pCoord construction (where the iter-099
+A.3 strengthening to ``exact zero'' relies on chaining the
+$cCH$-substitution identities through the Newton hierarchy).
+\end{itemize}
+\textbf{Dismantling cost.} The carriers marked obsolete were
+threaded through the iter-096 carrier-passthrough refactor
+(13 binders out of the helper's 25 binders correspond to the
+route-(c) infrastructure). The iter-099 Option~(Y) helper
+signature thus loses roughly half its binder count compared to
+the iter-096 carrier-passthrough form, reverting closer to the
+iter-095 extraction shape. The body of
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}
+does \emph{not} drop these carriers from its own scope (they are
+needed in the parent body to discharge the strengthened
+A.3 condition $p_i.\mathrm{eval}\,\alpha_i = 0$); rather, the
+parent stops \emph{threading} them through to the helper, and
+instead uses them locally to verify the helper's four polynomial
+hypotheses before invocation. Net effect: the helper becomes a
+small, ring-theoretic lemma with a 4-piece polynomial-bundle
+interface; the parent's complexity is unchanged in aggregate,
+just rebalanced — the LOC budget that was spent passing 13
+carriers through the helper boundary now goes into the per-coord
+polynomial construction. The 5th-tier helper
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}
+\emph{stays} sorry-free and is reused as-is.
+
+\textit{iter-100+ prover starting shape (Option (Y), iter-099
+refinement).} The iter-098 refactor installed an approximate
+route-(A) helper signature
+($p_i.\mathrm{eval}\,\alpha_i \in \mathfrak m_A^{d+1}$,
+no constant-term carrier) that admitted the trivial discharge
+$p_i := X$ but pushed the substantive obligation
+into the helper body, where it could not be discharged without
+either re-introducing $[\mathrm{IsNoetherianRing}\,A]$ (route~(c)
+Krull-collapse in disguise) or invoking a Mathlib henselian-uniqueness
+lemma that does not exist. The iter-099 chapter refinement above
+adopts Option~(Y): the helper signature is strengthened to require
+the polynomial bundle's evaluation at $\alpha_i$ AND at $0$ to be
+\emph{exactly zero} in $A$, and the helper body discharges via the
+four-step pure local-ring argument of \textbf{A.4}. The iter-100
+refactor directive should:
+\begin{enumerate}
+\item Rewrite the helper signature of
+\cref{lem:henselianPair-alpha-zero-via-per-coord-henselian} to
+match the iter-099 Option~(Y) shape:
+\begin{verbatim}
+lemma alpha_zero_via_per_coord_henselian
+    {A B : Type*} [CommRing A] [CommRing B] [Algebra A B]
+    [HenselianLocalRing A] [Module.Finite A B] [Module.Free A B]
+    {k d : ℕ} {α : Fin k → A}
+    (h_α_mem : ∀ i, α i ∈ IsLocalRing.maximalIdeal A ^ (d + 1))
+    (pCoord : Fin k → Polynomial A)
+    (hpCoord_monic : ∀ i, (pCoord i).Monic)
+    (hpCoord_eval_α : ∀ i, (pCoord i).eval (α i) = 0)
+    (hpCoord_eval_zero : ∀ i, (pCoord i).eval 0 = 0)
+    (hpCoord_deriv_unit : ∀ i,
+        IsUnit (Ideal.Quotient.mk (IsLocalRing.maximalIdeal A)
+          ((pCoord i).derivative.eval (α i)))) :
+    ∀ i, α i = 0
+\end{verbatim}
+The strengthening from the iter-098 shape:
+\texttt{hpCoord\_eval\_alpha\_mem : (pCoord i).eval (α i) ∈
+mA\^{}(d+1)} is replaced by
+\texttt{hpCoord\_eval\_α : (pCoord i).eval (α i) = 0},
+and the new carrier
+\texttt{hpCoord\_eval\_zero : (pCoord i).eval 0 = 0} is added.
+The \texttt{[HenselianLocalRing A]} typeclass is retained
+(unused in the body but kept for parent-side compatibility);
+\emph{no} \texttt{[IsNoetherianRing A]} is added.
+\item Close the helper body by the four enumerated steps of
+\textbf{A.4}: factor $p_i = X \cdot q_i$ via
+\texttt{Polynomial.X\_dvd\_iff} + \texttt{Polynomial.divX}, derive
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i = 0$, transfer
+the derivative-unit hypothesis to $q_i.\mathrm{eval}\,\alpha_i$
+(modulo $\mathfrak m_A$, then in $A$ via
+\texttt{IsLocalRing.notMem\_maximalIdeal}), and cancel.
+\item At the parent
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples},
+construct the per-coord polynomial $p_i$ satisfying the four
+strengthened conditions of \textbf{A.3}. The exact-zero condition
+$p_i.\mathrm{eval}\,\alpha_i = 0$ is the substantive new
+obligation introduced by Option~(Y); it is discharged by chaining
+the Newton-iterate identities $h_{\alpha\mathrm{Hi}\mathrm{mem}}$
+with the Cayley--Hamilton power expansion (\cref{lem:henselianPair-cayley-hamilton-power-expansion})
+and the basis projection
+(\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis}).
+The constant-term-zero condition $p_i.\mathrm{eval}\,0 = 0$ is
+discharged by construction: take $p_i(X) := X \cdot q_i(X)$ from
+the start, where $q_i$ is the Cayley--Hamilton-derived companion
+polynomial; the constant term then vanishes by inspection of the
+chosen form.
+\end{enumerate}
+\textbf{Existing carriers reusable from the iter-079$\to$iter-087
+banking:} the level-$d$ basis-decomposition data
+$(\alpha, h_{\alpha\,mem}, h_{\alpha\,eq})$;
+\cref{lem:henselianPair-cayley-hamilton-power-expansion} as a tool
+for bounding the per-coord polynomial degree by $d$;
+\cref{lem:henselianPair-exists-mAB-pow-decomposition-in-basis} as
+the basis-projection mechanism. The Newton-iterate carrier
+$\alpha^{(\mathrm{Hi})}$ and its residual
+$h_{\alpha\mathrm{Hi}\mathrm{mem}}$ are reused
+\emph{at the parent} to discharge the exact-zero condition.
+\textbf{What the iter-100 refactor agent should NOT touch:} the
+iter-095 extraction header of
+\cref{lem:henselianPair-alpha-zero-via-per-coord-henselian} as
+currently typed (the iter-100 refactor itself is the operation
+that rewrites this header to the Option~(Y) shape — no in-place
+patching). The iter-096 carrier-passthrough form must be wholly
+replaced, not patched in place, because the obsolete-carrier list
+(\textbf{A.5}) overlaps significantly with what iter-096 added.
+\end{proof}
+
+\begin{lemma}\leanok
+[Unit-bridge: determinant of the multiplication
+matrix in a finite free local-ring extension]
+\label{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
+\lean{Algebra.Etale.mult_det_isUnit_of_isUnit_mod_maximal}
+[iter-100 chapter refinement; corrects the falsified
+basis-coefficient bridge of iter-096--iter-098 prose.]
+Let $A$ be a local commutative ring with maximal ideal
+$\mathfrak m_A$, and let $B$ be a finite free $A$-algebra with
+$A$-basis $(b_1, \ldots, b_k)$. For $u \in B$, let
+$M_u \in \mathrm{Mat}_{k\times k}(A)$ be the matrix of
+left-multiplication by $u$ in the basis $(b_j)$; concretely,
+$(M_u)_{ij}$ is the $i$-th basis-coordinate of $u \cdot b_j$
+(extracted via $\mathrm{Module.Basis.repr}$). If
+$\mathrm{Ideal.Quotient.mk}\,(\mathfrak m_A \cdot B)\,u$ is a
+unit in $B / \mathfrak m_A \cdot B$, then
+$\mathrm{IsUnit}\,(\det M_u)$ in $A$.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The matrix $M_u$ is the standard $A$-algebra-to-endomorphism
+matrix of multiplication by $u$ on the free $A$-module $B$ in the
+basis $(b_j)$. Reduction modulo $\mathfrak m_A$ commutes with
+$\det$ (\texttt{Matrix.det\_map}\,/\,\texttt{Matrix.det\_smul}
+combined with $\mathrm{Ideal.Quotient.mk}$ functoriality), so
+$\det(M_u \bmod \mathfrak m_A) = (\det M_u) \bmod \mathfrak m_A$.
+
+The reduced matrix $M_u \bmod \mathfrak m_A$ is the matrix of
+left-multiplication by $\bar u := u \bmod \mathfrak m_A B$ on
+$B / \mathfrak m_A B$, taken in the residue basis $(\bar b_j)$.
+By the unit hypothesis on $\bar u$, multiplication-by-$\bar u$ is
+a bijective $(A/\mathfrak m_A)$-linear endomorphism of the
+finite-dimensional residue module, so its matrix is invertible
+in $\mathrm{Mat}(A/\mathfrak m_A)$ (square matrix over a field is
+invertible iff bijective). Invertibility forces
+$\det(M_u \bmod \mathfrak m_A) \in (A/\mathfrak m_A)^\times$,
+i.e.\ $(\det M_u) \bmod \mathfrak m_A$ is a unit in
+$A/\mathfrak m_A$, equivalently $\det M_u \notin \mathfrak m_A$.
+
+Since $A$ is local, \texttt{IsLocalRing.notMem\_maximalIdeal}
+identifies non-members of $\mathfrak m_A$ with units of $A$:
+$\det M_u \notin \mathfrak m_A \Leftrightarrow
+\mathrm{IsUnit}\,(\det M_u)$. The conclusion follows.
+
+\textit{Note.} No étale or henselian hypothesis is used in the
+proof: this is a fact about finite free algebras over local rings.
+The lemma is Mathlib-PR-shape; it generalises to any finite free
+module by the same proof, but the local-ring hypothesis on $A$ is
+essential for the \texttt{notMem\_maximalIdeal} step.
+
+\textit{Falsified candidate bridge for record.} The earlier
+informal sourcing in \textbf{A.2} suggested extracting the first
+basis-coefficient $c_1$ of $u$ in a basis with $b_1 = 1$. A
+counterexample at $A = k = \mathbb{F}_3$, $B = \mathbb{F}_3 \times
+\mathbb{F}_3$, basis $((1,1),\,(1,2))$, $u = (1, 2)$ (which is a
+unit with $u^2 = 1$ but has $c_1 = 0$, $c_2 = 1$) shows that
+formulation is false. The determinantal formulation above is the
+correct replacement.
 \end{proof}
 
 \begin{lemma}
@@ -1506,6 +3186,142 @@ belongs in
 \texttt{Mathlib/LinearAlgebra/CharPoly/Basic.lean} or
 \texttt{Mathlib/RingTheory/CayleyHamilton.lean} once both halves
 of the body are closed.
+\end{proof}
+
+\begin{lemma}
+\label{lem:henselianPair-alpha-zero-via-per-coord-henselian}
+\lean{Algebra.Etale.alpha_zero_via_per_coord_henselian}
+\uses{lem:henselianPair-l3c-root-descent-charpoly-multiples,
+      lem:henselianPair-cayley-hamilton-power-expansion}
+\leanok
+[6th-tier route-(A) per-coord local-ring closure, Option (Y)]
+\textit{Status: iter-099 chapter refinement.} This lemma packages
+the route-(A) per-coord closure step in its iter-099
+\textbf{Option (Y)} shape: the substantive Newton-iteration content
+is pushed entirely into the parent's polynomial construction, and
+the helper body is a four-step pure local-ring argument that needs
+neither henselian existence/uniqueness nor Krull intersection. The
+shape replaces both the iter-095 inductive-step extraction
+\texttt{alpha\_in\_deeper\_mA\_pow} (route-(c), excised under the
+iter-097 cascade) and the iter-098 approximate-residual
+route-(A) installation (whose carriers were satisfied vacuously
+by $p_i := X$ and could not be closed in the body without
+re-introducing $[\mathrm{IsNoetherianRing}\,A]$ or invoking a
+non-existent Mathlib henselian-uniqueness lemma).
+
+Let $A$ be a henselian local commutative ring with maximal ideal
+$\mathfrak m_A$, $B$ a finite free $A$-algebra, and $\alpha :
+\mathrm{Fin}\,k \to A$ a tuple with $\alpha_i \in \mathfrak m_A^{d+1}$
+for every $i$ (the level-$d$ Newton residual depth, banked by
+$h_{\alpha\mathrm{mem}}$). Suppose for every $i \in \mathrm{Fin}\,k$
+there is a polynomial $p_i \in A[X]$ satisfying:
+\begin{itemize}
+\item ($\mathrm{Monic}$) $p_i$ is monic;
+\item ($\mathrm{eval}\text{-}\alpha\text{-zero}$) $p_i.\mathrm{eval}\,\alpha_i = 0$
+exactly in $A$;
+\item ($\mathrm{eval}\text{-}0\text{-zero}$) $p_i.\mathrm{eval}\,0 = 0$
+exactly in $A$ (equivalently, $p_i.\mathrm{coeff}\,0 = 0$);
+\item ($\mathrm{deriv}\text{-}\mathrm{unit}$)
+$\mathrm{IsUnit}\,(\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,
+(p_i.\mathrm{derivative}.\mathrm{eval}\,\alpha_i))$.
+\end{itemize}
+Then $\alpha_i = 0$ for every $i$.
+
+\textit{Note on hypotheses.} The $[\mathrm{HenselianLocalRing}\,A]$
+typeclass is retained on the signature for compatibility with the
+parent's hypothesis structure (and because the parent's discharge
+of the eval-$\alpha$-zero hypothesis itself uses henselianness),
+but the helper body uses only that $A$ is a (commutative) local
+ring. No $[\mathrm{IsNoetherianRing}\,A]$ is needed.
+\end{lemma}
+
+\begin{proof}
+
+\leanok
+The argument is the four-step local-ring discharge described in
+\textbf{A.4} above. Fix $i \in \mathrm{Fin}\,k$.
+
+\textbf{Step 1: factorise $p_i = X \cdot q_i$.}
+By the carrier $p_i.\mathrm{eval}\,0 = 0$, equivalently
+$p_i.\mathrm{coeff}\,0 = 0$, the divisibility
+$X \mid p_i$ holds in $A[X]$
+(\texttt{Polynomial.X\_dvd\_iff}). Concretely set
+$q_i := p_i.\mathrm{divX}$, so that
+$p_i = X \cdot q_i$ in $A[X]$.
+
+\textbf{Step 2: evaluate at $\alpha_i$.}
+Substituting $X = \alpha_i$ in the factorisation and using the
+carrier $p_i.\mathrm{eval}\,\alpha_i = 0$ gives
+\[
+0 \;=\; p_i.\mathrm{eval}\,\alpha_i
+\;=\; \alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i
+\quad\text{in } A.
+\]
+
+\textbf{Step 3: transfer the derivative-unit hypothesis to $q_i$.}
+Differentiating $p_i = X \cdot q_i$ via
+\texttt{Polynomial.derivative\_mul} (and
+\texttt{Polynomial.derivative\_X}) yields
+$p_i'(X) = q_i(X) + X \cdot q_i'(X)$, hence
+\[
+p_i'(\alpha_i)
+\;=\; q_i.\mathrm{eval}\,\alpha_i
+\;+\; \alpha_i \cdot q_i'.\mathrm{eval}\,\alpha_i.
+\]
+Since $\alpha_i \in \mathfrak m_A^{d+1} \subseteq \mathfrak m_A$,
+the second summand lies in $\mathfrak m_A$, so the residues
+modulo $\mathfrak m_A$ agree:
+\[
+\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,(p_i'(\alpha_i))
+\;=\;
+\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,(q_i.\mathrm{eval}\,\alpha_i)
+\quad\text{in } A/\mathfrak m_A.
+\]
+By the carrier ($\mathrm{deriv}\text{-}\mathrm{unit}$), the LHS
+is a unit in $A/\mathfrak m_A$, hence so is the RHS — i.e.\
+$q_i.\mathrm{eval}\,\alpha_i \notin \mathfrak m_A$.
+
+\textbf{Step 4: promote to a unit in $A$ and cancel.}
+Since $A$ is a local ring,
+\texttt{IsLocalRing.notMem\_maximalIdeal} converts
+$q_i.\mathrm{eval}\,\alpha_i \notin \mathfrak m_A$ to
+$\mathrm{IsUnit}\,(q_i.\mathrm{eval}\,\alpha_i)$ in $A$. Multiplying
+the identity of Step 2 by the inverse of
+$q_i.\mathrm{eval}\,\alpha_i$ (Mathlib:
+\texttt{IsUnit.mul\_right\_eq\_zero} or
+\texttt{eq\_zero\_of\_mul\_isUnit\_right}) yields $\alpha_i = 0$,
+as required.
+
+\textbf{Carrier accounting (iter-099).} The discharge above uses
+only the four polynomial-bundle carriers
+(\textsc{Monic}, $\mathrm{eval}\text{-}\alpha\text{-}\mathrm{zero}$,
+$\mathrm{eval}\text{-}0\text{-}\mathrm{zero}$,
+$\mathrm{deriv}\text{-}\mathrm{unit}$) plus the depth carrier
+$h_{\alpha\mathrm{mem}}$ (in Step 3, to reduce mod $\mathfrak m_A$).
+The route-(c) carriers
+$(\eta, \varepsilon_0, \varepsilon,
+h_{\alpha 0\mathrm{rec}}, h_{\alpha\mathrm{succ}\mathrm{rec}},
+h_{\mathrm{tele}}, c^{\mathrm{CH}},
+h_{\mathrm{level} 0\mathrm{res}}, h_{\mathrm{level\,succ\,res}})$
+that iter-091/iter-094 threaded through the helper are removed
+from the signature; they survive only inside the parent's body
+where they discharge the strengthened
+$\mathrm{eval}\text{-}\alpha\text{-}\mathrm{zero}$ condition.
+The 5th-tier helper
+\cref{lem:henselianPair-cayley-hamilton-power-expansion} stays
+unchanged and is used \emph{by the parent} to construct
+$p_i$, not by the present helper.
+
+\textit{Formalisation note (iter-099 → iter-100).} The iter-099
+refinement \emph{specifies} the helper's iter-100 target shape;
+the actual Lean signature rewrite is the iter-100 refactor
+operation. Until that lands, the helper's Lean source carries the
+iter-098 approximate carriers as scaffolding; the body remains a
+typed \texttt{sorry} of the iter-098 conclusion until the
+iter-100 refactor installs the Option (Y) signature, at which
+point the body closes by the four steps above (each of which is
+a 1--2 line tactic invocation against Mathlib's local-ring +
+polynomial APIs).
 \end{proof}
 
 \begin{lemma}

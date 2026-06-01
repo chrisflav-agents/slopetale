@@ -1,0 +1,57 @@
+\chapter{Weakly étale extensions of fields are separable algebraic}
+\label{ch:mathlib-weakly-etale-fieldextension}
+
+This chapter backs the file
+\texttt{Proetale/Mathlib/RingTheory/WeaklyEtale/FieldExtension.lean},
+which packages the Stacks 092P specialisation of weak étaleness to a
+field-to-field extension $K \to L$: the conclusion is that $L$ is a
+\emph{separable algebraic} extension of $K$.
+
+The argument here mirrors (and is the field-restricted variant of) the
+informal sketch already living in
+\texttt{chapters/more-on-local-structure.tex} under
+\Cref{lem:flat-tensor-over-field-imples-algebraic}; this stub exists so
+that the autoformalisation pipeline has a chapter file matching the Lean
+file path. Plan-agent action item: flesh out the prose by importing the
+relevant paragraphs from \texttt{more-on-local-structure.tex} (or have
+the two chapters cross-reference one another rather than duplicate).
+
+\section{Statement}
+
+\begin{theorem}[\stacksproject{092P}]
+  \label{thm:mathlib-weakly-etale-field-imples-separable-algebraic}
+  \lean{Algebra.WeaklyEtale.isSeparable_algebraic_of_isField}
+  \leanok
+  Let $L / K$ be an extension of fields with $K \to L$ weakly étale.
+  Then $L$ is a separable algebraic extension of $K$.
+  \uses{def:weakly-etale-algebra,
+        lem:flat-tensor-over-field-imples-algebraic}
+\end{theorem}
+
+\section{Reduction structure}
+
+The Lean file decomposes the proof into:
+
+\begin{enumerate}
+  \item \texttt{Algebra.WeaklyEtale.isReduced\_tensor\_self}: $L \otimes_K L$
+    is reduced (it is absolutely flat, and every local ring of an absolutely
+    flat ring is a field).
+  \item Algebraicity per element $a \in L$.
+    Case $1 \otimes a = a \otimes 1$ in $L \otimes_K L$ is closed via
+    $K$-linear independence of $\{1, a\}$ (yielding $a \in K$).
+    The substantive case $1 \otimes a \neq a \otimes 1$ is offloaded to the
+    private helper
+    \texttt{isAlgebraic\_of\_isField\_aux}; this is the Stacks 092K
+    subalgebra-descent step that is the residual gap in the file.
+  \item Separability of each algebraic element: pass to the finite
+    intermediate field $K\langle a\rangle$ on which $K \to F$ is
+    \texttt{EssFiniteType}, lift formal unramifiedness through the
+    flat-injective embedding $F \otimes_K F \hookrightarrow L \otimes_K L$
+    (so $F \otimes_K F$ is reduced + Artinian + hence semisimple), and
+    apply \texttt{Algebra.FormallyUnramified.iff\_isSeparable}.
+\end{enumerate}
+
+The residual obligation is step (2), private helper
+\texttt{isAlgebraic\_of\_isField\_aux}: see
+\Cref{lem:weakly-etale-adjoin-singleton} in
+\Cref{ch:mathlib-weakly-etale-subalgebra}.

@@ -1,0 +1,66 @@
+\chapter{Étale algebras over strictly Henselian local rings (Stacks 04GG / 04GH)}
+\label{chap:Mathlib_RingTheory_Etale_StrictlyHenselian}
+
+% NOTE: Minimal stub created during iter-098 prover phase. The plan
+% agent should flesh out the informal proofs for the four residual
+% sorries in \texttt{Proetale/Mathlib/RingTheory/Etale/StrictlyHenselian.lean}:
+%
+%   1. \lean{Algebra.Etale.exists_idempotent_lift_isolating_at_maximal}
+%      (L548, sorry at L682): the "horizontal-killing" conjunct
+%      $\forall p \in \mathrm{Spec}(B),\ p \not\supseteq \mathfrak{m}\cdot B
+%      \implies e_{i_n} \in p$. Requires the étale-local-decomposition
+%      content (Stacks 0DXB) showing $B/(1 - e_{i_n})\cdot B$ is local with
+%      maximal ideal $\mathfrak{m}\cdot B/(1 - e_{i_n})\cdot B$.
+%
+%   2. \lean{Algebra.Etale.henselianLocalRing_of_etale_atPrime} (L782,
+%      sorry at L801): Stacks 04GF — an étale algebra over a Henselian
+%      local ring is Henselian at every maximal ideal lying over the
+%      closed point. Gated on the full \lean{HenselianRing B mB}
+%      instance produced by the L3c closure in
+%      \texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean}.
+%
+%   3. \lean{Algebra.Etale.surjective_standardEtalePair_lift_of_etale}
+%      (L1483) contains two sorries:
+%      \begin{itemize}
+%        \item L1767 (\texttt{h\_polylift}): the
+%          \{primes of $B$ over $\mathfrak{m}$\} $\leftrightarrow I$
+%          bijection (Stacks 04GG / 0DXB) is the HenselianPair-
+%          idempotent-bijection content deferred to iter-052+.
+%        \item L1814: the étale-Hensel-Nakayama close — for
+%          $\delta \in \mathfrak{m}\cdot B_b$, lift to
+%          $q \in \mathcal{P}.\mathrm{Ring}$ with $\psi q = \delta$
+%          (Stacks 04D1 / 04GE content; consumer-side requires
+%          \lean{Algebra.Etale.localisation_finite_at_maximal} a.k.a.
+%          the iter-054 \lean{Module.Finite} step).
+%      \end{itemize}
+
+This chapter (placeholder) records the two key structural results
+about étale algebras over a strictly Henselian local ring $A$.
+
+\begin{theorem}
+  \label{thm:strictly-henselian-good-retraction}
+  \lean{Algebra.Etale.strictlyHenselian_good_retraction}
+  \leanok
+  Let $A$ be a strictly Henselian local ring, $A \to B$ étale, and
+  $\mathfrak{n} \subset B$ a maximal ideal lying over the maximal
+  ideal $\mathfrak{m}$ of $A$. Then there exists an $A$-algebra
+  retraction $s : B \to A$ with $\mathfrak{n} = s^{-1}(\mathfrak{m})$.
+\end{theorem}
+
+\begin{theorem}
+  \label{thm:etale-over-strictly-henselian-localization-isom}
+  \lean{Algebra.Etale.bijective_localRingHom_of_strictlyHenselian}
+  \leanok
+  Under the same hypotheses, the canonical local ring homomorphism
+  $\mathrm{Loc}_{\mathfrak{m}}(A) \to B_{\mathfrak{n}}$ is bijective.
+  Equivalently, the composite $A \to B_{\mathfrak{n}}$ is an
+  isomorphism.
+\end{theorem}
+
+Both theorems are formalized modulo four residual typed sorries (see
+the \texttt{\% NOTE} above), each gated on infrastructure currently
+under construction in
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean}
+(the L3c sub-arc closure) and the iter-054 consumer-side
+\lean{Module.Finite} step. The plan agent should expand this chapter
+with the full informal proof sketch once the gating dependencies land.

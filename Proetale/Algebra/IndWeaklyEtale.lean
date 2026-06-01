@@ -1,4 +1,5 @@
 import Proetale.Algebra.WeaklyEtale
+import Proetale.Algebra.WeaklyEtaleField
 import Proetale.Algebra.IndEtale
 import Proetale.Algebra.FaithfullyFlat
 import Proetale.Algebra.HenselianLocalRing
@@ -8,10 +9,26 @@ import Proetale.Mathlib.RingTheory.Flat.FilteredColimit
 
 universe u
 
+open CategoryTheory Limits
+
 instance {R S : Type u} [CommRing R] [CommRing S] [Algebra R S]
     [Algebra.IndEtale R S] :
-    Algebra.WeaklyEtale R S :=
-  sorry
+    Algebra.WeaklyEtale R S := by
+  obtain ⟨ι, _, _, P, hP⟩ := Algebra.IndEtale.exists_colimitPresentation (R := R) (S := S)
+  have hflat (i : ι) : Module.Flat R (P.diag.obj i) := by
+    haveI : Algebra.Etale R (P.diag.obj i) := hP i
+    exact (inferInstance : Algebra.WeaklyEtale R (P.diag.obj i)).flat
+  have hlmul (i : ι) : (Algebra.TensorProduct.lmul' R (S := P.diag.obj i)).Flat := by
+    haveI : Algebra.Etale R (P.diag.obj i) := hP i
+    exact Algebra.WeaklyEtale.flat_lmul' R (P.diag.obj i)
+  refine ⟨?_, ?_⟩
+  · -- `Module.Flat R S`: transfer the `CommAlgCat`-level presentation to `ModuleCat`.
+    rw [← CommAlgCat.flat_iff (S := .of R S), CommAlgCat.flat,
+        ObjectProperty.inverseImage, ← ModuleCat.ind_flat R,
+        ← ObjectProperty.prop_inverseImage_iff (ModuleCat.flat.{u} R).ind]
+    refine ObjectProperty.ind_inverseImage_le _ _ _ ⟨ι, ‹_›, ‹_›, P, fun i ↦ ?_⟩
+    exact CommAlgCat.flat_iff.mpr (hflat i)
+  · exact RingHom.Flat.of_filteredColim_lmul' P hlmul
 
 lemma RingHom.IndEtale.weaklyEtale {R S : Type u} [CommRing R] [CommRing S] {f : R →+* S}
     (hf : f.IndEtale) :
@@ -94,8 +111,11 @@ theorem Algebra.WeaklyEtale.indEtale_of_isField (K B : Type u) [Field K] [CommRi
   -- 1. Stacks 092P: a field extension L/K with `lmul' : L ⊗_K L → L` flat is separable algebraic.
   -- 2. A categorical "B = colim of fg K-subalgebras" lemma for `CommAlgCat K`.
   --
-  -- See `task_results/Proetale_Algebra_IndWeaklyEtale.lean.md` for the detailed strategy.
-  sorry
+  -- The bulk of the obligation lives at the dedicated declaration
+  -- `Algebra.WeaklyEtale.indEtale_field` in `Proetale/Algebra/WeaklyEtaleField.lean`,
+  -- which carries the same Stacks 092Q statement and is its own (still-open) sorry.
+  -- We delegate here so that any future closure there immediately closes this theorem.
+  exact Algebra.WeaklyEtale.indEtale_field K B
 
 /-- (Stacks 097Z, Olivier.) Let `A` be a strictly henselian local ring and `A → B` a local,
 weakly étale ring map of local rings. Then `algebraMap A B` is bijective (so `A = B` as
@@ -109,10 +129,15 @@ theorem Algebra.WeaklyEtale.bijective_of_isStrictlyHenselianLocalRing
     (A B : Type u) [CommRing A] [CommRing B] [IsLocalRing A] [IsLocalRing B]
     [IsStrictlyHenselianLocalRing A] [Algebra A B] [IsLocalHom (algebraMap A B)]
     [Algebra.WeaklyEtale A B] :
-    Function.Bijective (algebraMap A B) := by
+    Function.Bijective (algebraMap A B) :=
   -- Blueprint: thm:weakly-etale-over-henselian-sep-closed
   --            (more-on-local-structure.tex L779) + thm:weakly-etale-over-sh (L814).
-  sorry
+  -- A strictly henselian local ring is, by definition, a henselian local ring with
+  -- separably closed residue field. The Olivier statement for that combined hypothesis
+  -- is already scaffolded as `Algebra.WeaklyEtale.bijective_of_henselianLocalRing`
+  -- in `Proetale/Algebra/HenselianLocalRing.lean`; we delegate so the obligation
+  -- lives at a single source.
+  Algebra.WeaklyEtale.bijective_of_henselianLocalRing
 
 /-- Reduction sub-lemma for Stacks 097Y. If `T` is a w-contractible ring (so every local
 ring of `T` at a maximal ideal is strictly henselian) and `R → T` is weakly étale, then
@@ -135,6 +160,50 @@ theorem Algebra.IndEtale.of_weaklyEtale_isWContractibleRing
   -- of `R` at the contracted prime. Globalising via the w-contractible structure of `T`
   -- (Stacks 097G + the constructible cover) writes `T` as a filtered colimit of étale
   -- `R`-algebras.
+  --
+  -- Partial scaffolding (iter-105+): the one structural fact directly usable from the
+  -- hypotheses is that every maximal ideal of `T` has a strictly henselian localization.
+  -- This is exactly the `IsWStrictlyLocalRing` part of `IsWContractibleRing T`.
+  have _hSH : ∀ (m : Ideal T) [m.IsMaximal],
+      IsStrictlyHenselianLocalRing (Localization.AtPrime m) := fun m _ =>
+    IsWStrictlyLocalRing.isStrictlyHenselianLocalRing_localization m
+  -- Step (a). Weakly étale is stable under composition: for each maximal `m` of `T`,
+  -- the ring-map composition `R → T → T_m` is weakly étale because `T → T_m` is
+  -- ind-Zariski (hence weakly étale) and weakly étale is closed under `comp`.
+  have _hRTm : ∀ (m : Ideal T) [m.IsMaximal],
+      ((algebraMap T (Localization.AtPrime m)).comp (algebraMap R T)).WeaklyEtale := by
+    intro m _
+    have hRT : (algebraMap R T).WeaklyEtale :=
+      (RingHom.weaklyEtale_algebraMap_iff (R := R) (S := T)).mpr inferInstance
+    have hTTm : (algebraMap T (Localization.AtPrime m)).WeaklyEtale :=
+      (RingHom.weaklyEtale_algebraMap_iff (R := T) (S := Localization.AtPrime m)).mpr
+        inferInstance
+    exact RingHom.WeaklyEtale.comp hRT hTTm
+  -- Step (b). The IsWLocalRing structure on `T` (carried by `IsWContractibleRing`) provides
+  -- exactly the data needed for the constructible-clopen cover: every prime of `T`
+  -- specializes to a unique closed point.
+  have _hwl : IsWLocalRing T := inferInstance
+  -- Step (c). Olivier's bijectivity helper
+  -- `Algebra.WeaklyEtale.bijective_of_isStrictlyHenselianLocalRing` is poised to apply,
+  -- once we identify the canonical source of the local map `R_{m.comap _} → T_m`
+  -- with a strictly henselian local ring. The two remaining ingredients are:
+  --   1. Strict henselization `R^{sh}_p` as a weakly étale, faithfully flat
+  --      `R`-algebra at a prime `p`. Then `R^{sh}_p` is strictly henselian local,
+  --      and the base change `R^{sh}_p → T_m ⊗_R R^{sh}_p` is weakly étale (Olivier
+  --      applies) and local; concluding via the Olivier helper identifies
+  --      `R^{sh}_p` with the localization `T_m` upto a uniqueness argument.
+  --   2. A `ColimitPresentation`-shape lemma packaging the constructible-clopen
+  --      cover of a w-contractible ring into a filtered diagram of étale
+  --      `R`-subalgebras whose colimit is `T`. Combined with (1), this gives a
+  --      `ColimitPresentation` for `T` over `R` whose stages are étale, which is
+  --      the hypothesis of `Algebra.IndEtale.of_colimitPresentation`.
+  -- Neither (1) nor (2) is currently in Mathlib or this project; they will be
+  -- supplied by a dedicated infrastructure iteration once L3c closes upstream
+  -- (PROGRESS.md "off-limits this iter" list).
+  --
+  -- Final step (anticipated): apply `Algebra.IndEtale.of_colimitPresentation` to the
+  -- filtered diagram supplied by (2):
+  --   `exact Algebra.IndEtale.of_colimitPresentation R T P (fun i => by infer_instance)`.
   sorry
 
 /-- If `S` is a weakly étale `R`-algebra, there exists a faithfully flat, ind-étale `S`-algebra `T`

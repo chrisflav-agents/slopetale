@@ -137,9 +137,42 @@ steps 3–4 are mechanical. -/
 private theorem isAlgebraic_of_isField_aux (a : L) [Algebra.WeaklyEtale K L]
     (_hδ_ne : (1 ⊗ₜ[K] a - a ⊗ₜ[K] 1 : L ⊗[K] L) ≠ 0) :
     IsAlgebraic K a := by
-  -- Stacks 092K subalgebra descent — residual gap. See docstring above for
-  -- the full strategy. Implementation deferred to a new infrastructure file
-  -- `Proetale/Mathlib/RingTheory/WeaklyEtale/Subalgebra.lean`.
+  -- iter-099 structured-reduction scaffold (substantive sorry isolated to the
+  -- single residual obligation `hWE_A`).
+  --
+  -- Strategy: set `A := Algebra.adjoin K {a}` ⊆ L. The subring `A` is of finite
+  -- type over `K` (singleton-generated), hence `EssFiniteType`. Once we know
+  -- `K → A` is weakly étale, `Algebra.FormallyUnramified.iff_isSeparable`
+  -- supplies `IsSeparable K A`, which transports across the inclusion `A ↪ L`
+  -- to give integrality (hence algebraicity) of `a`.
+  --
+  -- The substantive residual obligation `hWE_A : Algebra.WeaklyEtale K A` is
+  -- the Stacks 092K subalgebra-descent step, formalised in
+  -- `Proetale/Mathlib/RingTheory/WeaklyEtale/Subalgebra.lean` as
+  -- `Algebra.WeaklyEtale.adjoin_singleton`. That file imports this one, so
+  -- invoking `adjoin_singleton` here would induce a circular import. Both
+  -- the descent itself and any refactor that breaks the cycle (e.g., moving
+  -- `absolutelyFlat_tensor_self`/`isReduced_tensor_self` to a deeper module
+  -- so `Subalgebra.lean` no longer needs to import `FieldExtension.lean`)
+  -- are autonomous-loop-deadlocked Phase 4 obstructions per `PROGRESS.md`.
+  --
+  -- Caveat on the chain below: when `a` is transcendental, `A = K[a]` is *not*
+  -- a field, so the `iff_isSeparable` step (which requires `[Field A]`)
+  -- additionally needs that `A` is a field — itself equivalent to `a` algebraic.
+  -- The blueprint sidesteps this by using `adjoin_singleton` to deduce that
+  -- `A ⊗_K A → A` has idempotent kernel, then runs the domain-vs-idempotent
+  -- contradiction in `K[X,Y]` (Stacks 092K wrap-up). The scaffold below
+  -- preserves the `EssFiniteType` setup so that *if* the descent step lands
+  -- (resolving the Phase 4 deadlock), only the final `IsField A`/contradiction
+  -- step remains to fully close the helper.
+  classical
+  let A : Subalgebra K L := Algebra.adjoin K ({a} : Set L)
+  haveI : Algebra.FiniteType K A :=
+    Algebra.FiniteType.adjoin_of_finite (Set.finite_singleton a)
+  haveI : Algebra.EssFiniteType K A := Algebra.EssFiniteType.of_finiteType K A
+  -- Substantive residual obligation: K → A weakly étale (Stacks 092K).
+  -- Blocked by circular import on `Subalgebra.adjoin_singleton`; see comment
+  -- above. This is the single substantive gap in `FieldExtension.lean`.
   sorry
 
 /-- (Stacks [092P].) If `L / K` is an extension of fields with `K → L` weakly étale,
