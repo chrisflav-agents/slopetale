@@ -490,6 +490,118 @@ end Pullback
 
 end Pullback
 
+/-!
+### The profinite Pullback
+
+The "profinite Pullback" is the filtered colimit of finite-stage `Pullback S f` rings
+over `S : DiscreteQuotient T` for a profinite space `T`. This corresponds to
+`def:modify-pi0-profinite` (Stacks 097D) in the blueprint and is the
+key carrier underlying `exists_isWContractibleRing_of_isWStrictlyLocal`.
+-/
+
+section PullbackProfinite
+
+namespace PullbackProfinite
+
+variable {T : Type u} [TopologicalSpace T] [CompactSpace T] [T2Space T]
+  [TotallyDisconnectedSpace T]
+
+/-- The transition diagram for the profinite Pullback construction
+(blueprint `def:modify-pi0-transition-map`). For a refinement
+`S₁ ≤ S₂` of discrete quotients of `T` (S₁ finer than S₂ in
+Mathlib's order, equivalently `Sop₂ ⟶ Sop₁` in
+`(DiscreteQuotient T)ᵒᵖ`), the transition map
+`Pullback S₂ f → Pullback S₁ f` (coarser → finer at the algebra level)
+is constructed via the identifies-local-rings bijection. -/
+def diag (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    (DiscreteQuotient T)ᵒᵖ ⥤ CommAlgCat A where
+  obj S := .of A (Pullback S.unop f)
+  map {_ _} _ := sorry
+  map_id _ := sorry
+  map_comp _ _ := sorry
+
+/-- The transition diagram of finite-stage `Pullback` rings admits a colimit:
+`(DiscreteQuotient T)ᵒᵖ` is filtered (finer-direction in Mathlib's
+order = upward in the opposite, with meets in `DiscreteQuotient T`
+becoming joins in the opposite) and `CommAlgCat A` has all filtered
+colimits. -/
+noncomputable instance diag_hasColimit
+    (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    HasColimit (diag f) := inferInstance
+
+end PullbackProfinite
+
+/-- The profinite Pullback ring (Stacks 097D; blueprint `def:modify-pi0-profinite`):
+the filtered colimit of finite-stage `Pullback S f` rings over `S : DiscreteQuotient T`.
+-/
+def PullbackProfinite {T : Type u} [TopologicalSpace T] [CompactSpace T]
+    [T2Space T] [TotallyDisconnectedSpace T]
+    (f : C(T, ConnectedComponents (PrimeSpectrum A))) : Type u :=
+  colimit (C := CommAlgCat A) (PullbackProfinite.diag f)
+
+namespace PullbackProfinite
+
+variable {T : Type u} [TopologicalSpace T] [CompactSpace T] [T2Space T]
+  [TotallyDisconnectedSpace T]
+
+instance commRing (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    CommRing (PullbackProfinite f) :=
+  inferInstanceAs <| CommRing <| colimit (C := CommAlgCat A) (diag f)
+
+instance algebra (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    Algebra A (PullbackProfinite f) :=
+  inferInstanceAs <| Algebra A <| colimit (C := CommAlgCat A) (diag f)
+
+/-- The profinite Pullback ring is ind-Zariski over `A` (Stacks 097D;
+blueprint `thm:modify-pi0-profinite-properties`). Each finite-stage
+`Pullback S f` is ind-Zariski (blueprint `thm:modify-pi0-finite-properties`),
+and ind-Zariski is closed under filtered colimits. -/
+instance indZariski (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    Algebra.IndZariski A (PullbackProfinite f) := sorry
+
+/-- The profinite Pullback ring is faithfully flat over `A`
+(blueprint `thm:modify-pi0-profinite-properties`). Each finite-stage
+`Pullback S f` is faithfully flat over `A` (composition of products and
+localizations at idempotents), and faithfully flat algebras are closed
+under filtered colimits. -/
+instance faithfullyFlat (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    Module.FaithfullyFlat A (PullbackProfinite f) := sorry
+
+/-- If `A` is w-local, the profinite Pullback ring is also w-local
+(blueprint `thm:modify-pi0-profinite-properties`; cf.
+`thm:cartesian-profinite-w-local`). -/
+instance isWLocalRing [IsWLocalRing A]
+    (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    IsWLocalRing (PullbackProfinite f) := sorry
+
+/-- The connected components of `Spec (PullbackProfinite f)` are canonically
+homeomorphic to `T` (blueprint `thm:modify-pi0-profinite-properties`; the
+canonical cartesian square `Spec D → T` over `Spec A → π₀(Spec A)`). -/
+def pi0Equiv (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    ConnectedComponents (PrimeSpectrum (PullbackProfinite f)) ≃ₜ T := sorry
+
+/-- Stalks at maximal ideals of the profinite Pullback are strictly Henselian
+when `A` is w-strictly-local. This combines `bijectiveOnStalks_algebraMap`
+(from `indZariski`) with the strictly-Henselian transport along ring iso. -/
+instance isWStrictlyLocalRing [IsWStrictlyLocalRing A]
+    (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    IsWStrictlyLocalRing (PullbackProfinite f) := sorry
+
+/-- The full conclusion: when `T` is extremally disconnected (and `A` is
+w-strictly-local), the profinite Pullback `PullbackProfinite f` is w-contractible.
+Combines `isWStrictlyLocalRing` with the transport of
+`ExtremallyDisconnected T` to `ExtremallyDisconnected (π₀(Spec D))`
+via `pi0Equiv`. -/
+instance isWContractibleRing [IsWStrictlyLocalRing A]
+    [ExtremallyDisconnected T]
+    (f : C(T, ConnectedComponents (PrimeSpectrum A))) :
+    IsWContractibleRing (PullbackProfinite f) :=
+  { extremallyDisconnected_connectedComponents := sorry }
+
+end PullbackProfinite
+
+end PullbackProfinite
+
 end WContractification
 
 end
@@ -1149,11 +1261,53 @@ that is stated as an admitted helper lemma below.
 --     transfer of strictly Henselian property through ring isomorphism
 -- Individual pieces (a), (c-w-local part), (d-bijectiveOnStalks) are fully proved.
 -- Missing infrastructure: (b) profinite Pullback definition + (c-remaining) its properties.
+/-- A discrete-topology wrapper around `ConnectedComponents (PrimeSpectrum A)`, used to
+invoke the Stone–Čech compactification for Gleason's projective cover of `π₀(Spec A)`. -/
+private def Pi0AsDiscrete (A : Type u) [CommRing A] : Type u :=
+  ConnectedComponents (PrimeSpectrum A)
+
+namespace Pi0AsDiscrete
+
+instance (A : Type u) [CommRing A] : TopologicalSpace (Pi0AsDiscrete A) := ⊥
+instance (A : Type u) [CommRing A] : DiscreteTopology (Pi0AsDiscrete A) := ⟨rfl⟩
+
+/-- The identity map from the discretized wrapper back to `ConnectedComponents (PrimeSpectrum A)`
+with its quotient topology. Continuous because the source has the discrete topology. -/
+def toPi0 (A : Type u) [CommRing A] :
+    Pi0AsDiscrete A → ConnectedComponents (PrimeSpectrum A) := id
+
+lemma continuous_toPi0 (A : Type u) [CommRing A] : Continuous (toPi0 A) :=
+  continuous_of_discreteTopology
+
+end Pi0AsDiscrete
+
+/-- Existence of an extremally disconnected profinite cover of `π₀(Spec A)`.
+By Gleason's theorem (`StoneCech.projective` + `CompactT2.Projective.extremallyDisconnected`),
+the Stone–Čech compactification of the connected-components set with its discrete topology
+provides such a cover. -/
+private lemma exists_extremallyDisconnected_continuous_to_pi0 (A : Type u) [CommRing A] :
+    ∃ (T : Type u) (_ : TopologicalSpace T) (_ : CompactSpace T) (_ : T2Space T)
+      (_ : TotallyDisconnectedSpace T) (_ : ExtremallyDisconnected T),
+      Nonempty C(T, ConnectedComponents (PrimeSpectrum A)) := by
+  haveI : ExtremallyDisconnected (StoneCech (Pi0AsDiscrete A)) :=
+    CompactT2.Projective.extremallyDisconnected
+      (StoneCech.projective (X := Pi0AsDiscrete A))
+  refine ⟨StoneCech (Pi0AsDiscrete A), inferInstance, inferInstance, inferInstance,
+    inferInstance, inferInstance, ⟨?_⟩⟩
+  exact ⟨stoneCechExtend (Pi0AsDiscrete.continuous_toPi0 A),
+    continuous_stoneCechExtend _⟩
+
 private lemma exists_wContractibleCover (A : Type u) [CommRing A] [IsWStrictlyLocalRing A] :
     ∃ (D : Type u) (_ : CommRing D) (_ : Algebra A D),
       Algebra.IndZariski A D ∧ Module.FaithfullyFlat A D ∧ IsWContractibleRing D := by
   -- Blueprint: thm:ind-etale-w-contractible-cover-of-w-strictly-local (Stacks 0983).
-  sorry
+  -- Step 1: pick a profinite extremally disconnected cover `T → π₀(Spec A)`.
+  obtain ⟨T, _, _, _, _, _, ⟨f⟩⟩ :=
+    exists_extremallyDisconnected_continuous_to_pi0 A
+  -- Step 2: take `D := WContractification.PullbackProfinite f`. The four named
+  -- property witnesses + the bundled `isWContractibleRing` instance close everything.
+  exact ⟨WContractification.PullbackProfinite f, inferInstance, inferInstance,
+    inferInstance, inferInstance, inferInstance⟩
 
 /-- Any w-strictly-local ring has an ind-Zariski, faithfully flat cover that is w-contractible. -/
 lemma exists_isWContractibleRing_of_isWStrictlyLocal

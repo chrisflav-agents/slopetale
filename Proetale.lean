@@ -5,6 +5,7 @@ import Proetale.Algebra.Etale
 import Proetale.Algebra.FaithfullyFlat
 import Proetale.Algebra.FilteredLocalColimit
 import Proetale.Algebra.HenselianLocalRing
+import Proetale.Algebra.IdentifiesLocalRings
 import Proetale.Algebra.Ind
 import Proetale.Algebra.IndBijectiveOnStalks
 import Proetale.Algebra.IndEtale
@@ -15,6 +16,7 @@ import Proetale.Algebra.Preliminaries.Ideal
 import Proetale.Algebra.ProEtaleContraction
 import Proetale.Algebra.StalkAlgebraic
 import Proetale.Algebra.StalkIso
+import Proetale.Algebra.StructureSheafPullback
 import Proetale.Algebra.WContractible
 import Proetale.Algebra.WLocal
 import Proetale.Algebra.WLocalization.Basic
@@ -80,6 +82,8 @@ import Proetale.Mathlib.FieldTheory.IsSepClosed
 import Proetale.Mathlib.Order.BooleanAlgebra.Set
 import Proetale.Mathlib.RingTheory.Etale.HenselianIdempotentLift
 import Proetale.Mathlib.RingTheory.Etale.HenselianPair
+import Proetale.Mathlib.RingTheory.Etale.HenselianPairCharpolyDescent
+import Proetale.Mathlib.RingTheory.Etale.HenselianPairLift
 import Proetale.Mathlib.RingTheory.Etale.IndSpreads
 import Proetale.Mathlib.RingTheory.Etale.Prod
 import Proetale.Mathlib.RingTheory.Etale.StrictlyHenselian
@@ -98,8 +102,10 @@ import Proetale.Mathlib.RingTheory.Spectrum.Prime.Topology
 import Proetale.Mathlib.RingTheory.TensorProduct.Maps
 import Proetale.Mathlib.RingTheory.WeaklyEtale.FieldExtension
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Local
+import Proetale.Mathlib.RingTheory.WeaklyEtale.Localization
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Pi
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Subalgebra
+import Proetale.Mathlib.RingTheory.WeaklyEtale.TensorSelf
 import Proetale.Mathlib.Topology.Category.TopCat.Limits.Pullbacks
 import Proetale.Mathlib.Topology.Connected.TotallyDisconnected
 import Proetale.Mathlib.Topology.Constructions

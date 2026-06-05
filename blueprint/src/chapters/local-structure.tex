@@ -1,4 +1,5 @@
 \chapter{Local structures}
+% archon:covers Proetale/Algebra/WContractible.lean Proetale/Algebra/IdentifiesLocalRings.lean
 
 This chapter serves for the first half of the commutative algebra preparation of the remaining part of the paper. The key result is
 \begin{enumerate}
@@ -455,30 +456,591 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
   by sending $B$ to $\Spec(B)$.
 \end{definition}
 
-\begin{lemma}{\cite[\href{https://stacks.math.columbia.edu/tag/096L}{Tag 096L}]{stacks-project}}
+\begin{definition}\leanok
+[Lean carrier for ``Hom over $\Spec A$'' --- Archon-original]
+  \label{def:identifies-local-ring-homover}
+  \uses{def:identify-local-rings}
+  \lean{Algebra.BijectiveOnStalks.HomOver}
+  Let $A$ be a ring, $X = \Spec(A)$, and let $B, C$ be $A$-algebras with
+  structure maps $\alpha_B : A \to B$ and $\alpha_C : A \to C$. Define
+  $\mathrm{HomOver}(A, B, C)$ to be the set of pairs $(\varphi, h)$
+  where $\varphi : \Spec(C) \to \Spec(B)$ is a continuous map and $h$
+  is a witness of the compatibility condition
+  $\Spec(\alpha_B) \circ \varphi = \Spec(\alpha_C)$, i.e. for every
+  $\mathfrak p \in \Spec(C)$ one has
+  $\alpha_B^{-1}(\varphi(\mathfrak p)) = \alpha_C^{-1}(\mathfrak p)$
+  as elements of $\Spec(A)$.
+
+  This concretely materialises $\Hom_{\mathrm{Top}_X}(\Spec C, \Spec B)$ as a
+  set --- the Lean carrier \texttt{Algebra.BijectiveOnStalks.HomOver}
+  is the iter-132 design choice (a concrete \texttt{structure} rather
+  than a \texttt{CategoryTheory.Over} object) made to facilitate
+  \texttt{FunLike} / \texttt{@[ext]} API.
+\end{definition}
+
+\begin{lemma}\leanok
+{\cite[\href{https://stacks.math.columbia.edu/tag/096L}{Tag 096L}]{stacks-project}}
   \label{thm:identifies-local-ring-to-top-fully-faithful}
+  \lean{Algebra.BijectiveOnStalks.algHomEquivContinuousMap}
   \uses{def:identifies-local-ring-to-top}
   Let $A$ be a ring. Set $X = \Spec (A)$. The functor \(F\) constructed in \Cref{def:identifies-local-ring-to-top}
   \[
   B \longmapsto \Spec (B)
   \]
   from the category of $A$-algebras $B$ such that $A \to B$ identifies local rings to the category of topological spaces over $X$ is fully faithful.
+
+  \emph{Lean delivery (iter-132).} The Lean carrier lives in
+  \texttt{Proetale/Algebra/IdentifiesLocalRings.lean} as a hom-set
+  bijection (rather than a full categorical functor) — when $A \to B$
+  and $A \to C$ both identify local rings (Lean class
+  \texttt{Algebra.BijectiveOnStalks}, already present in
+  \texttt{Proetale/Algebra/StalkIso.lean}), the map
+  $\Hom_{A\text{-alg}}(B, C) \to \mathrm{Hom}_{\mathrm{Top}_X}(\Spec C, \Spec B)$
+  is an equivalence of sets. The iter-132 file-skeleton lane scaffolds
+  the statement; the closing proof in subsequent iters formalises the
+  ringed-space identification $\mathcal O_Y = p^{-1} \mathcal O_X$ for
+  $A \to B$ identifying local rings, then invokes the canonical
+  isomorphism $f^{-1}\mathcal O_Y \cong q^{-1}\mathcal O_X \cong
+  \mathcal O_Z$ on the codomain.
+\end{lemma}
+
+% SOURCE QUOTE PROOF: "This follows from Lemma
+% \ref{lemma-fully-faithful-spaces-over-X} and the fact that if $A \to B$
+% identifies local rings, then the pullback of the structure sheaf of
+% $\Spec(A)$ via $p : \Spec(B) \to \Spec(A)$ is equal to the structure
+% sheaf of $\Spec(B)$." (Stacks Project Tag 096L, proof, read from
+% references/stacks-096J.tex L140-145).
+\begin{proof}
+\leanok
+\uses{def:identify-local-rings,def:identifies-local-ring-homover,def:identifies-local-ring-to-top,
+      lem:identifies-local-ring-spec-injective,lem:identifies-local-ring-spec-existence}
+\textit{Source: Stacks Project, Tag 096L, proof.}
+The functor \(F\) factors as the composition
+\[
+  \operatorname{ILR}_A \;\longrightarrow\;
+    \operatorname{LRS}_{/X} \;\longrightarrow\;
+    \operatorname{Top}_{/X},
+\]
+where the first arrow sends \(B\) to \((\Spec B, \mathcal O_{\Spec B}) \to (\Spec A, \mathcal O_{\Spec A})\) and the second forgets the sheaf-level data. The hypothesis that \(A \to B\) identifies local rings is equivalent to the assertion that the pullback of the structure sheaf is the structure sheaf, i.e.\ \(p^{-1}\mathcal O_X = \mathcal O_Y\) for \(p : Y = \Spec B \to X = \Spec A\); under this hypothesis \Cref{lem:identifies-local-ring-spec-spaces-over-X} shows that the second arrow is bijective on hom-sets. The first arrow is bijective on hom-sets by the affine-scheme \(\Spec/\Gamma\) adjunction.
+
+\medskip
+
+\noindent\emph{Lean-side decomposition.} On the formal side the target
+is the equivalence
+\[
+  \mathrm{algHomEquivContinuousMap} \colon
+    \Hom_{A\text{-alg}}(B, C) \;\simeq\; \mathrm{HomOver}(A, B, C),
+\]
+where the right-hand carrier was introduced in
+\Cref{def:identifies-local-ring-homover}. Following the iter-133/134
+proof split, we package this as the pair
+\((\Phi, \Psi)\) of forward and inverse maps and read off the bijection
+from the two halves separately: injectivity of \(\Phi\) is handled in
+\Cref{lem:identifies-local-ring-spec-injective}, and existence of a
+preimage under \(\Phi\) (i.e.\ surjectivity) is handled in
+\Cref{lem:identifies-local-ring-spec-existence}. The bundled equivalence
+\(\mathrm{algHomEquivContinuousMap}\) is then assembled by
+\texttt{Equiv.ofBijective} from the bijection
+\(\Hom_{A\text{-alg}}(B, C) \to \mathrm{HomOver}(A, B, C)\) of
+\Cref{lem:identifies-local-ring-spec-injective} +
+\Cref{lem:identifies-local-ring-spec-existence}.
+\end{proof}
+
+% ------------------------------------------------------------------
+% iter-135 split: the iter-133/134 prover decomposed
+% thm:identifies-local-ring-to-top-fully-faithful into the LRS->Top
+% bijection (Stacks 096K, recorded below as a chapter sub-lemma) plus
+% injectivity and existence halves at the AlgHom <-> HomOver level. The
+% three sub-lemmas below correspond to the Lean declarations
+%   Algebra.BijectiveOnStalks.continuousMap_of_algHom_injective
+%   Algebra.BijectiveOnStalks.exists_algHom_of_continuousMap
+% (the closed/open halves named in
+% .archon/task_results/Algebra_IdentifiesLocalRings.lean.md) plus an
+% explicit chapter record of Stacks 096K used in the parent's proof above.
+% ------------------------------------------------------------------
+
+% SOURCE: Stacks Project, Tag 096K, Lemma 61.3.7
+% (read from references/stacks-096J.tex L108-127).
+% SOURCE QUOTE: "Let $p : (Y, \mathcal{O}_Y) \to (X, \mathcal{O}_X)$ and
+% $q : (Z, \mathcal{O}_Z) \to (X, \mathcal{O}_X)$ be morphisms of locally
+% ringed spaces. If $\mathcal{O}_Y = p^{-1}\mathcal{O}_X$, then
+% $$\Mor_{\text{LRS}/(X, \mathcal{O}_X)}((Z, \mathcal{O}_Z), (Y, \mathcal{O}_Y))
+% \longrightarrow \Mor_{\textit{Top}/X}(Z, Y),\quad (f, f^\sharp) \longmapsto f$$
+% is bijective. Here $\text{LRS}/(X, \mathcal{O}_X)$ is the category of
+% locally ringed spaces over $X$ and $\textit{Top}/X$ is the category of
+% topological spaces over $X$."
+\begin{lemma}[Stacks 096K: LRS-over-$X$ forget-to-Top is bijective when $\mathcal O_Y = p^{-1}\mathcal O_X$]
+  \label{lem:identifies-local-ring-spec-spaces-over-X}
+  Let \((X, \mathcal O_X)\) be a locally ringed space and let
+  \(p \colon (Y, \mathcal O_Y) \to (X, \mathcal O_X)\) and
+  \(q \colon (Z, \mathcal O_Z) \to (X, \mathcal O_X)\) be morphisms of
+  locally ringed spaces. If \(\mathcal O_Y = p^{-1}\mathcal O_X\), then
+  the forgetful map
+  \[
+    \Mor_{\mathrm{LRS}/(X, \mathcal O_X)}\!\left((Z, \mathcal O_Z), (Y, \mathcal O_Y)\right)
+      \;\longrightarrow\;
+      \Mor_{\mathrm{Top}/X}(Z, Y), \quad (f, f^\sharp) \longmapsto f
+  \]
+  is a bijection.
+  \textit{Source: Stacks Project, Tag 096K.}
+\end{lemma}
+
+% SOURCE QUOTE PROOF: "This is immediate from the definitions." (Stacks
+% Project Tag 096K, proof, read from references/stacks-096J.tex L125-127).
+\begin{proof}
+  \textit{Source: Stacks Project, Tag 096K, proof.}
+  Given a continuous \(f \colon Z \to Y\) with \(p \circ f = q\),
+  inverse-image functoriality and the hypothesis \(\mathcal O_Y =
+  p^{-1}\mathcal O_X\) give a canonical chain
+  \[
+    f^{-1}\mathcal O_Y \;=\; f^{-1} p^{-1} \mathcal O_X
+      \;=\; (p \circ f)^{-1} \mathcal O_X
+      \;=\; q^{-1} \mathcal O_X \;=\; \mathcal O_Z;
+  \]
+  one checks the composed map is an LRS-morphism (the stalk components
+  are isomorphisms because \(\mathcal O_Y = p^{-1}\mathcal O_X\)
+  identifies each stalk \((\mathcal O_Y)_{f(z)}\) with \((\mathcal O_X)_{p(f(z))} = (\mathcal O_X)_{q(z)} = (\mathcal O_Z)_z\)).
+  Conversely, an LRS-morphism over \((X, \mathcal O_X)\) determines
+  its underlying continuous map and is determined by it because the
+  sheaf component is forced by the same inverse-image chain.
+\end{proof}
+
+\begin{lemma}\leanok
+[Injectivity of $\Spec$ on $\Hom_{A\text{-alg}}$ in the \texttt{BijectiveOnStalks} setting --- Archon split]
+  \label{lem:identifies-local-ring-spec-injective}
+  \lean{Algebra.BijectiveOnStalks.continuousMap_of_algHom_injective}
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover}
+  Let \(A\) be a ring and let \(A \to B\), \(A \to C\) be two
+  \(A\)-algebra structures both identifying local rings. The forward
+  map
+  \[
+    \Phi \colon \Hom_{A\text{-alg}}(B, C) \;\longrightarrow\;
+      \mathrm{HomOver}(A, B, C),
+      \qquad f \longmapsto (\Spec(f), \text{compatibility witness}),
+  \]
+  introduced in \Cref{def:identifies-local-ring-hom-set-bijection}, is
+  injective.
 \end{lemma}
 
 \begin{proof}
-The functor \(F\) is a composition of two functors:
-1. The fully faithful functor from the category of \(A\)-algebras \(B\) for which \(A \to B\) identifies local rings to the category of ringed spaces \((Y, \O_Y)\) over \(X = \Spec(A)\) satisfying \(\O_Y = p^{-1}\O_X\), where \(p: Y \to X\) is the structure map.
-2. The functor sending a ringed space to its underlying topological space, and a morphism \((f, f^\#)\) to \(f\).
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover}
+  \leanok
+  Suppose \(f_1, f_2 : B \to C\) are two \(A\)-algebra homomorphisms with
+  \(\Spec(f_1) = \Spec(f_2)\). For each prime \(\mathfrak p \subset C\),
+  write \(\mathfrak q_i = f_i^{-1}(\mathfrak p)\); the equality of
+  Spec-maps gives \(\mathfrak q_1 = \mathfrak q_2\), call this common
+  prime \(\mathfrak q\). Localising at \(\mathfrak p\) yields two
+  ring maps
+  \(M_i \colon B_\mathfrak q \to C_\mathfrak p\)
+  induced by \(f_i\), and these agree after pre-composition with the
+  canonical \(A_{\mathfrak q \cap A} \to B_\mathfrak q\): both equal the
+  local ring map \(A_{\mathfrak q \cap A} \to C_\mathfrak p\)
+  attached to \(A \to C\) at \(\mathfrak p\) (this uses that each
+  \(f_i\) is an \(A\)-algebra map, so it commutes with the structure
+  maps from \(A\)). Because \(A \to B\) identifies local rings, the
+  canonical map \(A_{\mathfrak q \cap A} \to B_\mathfrak q\) is
+  surjective (in fact an isomorphism), so \(M_1 = M_2\). Finally, the
+  product of localisation maps
+  \(C \to \prod_{\mathfrak p}\, C_\mathfrak p\) is injective, so
+  \(f_1 = f_2\).
 
-The second functor is fully faithful because \(f^\#\) is always an isomorphism, being given by the canonical identification \(f^{-1}\O_Y \cong f^{-1}p^{-1}\O_X = q^{-1}\O_X \cong \O_Z\), where \(p: Y \to X\) and \(q: Z \to X\) are the structure maps.
+  \smallskip
+
+  \noindent\emph{Lean delivery.} The injectivity half lives in
+  \texttt{Proetale/Algebra/IdentifiesLocalRings.lean} as
+  \texttt{continuousMap\_of\_algHom\_injective}. The chain of
+  reductions above uses, in order, \texttt{AlgHom.coe\_ringHom\_injective}
+  / \texttt{RingHom.ext} to reduce to pointwise equality, then
+  \texttt{PrimeSpectrum.toPiLocalization\_injective C} for the final
+  localisation-injectivity step, and \texttt{Localization.localRingHom}
+  for the per-prime maps \(M_i\). The proof was closed sorry-free in
+  iter-134.
+
+  \smallskip
+
+  \noindent\emph{Source.} Per Stacks 096L the parent functor
+  \(\operatorname{ILR}_A \to \operatorname{Top}_X\) is fully faithful;
+  this lemma is its injectivity (faithfulness) half rendered as a
+  hom-set statement at the level of \(A\)-algebra maps.
 \end{proof}
+
+\begin{lemma}\leanok
+[Existence of an $A$-algebra map from a $\mathrm{HomOver}$ datum in the \texttt{BijectiveOnStalks} setting --- Archon split]
+  \label{lem:identifies-local-ring-spec-existence}
+  \lean{Algebra.BijectiveOnStalks.exists_algHom_of_continuousMap}
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover,
+        lem:identifies-local-ring-spec-spaces-over-X}
+  Let \(A\) be a ring and let \(A \to B\), \(A \to C\) be two
+  \(A\)-algebra structures both identifying local rings. For every
+  \((\varphi, h) \in \mathrm{HomOver}(A, B, C)\) there exists an
+  \(A\)-algebra homomorphism \(f \colon B \to C\) with
+  \(\Spec(f) = \varphi\) (equivalently:
+  \(\Phi(f) = (\varphi, h)\)). This is the substantive content of
+  Stacks 096L --- the surjectivity half of the bijection
+  \(\Phi\).
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover,
+        lem:identifies-local-ring-spec-spaces-over-X,
+        lem:identifies-local-ring-invImage-structureSheaf-iso}
+  \textit{Source: Stacks Project, Tag 096L (the surjectivity half of
+  the cited bijection); the structure-sheaf identification used here
+  appears in Tag 096L's proof and uses Tag 096K as its main reduction
+  step.}
+
+  Write \(X = \Spec A\), \(Y = \Spec B\), \(Z = \Spec C\), with
+  structure maps \(p \colon Y \to X\) and \(q \colon Z \to X\). The
+  hypothesis that \(A \to B\) (resp.\ \(A \to C\)) identifies local
+  rings is equivalent --- as recorded inside the proof of Stacks 096L
+  --- to the structure-sheaf identification
+  \(\mathcal O_Y = p^{-1}\mathcal O_X\) (resp.\
+  \(\mathcal O_Z = q^{-1}\mathcal O_X\)). The compatibility witness
+  \(h\) of \((\varphi, h)\) says exactly \(p \circ \varphi = q\) on the
+  topological level.
+
+  Apply \Cref{lem:identifies-local-ring-spec-spaces-over-X} to the
+  pair \((p \colon Y \to X, q \colon Z \to X)\). Under
+  \(\mathcal O_Y = p^{-1}\mathcal O_X\), the LRS-over-\(X\) forgetful
+  map is bijective, so the continuous map \(\varphi \colon Z \to Y\)
+  promotes uniquely to a morphism of locally ringed spaces
+  \(\tilde\varphi \colon (Z, \mathcal O_Z) \to (Y, \mathcal O_Y)\) over
+  \((X, \mathcal O_X)\). Taking global sections of the induced sheaf
+  map \(\tilde\varphi^\sharp \colon \mathcal O_Y \to \varphi_* \mathcal O_Z\)
+  yields a ring map
+  \[
+    \mathcal O_Y(Y) \;\longrightarrow\; \mathcal O_Z(Z),
+      \qquad \text{i.e.}\qquad B \to C.
+  \]
+  Call this \(f \colon B \to C\). Tracing the global sections of the
+  diagram \(\mathcal O_X(X) \to \mathcal O_Y(Y) \to \mathcal O_Z(Z)\)
+  shows \(f \circ \alpha_B = \alpha_C\), so \(f\) is an \(A\)-algebra
+  homomorphism. The Spec-map of \(f\) agrees with \(\varphi\) on
+  points because the LRS-promotion \(\tilde\varphi\) of \Cref{lem:identifies-local-ring-spec-spaces-over-X} pinpoints the unique LRS-morphism over \(X\) with underlying map \(\varphi\), and \(\Spec(f)\) is another such morphism (with underlying map \(\Spec(f)\) and sheaf part the canonical comap of \(f\)); both must coincide. Hence \(\Spec(f) = \varphi\), as required.
+
+  \smallskip
+
+  \noindent\emph{Warning: the naive per-prime route does not close
+  existence.}
+  % iter-134 LM-vs-BP-checker `identifies-iter134` noted this trap;
+  % the iter-134 mathlib-analogist `lane-d-lrs-bridge` recipe walked
+  % into it.
+  A tempting strategy --- and the one followed by the iter-134
+  prover round --- is to mimic the injectivity argument by building
+  \(f(b)\) per-prime: for each \(\mathfrak p \subset C\) compute the
+  candidate image of \(b \in B\) in \(C_\mathfrak p\) via the chain
+  \(B \to B_{\varphi(\mathfrak p)} \cong A_{\varphi(\mathfrak p) \cap A}
+  = A_{\mathfrak p \cap A} \cong C_\mathfrak p\), then assemble these
+  into an element of \(\prod_{\mathfrak p} C_\mathfrak p\), and finally
+  recover an element of \(C\) via the injection
+  \(C \hookrightarrow \prod_{\mathfrak p} C_\mathfrak p\). The first
+  three steps go through unchanged from the injectivity proof, but the
+  final step is \emph{not} a formality: the injection \(C \hookrightarrow \prod_{\mathfrak p} C_\mathfrak p\)
+  is generally not surjective, and showing that the candidate family
+  lies in its image is precisely the structure-sheaf identification
+  \(\mathcal O_Z = q^{-1}\mathcal O_X\) repackaged as a "local data
+  globalises" sheaf condition. Per the iter-134 prover's task report
+  (\texttt{.archon/task\_results/Algebra\_IdentifiesLocalRings.lean.md})
+  this is the trap: the algebraic-only per-prime route eliminates the
+  \texttt{LocallyRingedSpace.Hom} scaffolding but does not, on its
+  own, close the existence half. Some form of the structure-sheaf
+  identification --- either the LRS route above or one of the
+  Mathlib-side alternatives listed next --- must appear in the proof.
+
+  \smallskip
+
+  \noindent\emph{Committed Mathlib route: sheaf-theoretic short circuit (iter-136).}
+  The iter-135 \texttt{mathlib-analogist} subagent
+  (\texttt{lane-d-sub-existence}) returned an
+  \texttt{ALIGN\_WITH\_MATHLIB} verdict on the \emph{sheaf-theoretic
+  short circuit} route; the plan agent has committed to this route
+  for iter-136. The full recipe lives in
+  \texttt{analogies/identifies-local-rings-lrs-bridge.md} (iter-135
+  revision). The three Mathlib idioms that close the route are:
+  \begin{itemize}
+    \item \texttt{AlgebraicGeometry.Spec.locallyRingedSpaceMap} ---
+      promotes a ring map to a morphism of locally ringed spaces
+      \(\Spec(\text{target}) \to \Spec(\text{source})\), packaging the
+      structure-sheaf comap automatically. We use it implicitly via the
+      structure-sheaf identification supplied by the helper below: once
+      we know \(q^{-1}\mathcal O_Y \cong \mathcal O_Z\) on \(\Spec C\),
+      the underlying continuous map \(\varphi \colon Z \to Y\) promotes
+      uniquely to an LRS-morphism \(\tilde\varphi \colon (Z,\mathcal O_Z)
+      \to (Y,\mathcal O_Y)\) over \((X,\mathcal O_X)\) by
+      \Cref{lem:identifies-local-ring-spec-spaces-over-X}.
+    \item \texttt{AlgebraicGeometry.Spec.preimage} (or, if the
+      one-shot form is unavailable in the current Mathlib snapshot,
+      its source \texttt{AlgebraicGeometry.ΓSpec.adjunction.homEquiv})
+      --- extracts the underlying ring map \(B \to C\) from an
+      LRS-morphism \(\tilde\varphi\) via global sections / \(\Spec\)-\(\Gamma\)
+      adjunction.
+    \item the new project helper
+      \Cref{lem:identifies-local-ring-invImage-structureSheaf-iso}
+      (stated below) --- supplies the structure-sheaf identification
+      \(q^{-1}\mathcal O_Y \cong \mathcal O_Z\) on \(\Spec C\) that, in
+      combination with \Cref{lem:identifies-local-ring-spec-spaces-over-X},
+      upgrades the continuous \(\varphi\) to an LRS-morphism over
+      \(X\). The helper is proved stalk-locally using
+      \texttt{Algebra.BijectiveOnStalks.localRingHom\_comp\_stalkIso}
+      (already in \texttt{Proetale/Algebra/StalkIso.lean}) and
+      \texttt{Algebra.BijectiveOnStalks.bijective\_localRingHom}.
+  \end{itemize}
+  Concretely, the existence proof first applies
+  \Cref{lem:identifies-local-ring-invImage-structureSheaf-iso} (with
+  the data \(A \to C\)) to obtain the structure-sheaf identification
+  \(q^{-1}\mathcal O_X \cong \mathcal O_Z\) on \(\Spec C\). Together
+  with \Cref{lem:identifies-local-ring-spec-spaces-over-X} applied to
+  \((p \colon Y \to X, q \colon Z \to X)\) --- whose hypothesis
+  \(\mathcal O_Y = p^{-1}\mathcal O_X\) is supplied by the same helper
+  applied to \(A \to B\) --- this upgrades the underlying continuous
+  map \(\varphi \colon Z \to Y\) to an LRS-morphism \(\tilde\varphi\)
+  over \((X,\mathcal O_X)\). The ring map \(f \colon B \to C\) is then
+  extracted via \(\Spec/\Gamma\) (i.e.\ \texttt{Spec.preimage}). The
+  compatibility witness \(h\) of \((\varphi, h)\) supplies the
+  over-\(X\) structure.
+
+  \smallskip
+
+  \noindent\emph{Deferred routes (iter-136 will not pursue).}
+  The two algebraic-only alternatives explored in earlier iters are
+  recorded here for completeness but are deliberately \emph{not}
+  followed in iter-136:
+  \begin{itemize}
+    \item \emph{Flat-epimorphism / Olivier characterisation.} An
+      algebra map identifying local rings is the same as a flat
+      epimorphism (Olivier's theorem); the iter-135 analogist
+      estimated this requires a Mathlib gap fill of \(\geq 500\)
+      LOC before it could plug in here, so it is deferred.
+    \item \emph{Direct sheafification.} An inline sheafification
+      argument on basic opens \(D(c) \subset \Spec C\) closes the
+      statement but produces no reusable artefact for downstream
+      \texttt{BijectiveOnStalks} consumers; deferred for that
+      reason.
+  \end{itemize}
+
+  \smallskip
+
+  \noindent\emph{Common helpers (all routes).}
+  \begin{itemize}
+    \item \texttt{PrimeSpectrum.comap\_comp} --- the composition
+      functoriality of \(\Spec\) on ring maps. Used in the proof that
+      \(\Spec(f) = \varphi\).
+    \item \texttt{Localization.localRingHom} and
+      \texttt{Algebra.BijectiveOnStalks.localRingHom} (already in
+      \texttt{Proetale/Algebra/StalkIso.lean}) --- give the per-prime
+      ring isomorphisms \(A_{\mathfrak q \cap A} \cong B_\mathfrak q\)
+      and \(A_{\mathfrak p \cap A} \cong C_\mathfrak p\) used in
+      every route.
+    \item \texttt{PrimeSpectrum.toPiLocalization\_injective} --- the
+      injection \(C \hookrightarrow \prod_{\mathfrak p} C_\mathfrak p\).
+      Used in the injectivity sub-lemma; in the existence sub-lemma it
+      appears as the target object whose image-of-\(C\) characterisation
+      is the trap discussed above.
+  \end{itemize}
+\end{proof}
+
+% NOTE (review iter-142): Lane D-sub prover (iter-142, second consecutive
+% iter against this signature) reports the named helper
+% `Algebra.BijectiveOnStalks.isIso_specMap_c` is mathematically wrong as
+% stated. The c-component of `Spec.locallyRingedSpaceMap` lives on
+% `Spec A` (a sheaf morphism `O_{Spec A} -> q_* O_{Spec B}`) and is iso
+% iff the ring map is a surjection on both stalks AND global sections,
+% strictly stronger than `Algebra.BijectiveOnStalks A B` (counterexample:
+% `Z -> Q`; see `Proetale/Algebra/IdentifiesLocalRings.lean` L210-230
+% docstring). The corrected helper lives on `Spec B`:
+%   `Algebra.BijectiveOnStalks.isIso_invImage_structureSheaf` --- the
+%   inverse-image map `q.base^{-1} O_{Spec A} -> O_{Spec B}` is iso.
+% This is the Stacks 096J <=> 04D2 sheaf-iso at the inverse-image level.
+% Plan agent: please dispatch a blueprint-writer to (a) rename
+% `lem:identifies-local-ring-spec-iso-c` to
+% `lem:identifies-local-ring-invImage-structureSheaf-iso`, (b) restate
+% the lemma at the inverse-image level, (c) update the `\lean{...}` to
+% `Algebra.BijectiveOnStalks.isIso_invImage_structureSheaf`. See
+% `task_results/Algebra_IdentifiesLocalRings.lean.md` (iter-142) for the
+% full closure recipe + Option B (algebraic re-packaging via
+% `PrimeSpectrum.toPiLocalization`).
+\begin{lemma}\leanok
+[Inverse-image of $\mathcal O_{\Spec A}$ is $\mathcal O_{\Spec B}$ when $A \to B$ identifies local rings --- Archon helper]
+  \label{lem:identifies-local-ring-invImage-structureSheaf-iso}
+  \lean{Algebra.BijectiveOnStalks.isIso_invImage_structureSheaf}
+  \uses{def:identify-local-rings, lem:identifies-local-ring-spec-spaces-over-X}
+  Let $A \to B$ be a ring homomorphism such that $A \to B$ identifies
+  local rings (i.e.\ \texttt{Algebra.BijectiveOnStalks A B}), and let
+  $q : \Spec B \to \Spec A$ denote the induced morphism of locally
+  ringed spaces. Then the canonical inverse-image map on structure
+  sheaves
+  \[
+    q^{-1}\mathcal O_{\Spec A} \;\longrightarrow\; \mathcal O_{\Spec B}
+  \]
+  (the morphism of sheaves of rings on $\Spec B$ given by the
+  $q^{-1} \dashv q_*$ adjunction counit applied to the structure-sheaf
+  comap) is an isomorphism.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:identify-local-rings}
+  \leanok
+  The statement is local on $\Spec B$: a morphism of sheaves of rings
+  on $\Spec B$ is an isomorphism iff its stalk map at every prime is
+  an isomorphism. For each $\mathfrak p \subset B$, the stalk of
+  $q^{-1}\mathcal O_{\Spec A}$ at $\mathfrak p$ is canonically
+  identified with the stalk of $\mathcal O_{\Spec A}$ at
+  $q(\mathfrak p) = \mathfrak p \cap A$ (Mathlib:
+  \texttt{TopCat.Presheaf.stalkPullback}), and standard Mathlib
+  identifies these structure-sheaf stalks of $\Spec$ with localizations,
+  giving
+  \[
+    (q^{-1}\mathcal O_{\Spec A})_{\mathfrak p}
+    \;\cong\; (\mathcal O_{\Spec A})_{\mathfrak p \cap A}
+    \;\cong\; A_{\mathfrak p \cap A},
+    \qquad
+    (\mathcal O_{\Spec B})_{\mathfrak p}
+    \;\cong\; B_{\mathfrak p}.
+  \]
+  Under these identifications the induced stalk map agrees with the
+  local ring map
+  \texttt{Localization.localRingHom} attached to the data $A \to B$
+  (i.e.\ the underlying ring hom witnessed by
+  \texttt{RingHom.BijectiveOnStalks.localRingHom} from
+  \texttt{Proetale/Algebra/StalkIso.lean}). By
+  \texttt{Algebra.BijectiveOnStalks.bijective\_localRingHom} this map
+  is bijective, hence an iso of (local) rings.
+
+  \medskip
+  \noindent \emph{Sheaf-vs-presheaf stalk identification.} The identification
+  $(q^{-1}\mathcal O_{\Spec A})_{\mathfrak p} \cong (\mathcal O_{\Spec A})_{q(\mathfrak p)}$
+  above is at the \emph{presheaf} level: Mathlib's
+  \texttt{TopCat.Presheaf.stalkPullbackIso} identifies the stalk of the
+  \emph{presheaf} pullback with the source-stalk at the image point. The
+  inverse-image $q^{-1}\mathcal O_{\Spec A}$ that actually appears in the
+  lemma statement is the \emph{sheaf}-level pullback, defined via the
+  sheafification adjunction
+  $\texttt{TopCat.Sheaf.pullbackPushforwardAdjunction}$ as the sheafification
+  of the presheaf pullback:
+  \[
+    q^{-1}\mathcal O_{\Spec A}
+    \;=\; \texttt{sheafify}\bigl(
+      \texttt{Presheaf.pullback}_q\,\mathcal O_{\Spec A}^{\mathrm{pre}}
+    \bigr).
+  \]
+  The bridge from sheaf stalk to presheaf stalk is the
+  \emph{sheafification-preserves-stalks} principle: for any presheaf
+  $F$ of $\mathrm{CommRingCat}$-valued objects on a topological space
+  $X$ and any point $x \in X$, the sheafification unit
+  $\eta : F \to \texttt{sheafify}\,F$ induces an isomorphism on stalks
+  \[
+    \eta_x : F_x \;\xrightarrow{\sim}\; (\texttt{sheafify}\,F)_x.
+  \]
+  For $\mathrm{Type}$-valued presheaves this is Mathlib's
+  \texttt{TopCat.Presheaf.sheafifyStalkIso}
+  (\texttt{Mathlib/Topology/Sheaves/Sheafify.lean}). For $\mathrm{CommRingCat}$-valued
+  presheaves the analogous lemma is \emph{not present in Mathlib}; the file
+  \texttt{Sheafify.lean} explicitly carries an
+  \texttt{assert\_not\_exists CommRingCat} declaration. This is the
+  substantive Mathlib gap blocking the close of the helper.
+
+  The Lean delivery
+  combines this with the structure-sheaf-stalk identifications shipped
+  by Mathlib's
+  \texttt{AlgebraicGeometry.StructureSheaf.stalkIso} and concludes
+  via Mathlib's `iso of stalk-iso' principle.
+  % NOTE: iter-144 refactor verified that no declaration named
+  % `localRingHom_comp_stalkIso` exists in `Proetale/Algebra/StalkIso.lean`;
+  % Mathlib's `AlgebraicGeometry.localRingHom_comp_stalkIso` (in
+  % `Mathlib/AlgebraicGeometry/Spec.lean`) is the correct carrier and is
+  % used directly in the closure. The iter-146 prover round identified the
+  % sheafification-preserves-stalks gap for CommRingCat as the substantive
+  % remaining obstacle (see Lemma
+  % `lem:topcat-presheaf-sheafify-stalk-iso-concrete` below). The iter-147
+  % prover task is to formalize that helper lemma in a Mathlib-shaped
+  % supplementary file (or inline in StructureSheafPullback.lean) before
+  % closing the headline `isIso_invImage_structureSheaf`.
+\end{proof}
+
+\begin{lemma}[Sheafification preserves stalks for sheaves valued in a concrete category whose forgetful functor preserves filtered colimits --- Archon Mathlib gap]
+  \label{lem:topcat-presheaf-sheafify-stalk-iso-concrete}
+  \lean{TopCat.Presheaf.sheafifyStalkIso_concrete}
+  Let $\mathcal C$ be a category with all small colimits and limits,
+  equipped with a faithful forgetful functor
+  $\mathrm{forget}_{\mathcal C} : \mathcal C \to \mathrm{Type}$ that
+  preserves filtered colimits, preserves limits, and reflects
+  isomorphisms (these are the standard conditions on the forgetful
+  functor of a concrete category that occur for $\mathrm{AddCommGrp}$,
+  $\mathrm{Ring}$, $\mathrm{CommRingCat}$, $\mathrm{Module}_R$, etc.).
+  Let $X : \mathrm{TopCat}$ be a topological space and let
+  $F : \mathrm{TopCat.Presheaf}\,\mathcal C\,X$ be a presheaf of
+  $\mathcal C$-valued sections on $X$. Let $x \in X$ be a point. Then
+  the sheafification unit
+  $\eta : F \to \texttt{presheafToSheaf}\,F$ induces an isomorphism on
+  stalks: the map
+  \[
+    \eta_x \;:=\; (\texttt{stalkFunctor}\,\mathcal C\,x).\mathrm{map}(\eta.\mathrm{app}\,F)
+    \;:\; F_x \;\longrightarrow\; (\texttt{presheafToSheaf}\,F).\mathrm{val.stalk}\,x
+  \]
+  is an isomorphism in $\mathcal C$.
+  \uses{}
+\end{lemma}
+\begin{proof}
+  Mathlib's \texttt{TopCat.Presheaf.sheafifyStalkIso} establishes the
+  same fact for the case $\mathcal C = \mathrm{Type}$. The forgetful
+  functor $\mathrm{forget}_{\mathcal C} : \mathcal C \to \mathrm{Type}$
+  commutes with the stalk functor (the stalk is a filtered colimit and
+  $\mathrm{forget}_{\mathcal C}$ preserves filtered colimits). It also
+  commutes with the sheafification functor (sheafification can be
+  computed pointwise as a filtered colimit over covers, and
+  $\mathrm{forget}_{\mathcal C}$ preserves filtered colimits).
+  Therefore the map
+  $\mathrm{forget}_{\mathcal C}(\eta_x)$ identifies with the
+  $\mathrm{Type}$-level sheafification-stalk iso applied to
+  $\mathrm{forget}_{\mathcal C}\,F$, and is hence an iso in
+  $\mathrm{Type}$. Since $\mathrm{forget}_{\mathcal C}$ reflects
+  isomorphisms, $\eta_x$ is an iso in $\mathcal C$.
+\end{proof}
+
+\noindent The \texttt{CommRingCat}-valued instance of
+\cref{lem:topcat-presheaf-sheafify-stalk-iso-concrete} is the missing
+ingredient in the close of
+\cref{lem:identifies-local-ring-invImage-structureSheaf-iso}. Once it
+is in scope, the full stalk identification chain becomes
+\begin{align*}
+  \bigl((\texttt{Sheaf.pullback}\,q.\mathrm{base}).\mathrm{obj}\,\mathcal O_{\Spec A}\bigr).\mathrm{val.stalk}\,\mathfrak p
+  & \;\xrightarrow{\texttt{pullbackIso}}
+    \bigl(\texttt{sheafify}\,(\texttt{Presheaf.pullback}\,q.\mathrm{base}\,\mathcal O_{\Spec A}^{\mathrm{pre}})\bigr).\mathrm{val.stalk}\,\mathfrak p \\
+  & \;\xrightarrow{\texttt{sheafifyStalkIso\_concrete}}
+    (\texttt{Presheaf.pullback}\,q.\mathrm{base}\,\mathcal O_{\Spec A}^{\mathrm{pre}}).\mathrm{stalk}\,\mathfrak p \\
+  & \;\xrightarrow{\texttt{stalkPullbackIso}}
+    \mathcal O_{\Spec A}^{\mathrm{pre}}.\mathrm{stalk}\,(q.\mathrm{base}\,\mathfrak p) \\
+  & \;\xrightarrow{\texttt{StructureSheaf.stalkIso}}
+    A_{\mathfrak p \cap A} \\
+  & \;\xrightarrow{\texttt{localRingHom}}
+    B_{\mathfrak p}\quad \text{(bijection from Algebra.BijectiveOnStalks)} \\
+  & \;\xrightarrow{\texttt{StructureSheaf.stalkIso.symm}}
+    \mathcal O_{\Spec B}.\mathrm{stalk}\,\mathfrak p.
+\end{align*}
+Compatibility of the actual stalk map of
+$q^{-1}\mathcal O_{\Spec A} \to \mathcal O_{\Spec B}$ with this
+composite follows from
+\texttt{AlgebraicGeometry.localRingHom\_comp\_stalkIso} after unwinding
+the adjunction transpose $\texttt{homEquiv.symm}$ of the direct-image
+$c$-component $q.\mathrm{toHom.c}$.
+% ------------------------------------------------------------------
+% End iter-135 split sub-lemmas.
+% ------------------------------------------------------------------
 
 \begin{definition}
   \label{def:identifies-local-ring-hom-set-bijection}
-  \uses{def:identify-local-rings,thm:identifies-local-ring-to-top-fully-faithful}
-  Let \(A\) be a ring and \(X = \Spec(A)\). Let \(A \to B\) and \(A \to C\) be two \(A\)-algebras that identifies local rings. As a consequence of \Cref{thm:identifies-local-ring-to-top-fully-faithful}, we have a bijective map 
-  \[F : \Hom_{A\textnormal{-alg}}(B, C) \to \Hom_{\textnormal{-Top}_X}(\Spec(C), \Spec(B)).\]
-  sending \(f : B \to C\) to the continuous map \(\Spec(f) : \Spec(C) \to \Spec(B)\) induced by \(f\).
+  \lean{Algebra.BijectiveOnStalks.algHomEquivContinuousMap,
+        Algebra.BijectiveOnStalks.algHom_of_continuousMap,
+        Algebra.BijectiveOnStalks.continuousMap_of_algHom}
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover,thm:identifies-local-ring-to-top-fully-faithful}
+  Let \(A\) be a ring and \(X = \Spec(A)\). Let \(A \to B\) and \(A \to C\) be two \(A\)-algebras that identifies local rings. As a consequence of \Cref{thm:identifies-local-ring-to-top-fully-faithful}, we have a bijective map
+  \[F : \Hom_{A\textnormal{-alg}}(B, C) \to \mathrm{HomOver}(A, B, C),\]
+  with \(\mathrm{HomOver}(A, B, C)\) as introduced in
+  \Cref{def:identifies-local-ring-homover}, sending
+  \(f : B \to C\) to the continuous map
+  \(\Spec(f) : \Spec(C) \to \Spec(B)\) induced by \(f\) (paired with
+  its automatic compatibility witness over \(\Spec(A)\)).
 \end{definition}
 
 \begin{lemma}
@@ -660,7 +1222,6 @@ The following example shows that our definition agrees with the one in
 \begin{lemma}
     \label{lem:etale-locally-standard-etale-at-max}
     \lean{Algebra.Etale.isStandardEtale_localizationAway_of_etale_at_maxIdeal}
-    \leanok
     Let \(A\) be a Henselian local ring and \(A \to B\) an étale ring map. Let \(\n \subset B\) be a maximal ideal lying over the maximal ideal \(\m\) of \(A\). Then there exists \(b \in B \setminus \n\) such that the localization \(B_b = B[1/b]\) is a standard étale \(A\)-algebra.
 \end{lemma}
 
@@ -2037,7 +2598,9 @@ In the following series of constructions, we will modify the connected component
 
 \begin{definition}
   \label{def:modify-pi0-transition-map}
+  \lean{WContractification.PullbackProfinite.diag}
   \uses{def:modify-pi0-finite,def:identify-local-rings,def:identifies-local-ring-hom-set-bijection}
+  \leanok
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be profinite space and let $f : T \to \pi_0(X)$ be a continuous map. Let \(S\) and \(S'\) be finite discrete spaces and let \(q : T \to S\) and \(q' : T \to S'\) be quotient maps. Let \(g : S' \to S\) be a map such that \(q = g \circ q'\). Let \(Z \subseteq \pi_0(\Spec (A^{S})) \times S\) and \(Z' \subseteq \pi_0(\Spec (A^{S'})) \times S'\) be the images of \(T\) under the maps induced by \(f\) and \(f'\) respectively. Then \(g\) induces a map \(Z \to Z'\) and a map \(\tilde{g} : \Spec (A^f_{q}) \cong X \times_{\pi_0(X)} Z \to X \times_{\pi_0(X)} Z' \cong \Spec (A^{f'}_{q'})\).
 
   Since both maps \(A \to A^f_{q}\) and \(A \to A^{f'}_{q'}\) identify local rings, by the bijection in \Cref{def:identifies-local-ring-hom-set-bijection} we can find a transition ring map
@@ -2047,28 +2610,36 @@ In the following series of constructions, we will modify the connected component
 
 \begin{lemma}
   \label{thm:modify-pi0-transition-map-compatible}
+  \lean{WContractification.PullbackProfinite.diag}
   \uses{def:modify-pi0-transition-map}
+  \leanok
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be profinite space and let $f : T \to \pi_0(X)$ be a continuous map. Let \(S\), \(S'\) and \(S''\) be finite discrete spaces and let \(q : T \to S\), \(q' : T \to S'\) and \(q'' : T \to S''\) be quotient maps. Let \(g : S' \to S\) and \(g' : S'' \to S'\) be maps such that \(q = g \circ q'\) and \(q' = g' \circ q''\). Then the transition maps defined in \Cref{def:modify-pi0-transition-map} satisfy
   \[t_{g'} \circ t_{g} = t_{g \circ g'}.\]
 \end{lemma}
 
 \begin{proof}
   \uses{thm:modify-pi0-finite-properties,def:identifies-local-ring-hom-set-bijection}
+  \leanok
   Both maps \(t_{g'}\) and \(t_{g} \circ t_{g' \circ g}\) induce the same topological map between the spectra by construction. Since all maps involved identify local rings by \Cref{thm:modify-pi0-finite-properties}, by fully faithfulness in \Cref{def:identifies-local-ring-hom-set-bijection} we conclude that they are equal.
 \end{proof}
 
-\begin{definition}[{\cite[\href{https://stacks.math.columbia.edu/tag/097D}{Tag 097D}]{stacks-project}}]
+\begin{definition}\leanok
+[{\cite[\href{https://stacks.math.columbia.edu/tag/097D}{Tag 097D}]{stacks-project}}]
   \label{def:modify-pi0-profinite}
+  \lean{WContractification.PullbackProfinite}
   \uses{def:modify-pi0-finite,def:modify-pi0-transition-map,thm:modify-pi0-transition-map-compatible}
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be a profinite space and let $T \to \pi_0(X)$ be a continuous map. Write $T = \lim T_i$ as the limit of an inverse system of finite discrete spaces over a directed set. Define the ring \(A^f_{\pi_0}\) as follows:
   \[
     A^f_{\pi_0} := \colim_{(T \to T_i)} A^f_{q_i},
   \]
   where \(q_i : T \to T_i\) are the quotient maps and \(A^f_{q_i}\) are the rings defined in \Cref{def:modify-pi0-finite} and the transition maps are those defined in \Cref{def:modify-pi0-transition-map}. By \Cref{thm:modify-pi0-transition-map-compatible} the transition maps are compatible thus the colimit is well-defined.
+
+  On the Lean side the indexing category is \texttt{(DiscreteQuotient T)\^{}op}: Mathlib's order \(S_1 \leq S_2\) on \texttt{DiscreteQuotient T} encodes refinement (\(S_1\) finer than \(S_2\), with \(\top\) the coarsest one-class quotient), so a Mathlib morphism \(S_1 \to S_2\) is the finer-to-coarser direction at the type level. The blueprint's transition \(t_g : A^f_q \to A^{f'}_{q'}\) going from a coarser \(q\) to a finer \(q'\) at the algebra level therefore corresponds to a covariant functor on \texttt{(DiscreteQuotient T)\^{}op}, and the colimit \(A^f_{\pi_0}\) is the colimit of that functor in \texttt{CommAlgCat A}.
 \end{definition}
 
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/097D}{Tag 097D}]{stacks-project}}]
   \label{thm:modify-pi0-profinite-properties}
+  \lean{WContractification.PullbackProfinite.indZariski, WContractification.PullbackProfinite.faithfullyFlat, WContractification.PullbackProfinite.isWLocalRing, WContractification.PullbackProfinite.pi0Equiv}
   \uses{def:modify-pi0-profinite,def:ind-Zariski}
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be a profinite space and let $T \to \pi_0(X)$ be a continuous map. Then the $A$-algebra $A^f_{\pi_0}$ defined in \Cref{def:modify-pi0-profinite} is ind-Zariski. Let $Y = \Spec (A^f_{\pi_0})$. Then $\pi_0(Y) \cong T$ and the diagram
   \[

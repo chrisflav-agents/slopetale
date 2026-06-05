@@ -34,13 +34,210 @@
 %          the iter-054 \lean{Module.Finite} step).
 %      \end{itemize}
 
-This chapter (placeholder) records the two key structural results
-about étale algebras over a strictly Henselian local ring $A$.
+This chapter records the two structural results about étale algebras
+over a strictly Henselian local ring $A$ together with the producer
+infrastructure (Stacks 04GG / 04GH) on which their informal proofs
+rely.
+
+\section*{Producer block: Stacks 04GG / 04GH}
+
+\begin{lemma}[Finite over henselian local: product decomposition]
+  \label{lem:henselian-finite-product-decomp}
+  \uses{def:strictly-henselian-local-ring, thm:etale-henselian-cop-lift}
+  % SOURCE: \stacksproject{04GH} = Algebra Lemma 10.155.4 (read from
+  %         references/stacks-04gg.tex, lines 340--371)
+  % SOURCE QUOTE:
+  %   "Let $(R, \mathfrak m, \kappa)$ be a henselian local ring.
+  %   \begin{enumerate}
+  %   \item If $R \to S$ is a finite ring map then $S$ is
+  %   a finite product of henselian local rings each finite over $R$.
+  %   \item If $R \to S$ is a finite ring map and $S$ is local, then
+  %   $S$ is a henselian local ring and $R \to S$ is a (finite) local
+  %   ring map.
+  %   \item If $R \to S$ is a finite type ring map, and $\mathfrak q$
+  %   is a prime of $S$ lying over $\mathfrak m$ at which $R \to S$ is
+  %   quasi-finite, then $S_{\mathfrak q}$ is henselian and finite
+  %   over $R$.
+  %   \item If $R \to S$ is quasi-finite then $S_{\mathfrak q}$ is
+  %   henselian and finite over $R$ for every prime $\mathfrak q$
+  %   lying over $\mathfrak m$.
+  %   \end{enumerate}"
+  \textit{Source: Stacks Project, Tag 04GH (part 1).}
+  Let $(R, \mathfrak{m}, \kappa)$ be a henselian local ring and let
+  $S$ be a finite $R$-algebra. Then $S$ decomposes as a finite product
+  $S = \prod_{i=1}^{n} S_{i}$, where each factor $S_{i}$ is a
+  henselian local ring finite over $R$.
+\end{lemma}
+
+% SOURCE QUOTE PROOF:
+%   "Part (2) implies part (1) since $S$ as in part (1) is a finite
+%   product of its localizations at the primes lying over $\mathfrak m$
+%   by Lemma \ref{lemma-characterize-henselian} part (10).
+%   Part (2) also follows from Lemma \ref{lemma-characterize-henselian}
+%   part (10) since any finite $S$-algebra is also a finite $R$-algebra
+%   (of course any finite ring map between local rings is local)."
+\begin{proof}
+  \uses{lem:henselian-finite-local-is-henselian,
+        thm:etale-henselian-cop-lift}
+  We deduce the statement from three observations.
+  \begin{enumerate}
+    \item \emph{$S$ is semi-local.} The integral map $R \to S$ has
+      lying-over and going-up, so every maximal ideal of $S$ contracts
+      to $\mathfrak{m}$. The quotient $S / \mathfrak{m} S$ is a
+      finite-dimensional $\kappa$-algebra, hence Artinian, so it has
+      finitely many maximal ideals; pulling these back to $S$ along
+      $S \twoheadrightarrow S/\mathfrak{m} S$ exhausts the maximals of
+      $S$.
+    \item \emph{Idempotent lift.} The Artinian ring $S/\mathfrak{m} S$
+      splits as the product of its localisations at its maximal ideals:
+      $S/\mathfrak{m} S \cong \prod_{i} (S/\mathfrak{m} S)_{\bar{\mathfrak{n}}_{i}}$,
+      with orthogonal idempotents $\{\bar e_{1}, \dots, \bar e_{n}\}$.
+      Because $R$ is henselian, Stacks 04GG (1)$\Rightarrow$(10) (via
+      Cayley--Hamilton) lifts these residue idempotents to a complete
+      orthogonal idempotent
+      system $\{e_{1}, \dots, e_{n}\}$ in $S$ with
+      $e_{i} \equiv \bar e_{i} \pmod{\mathfrak{m} S}$. This is the
+      content of \cref{thm:etale-henselian-cop-lift} (the étale case
+      banked in iter-128) for the étale slice and of Stacks 04GG (1)
+      $\Rightarrow$ (10) more generally.
+    \item \emph{Product decomposition.} Setting $S_{i} := e_{i} S$
+      yields $S = \prod_{i} S_{i}$ as $R$-algebras; each factor is a
+      direct summand of the finite $R$-module $S$, hence finite over
+      $R$. The image of $\bar e_{i}$ in $S/\mathfrak{m} S$ generates a
+      local Artinian factor, so $S_{i}/\mathfrak{m} S_{i}$ is local,
+      and by Nakayama the unique maximal ideal of $S_{i}/\mathfrak{m}
+      S_{i}$ lifts to the unique maximal ideal of $S_{i}$; thus each
+      $S_{i}$ is local.
+  \end{enumerate}
+  Finally, each finite local extension $S_{i}$ of the henselian local
+  ring $R$ is itself henselian by
+  \cref{lem:henselian-finite-local-is-henselian} below.
+\end{proof}
+
+\begin{lemma}\leanok
+[Finite local over henselian local is henselian]
+  \label{lem:henselian-finite-local-is-henselian}
+  \lean{Algebra.Etale.henselianRing_map_maximalIdeal}
+  \uses{def:strictly-henselian-local-ring}
+  % SOURCE: \stacksproject{04GH} part (2) (read from
+  %         references/stacks-04gg.tex, lines 340--371)
+  % SOURCE QUOTE:
+  %   "If $R \to S$ is a finite ring map and $S$ is local, then
+  %   $S$ is a henselian local ring and $R \to S$ is a (finite) local
+  %   ring map."
+  \textit{Source: Stacks Project, Tag 04GH (part 2).}
+  Let $(R, \mathfrak{m})$ be a henselian local ring and let $S$ be a
+  finite $R$-algebra which is itself local. Then $S$ is a henselian
+  local ring and $R \to S$ is a local ring homomorphism.
+\end{lemma}
+
+% SOURCE QUOTE PROOF:
+%   "Part (2) also follows from Lemma \ref{lemma-characterize-henselian}
+%   part (10) since any finite $S$-algebra is also a finite $R$-algebra
+%   (of course any finite ring map between local rings is local)."
+\begin{proof}
+  \uses{lem:henselian-finite-product-decomp}
+  \leanok
+  Apply Stacks 04GG part (10): $R$ is henselian iff every finite
+  $R$-algebra is a finite product of local rings. Any finite
+  $S$-algebra $T$ is finite over $R$ by composition, hence splits as
+  a product of local rings; that decomposition restricts to a
+  decomposition of $T$ as a finite product of local $S$-algebras, so
+  $S$ inherits the criterion. Locality of $R \to S$ is automatic from
+  going-up.
+\end{proof}
+
+\begin{lemma}[Étale-local-decomposition: isolating idempotent]
+  \label{lem:etale-isolating-idempotent}
+  \lean{Algebra.Etale.exists_idempotent_lift_isolating_at_maximal}
+  \uses{lem:henselian-finite-product-decomp,
+        thm:etale-henselian-cop-lift,
+        def:strictly-henselian-local-ring}
+  % SOURCE: \stacksproject{04GG}, "Proof of 8$\Rightarrow$10" paragraph
+  %         (read from references/stacks-04gg.tex, lines 197--219)
+  % SOURCE QUOTE:
+  %   "Proof of 8$\Rightarrow$10. Assume (8) and let $R \to S$ be a
+  %   finite ring map. Apply Lemma
+  %   \ref{lemma-etale-makes-quasi-finite-finite}.
+  %   We find an \'etale ring map $R \to R'$ and a prime $\mathfrak m'
+  %   \subset R'$ lying over $\mathfrak m$ with $\kappa = \kappa(\mathfrak m')$
+  %   such that $R' \otimes_R S = A'_1 \times \ldots \times A'_n \times B'$
+  %   with $A'_i$ finite over $R'$ having exactly one prime over $\mathfrak m'$
+  %   and $B'$ not quasi-finite over $R'$ at any prime lying over $\mathfrak m'$.
+  %   Apply (8) to get a retraction $\tau : R' \to R$ with
+  %   $\mathfrak m' = \tau^{-1}(\mathfrak m)$. Then we obtain
+  %   \begin{align*}
+  %   S & = (S \otimes_R R') \otimes_{R', \tau} R \\
+  %     & = (A'_1 \times \ldots \times A'_n \times B') \otimes_{R', \tau} R \\
+  %     & = (A'_1 \otimes_{R', \tau} R) \times \ldots \times
+  %         (A'_1 \otimes_{R', \tau} R) \times (B' \otimes_{R', \tau} R) \\
+  %     & = A_1 \times \ldots \times A_n \times B
+  %   \end{align*}
+  %   The factor $B$ is finite over $R$ but $R \to B$ is not
+  %   quasi-finite at any prime lying over $\mathfrak m$. Hence
+  %   $B = 0$. The factors $A_i$ are finite $R$-algebras having exactly
+  %   one prime lying over $\mathfrak m$, hence they are local rings.
+  %   This proves that $S$ is a finite product of local rings."
+  \textit{Source: Stacks Project, Tag 04GG, proof of
+  $(8) \Rightarrow (10)$.}
+  Let $(R, \mathfrak{m})$ be a henselian local ring, let $R \to S$
+  be étale, and let $\mathfrak{n} \subset S$ be a maximal ideal lying
+  over $\mathfrak{m}$. There exists an idempotent $e \in S$
+  satisfying both
+  \begin{enumerate}
+    \item $e \notin \mathfrak{n}$, and
+    \item $e \in \mathfrak{p}$ for every prime $\mathfrak{p} \in
+      \mathrm{Spec}(S)$ with $\mathfrak{m} S \not\subseteq
+      \mathfrak{p}$.
+  \end{enumerate}
+  Equivalently, $e$ ``isolates'' $\mathfrak{n}$ among the primes of
+  $S$ over $\mathfrak{m}$ while annihilating the horizontal locus
+  $\{ \mathfrak{p} : \mathfrak{p} \not\supseteq \mathfrak{m} S \}$.
+\end{lemma}
+
+% SOURCE QUOTE PROOF: (proof reconstructed from the verbatim
+%   excerpt above by indexing the product decomposition by the
+%   primes of $S$ lying over $\mathfrak m$; no separate paragraph
+%   in Stacks isolates this corollary, hence the quote above is the
+%   relevant slice.)
+\begin{proof}
+  \uses{lem:henselian-finite-product-decomp,
+        thm:etale-henselian-cop-lift}
+  Since $R \to S$ is étale and in particular finite-type, the proof
+  of \cref{lem:henselian-finite-product-decomp} (specialised to the
+  étale slice using \cref{thm:etale-henselian-cop-lift} for the
+  idempotent lift) produces a complete orthogonal idempotent
+  decomposition $S = \prod_{i \in I} S_{i}$ indexed by the maximal
+  ideals $\{ \mathfrak{n}_{i} \}_{i \in I}$ of $S$ lying over
+  $\mathfrak{m}$; in particular there is a unique index
+  $i_{0} \in I$ with $\mathfrak{n} = \mathfrak{n}_{i_{0}}$.
+
+  Let $\{ e_{i} \}_{i \in I}$ be the corresponding orthogonal
+  idempotents of $S$, so that $S_{i} = e_{i} S$ and $e_{i_{0}} = 1$
+  on $S_{i_{0}}$, $e_{i_{0}} = 0$ on the other factors. Set
+  $e := e_{i_{0}}$.
+
+  \emph{(1) $e \notin \mathfrak{n}$.} The image of $e$ in
+  $S/\mathfrak{n} = \kappa(\mathfrak{n})$ is the unique idempotent of
+  the residue field that picks out the factor
+  $S_{i_{0}}/\mathfrak{n}_{i_{0}}$; this idempotent equals $1$, not
+  $0$, so $e \not\equiv 0 \pmod{\mathfrak{n}}$.
+
+  \emph{(2) $e \in \mathfrak{p}$ whenever
+  $\mathfrak{m} S \not\subseteq \mathfrak{p}$.} A prime
+  $\mathfrak{p}$ of $S$ that does not contain $\mathfrak{m} S$ does
+  not lie over $\mathfrak{m}$, so its image lies in some non-closed
+  factor $S_{j}$ with $j \ne i_{0}$. By construction
+  $e_{i_{0}} = 0$ on $S_{j}$, hence $e \in \mathfrak{q}$ for every
+  prime $\mathfrak{q}$ of $S_{j}$; in particular $e \in
+  \mathfrak{p}$.
+\end{proof}
+
+\section*{Consumer theorems}
 
 \begin{theorem}
-  \label{thm:strictly-henselian-good-retraction}
+  \label{thm:strictly-henselian-good-retraction-skeleton}
   \lean{Algebra.Etale.strictlyHenselian_good_retraction}
-  \leanok
   Let $A$ be a strictly Henselian local ring, $A \to B$ étale, and
   $\mathfrak{n} \subset B$ a maximal ideal lying over the maximal
   ideal $\mathfrak{m}$ of $A$. Then there exists an $A$-algebra
@@ -48,9 +245,8 @@ about étale algebras over a strictly Henselian local ring $A$.
 \end{theorem}
 
 \begin{theorem}
-  \label{thm:etale-over-strictly-henselian-localization-isom}
+  \label{thm:etale-over-strictly-henselian-localization-isom-skeleton}
   \lean{Algebra.Etale.bijective_localRingHom_of_strictlyHenselian}
-  \leanok
   Under the same hypotheses, the canonical local ring homomorphism
   $\mathrm{Loc}_{\mathfrak{m}}(A) \to B_{\mathfrak{n}}$ is bijective.
   Equivalently, the composite $A \to B_{\mathfrak{n}}$ is an

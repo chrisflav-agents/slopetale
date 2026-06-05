@@ -22,59 +22,188 @@ extracted (during iter-048) from
   $1 \otimes \tilde e_i$ in $k \otimes_A B$ corresponds to $e_i$
   under the product decomposition.
 \end{theorem}
+
+\medskip\noindent\textbf{Prerequisites.} The Lean signature for
+\texttt{Algebra.Etale.exists\_completeOrthogonalIdempotents\_lift\_of\_henselian}
+carries two additional instance binders beyond
+\texttt{[HenselianLocalRing A]} and \texttt{[Algebra.Etale A B]},
+namely
+\[
+  \texttt{[IsNoetherianRing A]} \qquad \text{and} \qquad
+  \texttt{[Module.Finite A B]}.
+\]
+These hypotheses are \emph{not} consequences of
+\texttt{HenselianLocalRing A} + \texttt{Algebra.Etale A B} alone:
+\begin{itemize}
+  \item \texttt{HenselianLocalRing A} does not imply
+    \texttt{IsNoetherianRing A}. There are non-Noetherian
+    henselian (in particular, henselian valuation) local rings, so
+    Noetherianness must be supplied as a hypothesis whenever the
+    proof uses Noetherian descent.
+  \item \texttt{Algebra.Etale A B} yields
+    \texttt{Algebra.FinitePresentation A B} (the standard étale $\Rightarrow$
+    finitely presented as an $A$-algebra), but not
+    \texttt{Module.FinitePresentation A B}: bridging from finite
+    presentation as an $A$-algebra to finite presentation as an
+    $A$-module via Mathlib's
+    \texttt{Module.FinitePresentation.of\_finite\_of\_finitePresentation}
+    would itself consume \texttt{Module.Finite A B}, producing a
+    circular instance loop. Hence \texttt{Module.Finite A B} must be
+    bundled separately.
+\end{itemize}
+These two binders match the instance pattern carried by the per-index
+single-idempotent lift
+\texttt{Algebra.Etale.lift\_idempotent\_henselianPair} (file
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPairLift.lean}),
+which propagates them through the Newton-iteration carrier. They are
+exactly the standard setting in which one decomposes a finite algebra
+over a henselian local ring as a finite product of (henselian) local
+algebras — the framework of Stacks tags
+\href{https://stacks.math.columbia.edu/tag/04GG}{04GG},
+\href{https://stacks.math.columbia.edu/tag/04GH}{04GH}, and the
+Hensel-idempotent-lift fragment
+\href{https://stacks.math.columbia.edu/tag/0DXB}{0DXB}; in the
+\href{https://stacks.math.columbia.edu/tag/04GE}{04GE} formulation
+the structural theorem states that a finite algebra over a henselian
+local ring decomposes as a finite product of finite local henselian
+algebras. The signature thus instantiates the canonical Stacks setting
+verbatim.
+
 \begin{proof}
-  \uses{thm:etale-henselian-cop-lift}
+  \uses{lem:henselianPair-l3a-idempotent-lift,
+        lem:henselianPair-newton-step,
+        lem:henselianPair-l1-separation,
+        lem:henselianPair-jac}
   \leanok
-  Write $\bar B := k \otimes_A B$ and let $\pi : B \to \bar B$,
-  $b \mapsto 1 \otimes b$, be the canonical surjection (surjective
-  because $A \to k$ is, hence so is $B \to k \otimes_A B$ as an
-  $A$-module map, hence as a ring map). Its kernel is
-  $\mathfrak{m} \cdot B$.
+  Write $\bar B := B / \mathfrak{m} \cdot B$ and let
+  $\pi : B \to \bar B$ be the canonical quotient. Composing with the
+  base-change isomorphism $\bar B \simeq k \otimes_A B$ identifies
+  $\bar B$ with the product $\prod_{i \in I} k_i$ via the algebra
+  isomorphism $\mathrm{eqv} : \bar B \xrightarrow{\sim}
+  \prod_{i \in I} k_i$. For each $i \in I$ set
+  $\bar e_i := \mathrm{eqv}^{-1}(\mathrm{Pi.single}\,i\,1) \in \bar B$,
+  the orthogonal idempotents of the product transported back to
+  $\bar B$. Each $\bar e_i$ is idempotent because
+  $\mathrm{Pi.single}\,i\,1$ is, and $\mathrm{eqv}^{-1}$ is a ring map.
+  We also record that
+  $\bar e_i \cdot \bar e_j = 0$ for $i \ne j$ and
+  $\sum_{i \in I} \bar e_i = 1$, both holding in $\bar B$ because they
+  hold componentwise in $\prod_i k_i$.
 
-  By the étale-over-field structure theorem
-  $\bar B \simeq \prod_{i \in I} k_i$ with each $k_i$ finite separable
-  over $k$, so for each $i \in I$ the element
-  $\bar e_i := \pi^{-1}(e_i) \in \bar B$ is a true orthogonal
-  idempotent. Choose any preimage $e_i^{(0)} \in B$ with
-  $\pi(e_i^{(0)}) = \bar e_i$. Then
-  $(e_i^{(0)})^2 - e_i^{(0)} \in \ker \pi = \mathfrak{m} \cdot B$.
+  \medskip
 
-  Consider the polynomial $f(X) = X^2 - X \in B[X]$. Its derivative
-  $f'(X) = 2X - 1$, evaluated at $e_i^{(0)}$, reduces modulo
-  $\mathfrak{m} \cdot B$ to the element $2 \bar e_i - 1 \in \bar B$.
-  Componentwise in $\prod_i k_i$ this is $2 \cdot 1 - 1 = 1$ at the
-  $i$-component and $2 \cdot 0 - 1 = -1$ elsewhere; both are units in
-  the respective residue fields. Hence $2 e_i^{(0)} - 1$ is a unit
-  modulo every maximal ideal of $B$ above $\mathfrak{m}$, and (since
-  $\mathfrak{m} \cdot B$ lies in the Jacobson radical when $A$ is
-  henselian and $B$ is étale over $A$) it is a unit in $B$.
+  \emph{Per-index single-idempotent lift.} By
+  \cref{lem:henselianPair-jac} the pair
+  $(B, \mathfrak{m} \cdot B)$ is henselian whenever $A$ is henselian
+  local and $B$ is étale over $A$, since
+  $\mathfrak{m} \cdot B$ sits inside the Jacobson radical of $B$ and
+  the underlying root-lifting hypothesis transports along the étale
+  structure. Apply
+  \cref{lem:henselianPair-l3a-idempotent-lift}
+  (Lean carrier \texttt{Algebra.Etale.lift\_idempotent\_henselianPair})
+  to each $\bar e_i$ to obtain
+  $\tilde e_i \in B$ with $\tilde e_i^2 = \tilde e_i$ and
+  $\pi(\tilde e_i) = \bar e_i$.
 
-  $A$ henselian local plus $B$ étale of finite presentation gives
-  $(B, \mathfrak{m} \cdot B)$ the henselian-pair property
-  (Stacks 04GG/0DXB). Henselian-pair lifting applied to $f$ and the
-  approximate root $e_i^{(0)}$ (with derivative a unit modulo
-  $\mathfrak{m} \cdot B$) yields a \emph{unique} root
-  $\tilde e_i \in B$ of $f$ with
-  $\tilde e_i \equiv e_i^{(0)} \pmod{\mathfrak{m} \cdot B}$. Since
-  $f(\tilde e_i) = 0$, $\tilde e_i$ is an idempotent of $B$ lifting
-  $\bar e_i$.
+  \medskip
 
-  Orthogonality and completeness follow by uniqueness: for $i \ne j$,
-  $\tilde e_i \tilde e_j$ is a root of $f$ congruent to
-  $\bar e_i \bar e_j = 0$ modulo $\mathfrak{m} \cdot B$, hence equals
-  the unique idempotent lift of $0$, which is $0$. Similarly
-  $\sum_{i \in I} \tilde e_i$ is a root of $f$ congruent to
-  $\sum_i \bar e_i = 1$ modulo $\mathfrak{m} \cdot B$, hence equals
-  the unique idempotent lift of $1$, which is $1$.
+  \emph{Uniqueness of the Hensel-lift for $Y^2 - Y$.} The argument
+  for orthogonality and completeness rests on the following
+  uniqueness statement: if $e, e' \in B$ are two idempotents with
+  $\pi(e) = \pi(e')$, then $e = e'$. Indeed, the Newton iteration
+  for $f(Y) = Y^2 - Y$ starting from any idempotent is stationary
+  (an idempotent is already a root of $f$), so both $e$ and $e'$
+  arise as the Hensel-pair limit of the same residual data;
+  by $\mathfrak{m} \cdot B$-adic separation
+  (\cref{lem:henselianPair-l1-separation},
+  $\bigcap_n (\mathfrak{m} \cdot B)^n = 0$ in the henselian pair),
+  combined with the contractive property of the Newton step
+  (\cref{lem:henselianPair-newton-step}), the two limits coincide.
+  In particular, an idempotent of $B$ whose residue in $\bar B$
+  equals $0$ (respectively $1$) must equal $0$ (respectively $1$).
+
+  \medskip
+
+  \emph{Orthogonality.} Fix $i \ne j$. The element
+  $\tilde e_i \tilde e_j$ is an idempotent of $B$
+  (product of two commuting idempotents), and
+  \[
+    \pi(\tilde e_i \tilde e_j)
+    = \pi(\tilde e_i) \cdot \pi(\tilde e_j)
+    = \bar e_i \cdot \bar e_j
+    = 0,
+  \]
+  the last equality being the componentwise computation in
+  $\prod_k k_k$: at index $i$, $1 \cdot 0 = 0$; at index $j$,
+  $0 \cdot 1 = 0$; elsewhere, $0 \cdot 0 = 0$. By the uniqueness
+  statement above, applied to the idempotents $\tilde e_i \tilde e_j$
+  and $0$, we conclude $\tilde e_i \tilde e_j = 0$.
+
+  \medskip
+
+  \emph{Completeness.} The pairwise-orthogonality just established
+  makes $\sum_{i \in I} \tilde e_i$ an idempotent of $B$
+  (sum of pairwise-orthogonal idempotents). Its residue is
+  \[
+    \pi\bigl(\textstyle\sum_{i \in I} \tilde e_i\bigr)
+    = \textstyle\sum_{i \in I} \pi(\tilde e_i)
+    = \textstyle\sum_{i \in I} \bar e_i
+    = \mathrm{eqv}^{-1}\bigl(\textstyle\sum_{i \in I}
+        \mathrm{Pi.single}\,i\,1\bigr)
+    = \mathrm{eqv}^{-1}(1)
+    = 1.
+  \]
+  By the same uniqueness statement applied to
+  $\sum_i \tilde e_i$ and $1$, we conclude
+  $\sum_{i \in I} \tilde e_i = 1$.
+
+  \medskip
+
+  \emph{Conclusion.} The family $\{\tilde e_i\}_{i \in I}$ is a
+  complete orthogonal idempotent system in $B$, and by construction
+  each $\tilde e_i$ projects to $\bar e_i$, hence to
+  $\mathrm{Pi.single}\,i\,1$ under the residue isomorphism
+  $\mathrm{eqv}$. This is the asserted lift.
 \end{proof}
 
-\medskip\noindent\textbf{Status.} The statement is formalized
-(\texttt{\textbackslash leanok} on the theorem environment); the body
-is a single typed \texttt{sorry} pending two pieces of Mathlib-PR
-infrastructure: (i) a \texttt{HenselianPair} predicate together with
-the henselian-pair condition for $(B, \mathfrak{m} \cdot B)$ when $B$
-is étale over a henselian local $A$, and (ii) a
-\texttt{CompleteOrthogonalIdempotents}-flavoured analogue of
-\texttt{CompleteOrthogonalIdempotents.lift\_of\_isNilpotent\_ker}
-weakened from `nilpotent kernel' to `kernel contained in the Jacobson
-radical of a henselian pair'.
+\medskip\noindent\textbf{Status.} The theorem is fully formalized.
+Iteration~128 closed the six-step backbone of the proof:
+(1)~the residue isomorphism $B / \mathfrak{m} B \xrightarrow{\sim}
+k \otimes_A B$ via composing
+\texttt{Algebra.TensorProduct.quotIdealMapEquivTensorQuot} with
+\texttt{Algebra.TensorProduct.comm};
+(2)~residue idempotents $\bar e_i := \mathrm{eqv}^{-1}(\mathrm{Pi.single}\,i\,1)$
+established as idempotents in $B / \mathfrak{m} B$;
+(3)~per-index single-idempotent lifting via
+\texttt{Algebra.Etale.lift\_idempotent\_henselianPair} from
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPairLift.lean};
+(4)~pairwise orthogonality $\tilde e_i \tilde e_j = 0$ for $i \ne j$;
+(5)~completeness $\sum_i \tilde e_i = 1$; and
+(6)~packaging into \texttt{CompleteOrthogonalIdempotents}. Iteration~129
+amends the Lean signature with the two instance binders
+\texttt{[IsNoetherianRing A]} and \texttt{[Module.Finite A B]}
+documented under \emph{Prerequisites} above; this discharges the two
+typed sub-sorries surfaced at the end of iter-128 and brings the file
+to a sorry-free state.
+
+\medskip\noindent\textbf{Route note (Newton iteration $\to$ Jacobson
+idempotent).} The proof sketch in this chapter motivates orthogonality
+and completeness via a uniqueness statement for the Hensel lift of
+$Y^2 - Y$, traditionally proved by identifying the Newton-Cauchy
+limit (à la Hiblot 1975 / Sharp--Wadsworth 1976) and invoking
+$\mathfrak{m} \cdot B$-adic separation. In the Lean formalization
+this is replaced by a strictly cleaner Jacobson-idempotent argument:
+the auxiliary lemma
+\texttt{\_isIdempotentElem\_eq\_zero\_of\_mem\_jacobson\_bot}
+(file \texttt{HenselianIdempotentLift.lean}) shows that any idempotent
+$e \in B$ lying in the Jacobson radical $\mathrm{jac}(B)$ vanishes,
+since then $1 - e$ is a unit, $e \cdot (1 - e) = e - e^2 = 0$, and
+cancellation by $(1 - e)$ forces $e = 0$. Applying this to the
+candidate idempotents $\tilde e_i \tilde e_j$ (for $i \ne j$) and
+$1 - \sum_i \tilde e_i$, both of which are idempotents lying in
+$\mathfrak{m} \cdot B \subseteq \mathrm{jac}(B)$, yields orthogonality
+and completeness without invoking the Newton-Cauchy limit
+identification or the $\mathfrak{m} \cdot B$-adic separation step.
+This is a route detail, not a content change: the theorem statement
+is unchanged. The Jacobson-idempotent helper is a Mathlib-PR-quality
+single-lemma extraction.

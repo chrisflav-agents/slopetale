@@ -1,0 +1,30 @@
+\chapter{Weakly étale algebras over a field}
+\label{ch:proetale-algebra-weaklyEtaleField}
+
+This chapter is a placeholder for the per-file blueprint of
+\texttt{Proetale/Algebra/WeaklyEtaleField.lean}. The substantive informal
+material currently lives in \texttt{more-on-local-structure.tex}
+(Sections \ref{lem:flat-tensor-over-field-imples-algebraic},
+\ref{lem:isAlgebraic-of-weaklyEtale}, and
+\ref{thm:weakly-etale-imples-ind-etale-over-fields}) and should be migrated
+or summarised here in a future iteration. The Lean file collects the three
+results:
+\begin{itemize}
+  \item \texttt{Algebra.WeaklyEtale.isAlgebraic} (Stacks 092P): a weakly
+        étale extension of fields is separable algebraic.
+  \item \texttt{Algebra.WeaklyEtale.isAlgebraic\_of\_weaklyEtale}
+        (Stacks 092Q (2) / 0CKR(3)): every element of a weakly étale
+        algebra over a field is algebraic. iter-143: closed modulo the
+        residual sorry on \texttt{isAlgebraic}, via the per-prime route
+        \texttt{Algebra.WeaklyEtale.of\_isLocalization} (Lane M closure
+        iter-142) + \texttt{Algebra.WeaklyEtale.trans} + the iso
+        \texttt{Localization.AtPrime} is a field for absolutely flat $R$.
+  \item \texttt{Algebra.WeaklyEtale.etale\_of\_fg}: every finitely generated
+        $K$-subalgebra of a weakly étale $K$-algebra (over a field) is étale.
+  \item \texttt{Algebra.WeaklyEtale.indEtale\_field} (Stacks 092Q (1)):
+        a weakly étale algebra over a field is ind-étale.
+\end{itemize}
+
+% NOTE: plan agent — please flesh out this chapter with the per-result
+% blueprint prose and cross-references to the (currently consolidated)
+% more-on-local-structure.tex material.

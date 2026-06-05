@@ -5,6 +5,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 import Proetale.Algebra.WeaklyEtale
 import Proetale.Algebra.WeakDimension
 import Proetale.Algebra.WeaklyEtaleField
+import Proetale.Mathlib.RingTheory.WeaklyEtale.TensorSelf
+import Proetale.Mathlib.RingTheory.WeaklyEtale.Subalgebra
 import Mathlib.RingTheory.Unramified.Field
 import Mathlib.FieldTheory.Separable
 import Mathlib.RingTheory.Algebraic.Integral
@@ -78,22 +80,6 @@ instance, restated here for convenience. -/
 lemma formallyUnramified_of_isField [Algebra.WeaklyEtale K L] :
     Algebra.FormallyUnramified K L :=
   inferInstance
-
-/-- If `L / K` is weakly étale between fields, then `L ⊗[K] L` is reduced.
-
-This is the special-field version: derived from `Ring.AbsolutelyFlat (L ⊗[K] L)` via
-the TFAE result `Ring.AbsolutelyFlat.tfae` (absolutely flat ⇒ reduced + all primes
-maximal). -/
-instance isReduced_tensor_self [Algebra.WeaklyEtale K L] :
-    IsReduced (L ⊗[K] L) := by
-  haveI : Ring.AbsolutelyFlat (L ⊗[K] L) := absolutelyFlat_tensor_self K L
-  refine isReduced_ofLocalizationMaximal _ fun P hP ↦ ?_
-  haveI : P.IsPrime := hP.isPrime
-  haveI hfld : IsField (Localization.AtPrime P) :=
-    Ring.AbsolutelyFlat.isField_of_isLocalization_prime
-      (R := L ⊗[K] L) P (Localization.AtPrime P)
-  letI := hfld.toField
-  infer_instance
 
 /-- If `L / K` is weakly étale between fields and `a ∈ L`, then the element
 `1 ⊗ a - a ⊗ 1 ∈ L ⊗[K] L` lies in the kernel of multiplication. -/
@@ -170,10 +156,72 @@ private theorem isAlgebraic_of_isField_aux (a : L) [Algebra.WeaklyEtale K L]
   haveI : Algebra.FiniteType K A :=
     Algebra.FiniteType.adjoin_of_finite (Set.finite_singleton a)
   haveI : Algebra.EssFiniteType K A := Algebra.EssFiniteType.of_finiteType K A
-  -- Substantive residual obligation: K → A weakly étale (Stacks 092K).
-  -- Blocked by circular import on `Subalgebra.adjoin_singleton`; see comment
-  -- above. This is the single substantive gap in `FieldExtension.lean`.
-  sorry
+  -- iter-127 closure: invoke the cycle-free `adjoin_singleton` lemma in
+  -- `Subalgebra.lean` (its sole residual sorry — the `FormallyUnramified L
+  -- (L⊗A')` obligation — is consumed transitively here).
+  haveI hWE_A : Algebra.WeaklyEtale K A := Algebra.WeaklyEtale.adjoin_singleton K L a
+  haveI hFU_A : Algebra.FormallyUnramified K A := inferInstance
+  -- The kernel `KaehlerDifferential.ideal K A = ker μ_A` is finitely generated
+  -- (A is EssFiniteType) and idempotent (FormallyUnramified ⇔ Subsingleton
+  -- cotangent ⇔ idempotent kernel).
+  have hker_fg : (KaehlerDifferential.ideal K A).FG := KaehlerDifferential.ideal_fg K A
+  have hker_idem : IsIdempotentElem (KaehlerDifferential.ideal K A) :=
+    (Ideal.cotangent_subsingleton_iff _).mp
+      Algebra.FormallyUnramified.subsingleton_kaehlerDifferential
+  -- Suppose `a` is not algebraic; we derive a contradiction. The strategy:
+  -- if `a` is transcendental, `A ≅ K[X]` so `A ⊗_K A ≅ K[X][Y]` is an integral
+  -- domain. Then by `Ideal.isIdempotentElem_iff_eq_bot_or_top`,
+  -- `ker μ_A ∈ {⊥, ⊤}`. Both alternatives lead to contradictions:
+  --   * `⊥`: the diagonal `1 ⊗ a - a ⊗ 1` lies in `ker μ_A`, hence is zero in
+  --     `A ⊗ A`; pushed forward along the K-flat injection `A ⊗ A ↪ L ⊗ L`,
+  --     this contradicts `_hδ_ne`.
+  --   * `⊤`: then `1 ∈ ker μ_A`, but `μ_A 1 = 1 ≠ 0`.
+  by_contra h_not_alg
+  -- Build the K-algebra iso `K[X] ≃ₐ[K] A` from injectivity of `aeval a`.
+  have h_aeval_inj : Function.Injective (Polynomial.aeval a : Polynomial K →ₐ[K] L) :=
+    transcendental_iff_injective.mp h_not_alg
+  have hrange : (Polynomial.aeval a : Polynomial K →ₐ[K] L).range = A :=
+    (Algebra.adjoin_singleton_eq_range_aeval K a).symm
+  let φ : Polynomial K ≃ₐ[K] A :=
+    (AlgEquiv.ofInjective (Polynomial.aeval a : Polynomial K →ₐ[K] L) h_aeval_inj).trans
+      (Subalgebra.equivOfEq _ A hrange)
+  -- Tensor `φ` with itself, then identify `K[X] ⊗_K K[X] ≃ K[X][Y]` via
+  -- `polyEquivTensor`. The latter is a domain because `K[X]` is.
+  let θ : A ⊗[K] A ≃ₐ[K] Polynomial K ⊗[K] Polynomial K :=
+    Algebra.TensorProduct.congr φ.symm φ.symm
+  let σ : Polynomial K ⊗[K] Polynomial K ≃ₐ[K] Polynomial (Polynomial K) :=
+    (polyEquivTensor K (Polynomial K)).symm
+  haveI hdom_AA : IsDomain (A ⊗[K] A) :=
+    (θ.trans σ).toRingEquiv.toMulEquiv.isDomain _
+  -- Dichotomy in a domain: idempotent FG ideal is `⊥` or `⊤`.
+  rcases (Ideal.isIdempotentElem_iff_eq_bot_or_top _ hker_fg).mp hker_idem with hbot | htop
+  · -- Case `ker μ_A = ⊥`: the diagonal `1 ⊗ aA - aA ⊗ 1` is in the kernel,
+    -- hence equals zero in `A ⊗ A`. The K-algebra inclusion `A ↪ L` induces
+    -- a K-algebra map `A ⊗ A → L ⊗ L` carrying this diagonal to the original
+    -- `δ`, which is nonzero — contradiction.
+    let aA : A := ⟨a, Algebra.self_mem_adjoin_singleton K a⟩
+    have hδA_mem : ((1 : A) ⊗ₜ[K] aA - aA ⊗ₜ[K] (1 : A) : A ⊗[K] A) ∈
+        KaehlerDifferential.ideal K A := by
+      rw [KaehlerDifferential.ideal, RingHom.mem_ker]
+      show Algebra.TensorProduct.lmul' (R := K) (S := A)
+          ((1 : A) ⊗ₜ[K] aA - aA ⊗ₜ[K] (1 : A)) = 0
+      rw [map_sub, Algebra.TensorProduct.lmul'_apply_tmul,
+        Algebra.TensorProduct.lmul'_apply_tmul, one_mul, mul_one, sub_self]
+    rw [hbot, Ideal.mem_bot] at hδA_mem
+    apply _hδ_ne
+    have hmap := congrArg
+      (f := Algebra.TensorProduct.map (R := K) A.val A.val) hδA_mem
+    simp only [map_zero, map_sub, Algebra.TensorProduct.map_tmul,
+      map_one, Subalgebra.coe_val] at hmap
+    -- `hmap : 1 ⊗ (aA : L) - (aA : L) ⊗ 1 = 0`; this is exactly `δ = 0`.
+    show (1 : L) ⊗ₜ[K] a - a ⊗ₜ[K] (1 : L) = 0
+    exact hmap
+  · -- Case `ker μ_A = ⊤`: then `1 ∈ ker μ_A`, so `μ_A 1 = 1 = 0` in A,
+    -- contradicting nontriviality of A.
+    have h1_mem : (1 : A ⊗[K] A) ∈ KaehlerDifferential.ideal K A :=
+      htop ▸ Submodule.mem_top
+    rw [KaehlerDifferential.ideal, RingHom.mem_ker, map_one] at h1_mem
+    exact one_ne_zero h1_mem
 
 /-- (Stacks [092P].) If `L / K` is an extension of fields with `K → L` weakly étale,
 then `L` is a separable algebraic extension of `K`.

@@ -1,0 +1,201 @@
+% Verbatim excerpt from the Stacks Project, chapter `proetale.tex`
+% (Pro-étale Cohomology), Section 61.6 ("Identifying local rings versus
+% ind-Zariski"). Retrieved from
+%   https://raw.githubusercontent.com/stacks/stacks-project/master/proetale.tex
+% on 2026-06-02. Tag 097D is the macro label `lemma-construct-profinite`
+% (Lemma 61.6.2 in the rendered output).
+%
+% The surrounding tags are included verbatim so the lemma group around
+% 097D can be read in context: the preceding helper 097C
+% (lemma-construct), the example 09BJ (example-construct-space) that
+% applies 097D, and the lemmas 097E/097F (the two w-local-morphism
+% lemmas) plus proposition 097G (proposition-maps-wich-identify-local-rings)
+% that consume 097D right after. The text below is copied verbatim from
+% proetale.tex, lines 846–1031.
+
+\section{Identifying local rings versus ind-Zariski}
+\label{section-connected-components}
+
+\noindent
+An ind-Zariski ring map $A \to B$ identifies local rings
+(Lemma \ref{lemma-ind-zariski-implies}). The converse does not hold
+(Examples, Section \ref{examples-section-not-ind-etale}).
+However, it turns out that there is a kind of structure theorem for
+ring maps which identify local rings in terms of ind-Zariski
+ring maps, see Proposition \ref{proposition-maps-wich-identify-local-rings}.
+
+\medskip\noindent
+Let $A$ be a ring. Let $X = \Spec(A)$. The space of connected
+components $\pi_0(X)$ is a profinite space by
+Topology, Lemma \ref{topology-lemma-spectral-pi0}
+(and Algebra, Lemma \ref{algebra-lemma-spec-spectral}).
+
+\begin{lemma}
+\label{lemma-construct}
+Let $A$ be a ring. Let $X = \Spec(A)$. Let $T \subset \pi_0(X)$ be a
+closed subset. There exists a surjective ind-Zariski ring map $A \to B$
+such that $\Spec(B) \to \Spec(A)$ induces a homeomorphism of $\Spec(B)$
+with the inverse image of $T$ in $X$.
+\end{lemma}
+
+\begin{proof}
+Let $Z \subset X$ be the inverse image of $T$. Then $Z$ is the intersection
+$Z = \bigcap Z_\alpha$ of the open and closed subsets of $X$ containing $Z$,
+see Topology, Lemma \ref{topology-lemma-closed-union-connected-components}.
+For each $\alpha$ we have $Z_\alpha = \Spec(A_\alpha)$ where
+$A \to A_\alpha$ is a local isomorphism (a localization at an idempotent).
+Setting $B = \colim A_\alpha$ proves the lemma.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-construct-profinite}
+Let $A$ be a ring and let $X = \Spec(A)$. Let $T$ be a profinite space and
+let $T \to \pi_0(X)$ be a continuous map. There exists an
+ind-Zariski ring map $A \to B$ such that with $Y = \Spec(B)$ the diagram
+$$
+\xymatrix{
+Y \ar[r] \ar[d] & \pi_0(Y) \ar[d] \\
+X \ar[r] & \pi_0(X)
+}
+$$
+is cartesian in the category of topological spaces and such that
+$\pi_0(Y) = T$ as spaces over $\pi_0(X)$.
+\end{lemma}
+
+\begin{proof}
+Namely, write $T = \lim T_i$ as the limit of an inverse system finite
+discrete spaces over a directed set (see
+Topology, Lemma \ref{topology-lemma-profinite}). For each $i$ let
+$Z_i = \Im(T \to \pi_0(X) \times T_i)$. This is a closed subset.
+Observe that $X \times T_i$ is the spectrum of $A_i = \prod_{t \in T_i} A$
+and that $A \to A_i$ is a local isomorphism. By Lemma \ref{lemma-construct}
+we see that $Z_i \subset \pi_0(X \times T_i) = \pi_0(X) \times T_i$
+corresponds to a surjection $A_i \to B_i$ which is ind-Zariski
+such that $\Spec(B_i) = X \times_{\pi_0(X)} Z_i$ as subsets of
+$X \times T_i$. The transition maps $T_i \to T_{i'}$ induce maps
+$Z_i \to Z_{i'}$ and $X \times_{\pi_0(X)} Z_i \to X \times_{\pi_0(X)} Z_{i'}$.
+Hence ring maps $B_{i'} \to B_i$
+(Lemmas \ref{lemma-local-isomorphism-fully-faithful} and
+\ref{lemma-ind-zariski-implies}).
+Set $B = \colim B_i$. Because $T = \lim Z_i$ we have
+$X \times_{\pi_0(X)} T = \lim  X \times_{\pi_0(X)} Z_i$
+and hence $Y = \Spec(B) = \lim \Spec(B_i)$
+fits into the cartesian diagram
+$$
+\xymatrix{
+Y \ar[r] \ar[d] & T \ar[d] \\
+X \ar[r] & \pi_0(X)
+}
+$$
+of topological spaces. By Lemma \ref{lemma-silly}
+we conclude that $T = \pi_0(Y)$.
+\end{proof}
+
+\begin{example}
+\label{example-construct-space}
+Let $k$ be a field. Let $T$ be a profinite topological space.
+There exists an ind-Zariski ring map $k \to A$ such that
+$\Spec(A)$ is homeomorphic to $T$. Namely, just apply
+Lemma \ref{lemma-construct-profinite} to $T \to \pi_0(\Spec(k)) = \{*\}$.
+In fact, in this case we have
+$$
+A = \colim \text{Map}(T_i, k)
+$$
+whenever we write $T = \lim T_i$ as a filtered limit with each $T_i$ finite.
+\end{example}
+
+\begin{lemma}
+\label{lemma-w-local-morphism-equal-points-stalks-is-iso}
+Let $A \to B$ be ring map such that
+\begin{enumerate}
+\item $A \to B$ identifies local rings,
+\item the topological spaces $\Spec(B)$, $\Spec(A)$ are w-local,
+\item $\Spec(B) \to \Spec(A)$ is w-local, and
+\item $\pi_0(\Spec(B)) \to \pi_0(\Spec(A))$ is bijective.
+\end{enumerate}
+Then $A \to B$ is an isomorphism
+\end{lemma}
+
+\begin{proof}
+Let $X_0 \subset X = \Spec(A)$ and $Y_0 \subset Y = \Spec(B)$ be the
+sets of closed points. By assumption $Y_0$ maps into $X_0$ and
+the induced map $Y_0 \to X_0$ is a bijection.
+As a space $\Spec(A)$ is the disjoint union of the spectra
+of the local rings of $A$ at closed points.
+Similarly for $B$. Hence $X \to Y$ is a bijection.
+Since $A \to B$ is flat we have going down
+(Algebra, Lemma \ref{algebra-lemma-flat-going-down}).
+Thus Algebra, Lemma \ref{algebra-lemma-unique-prime-over-localize-below}
+shows for any prime $\mathfrak q \subset B$ lying over
+$\mathfrak p \subset A$ we have $B_\mathfrak q = B_\mathfrak p$.
+Since $B_\mathfrak q = A_\mathfrak p$ by assumption, we
+see that $A_\mathfrak p = B_\mathfrak p$ for all primes $\mathfrak p$
+of $A$. Thus $A = B$ by
+Algebra, Lemma \ref{algebra-lemma-characterize-zero-local}.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-w-local-morphism-equal-stalks-is-ind-zariski}
+Let $A \to B$ be ring map such that
+\begin{enumerate}
+\item $A \to B$ identifies local rings,
+\item the topological spaces $\Spec(B)$, $\Spec(A)$ are w-local, and
+\item $\Spec(B) \to \Spec(A)$ is w-local.
+\end{enumerate}
+Then $A \to B$ is ind-Zariski.
+\end{lemma}
+
+\begin{proof}
+Set $X = \Spec(A)$ and $Y = \Spec(B)$. Let $X_0 \subset X$ and
+$Y_0 \subset Y$ be the set of closed points. Let $A \to A'$ be the ind-Zariski
+morphism of affine schemes such that with $X' = \Spec(A')$ the diagram
+$$
+\xymatrix{
+X' \ar[r] \ar[d] & \pi_0(X') \ar[d] \\
+X \ar[r] & \pi_0(X)
+}
+$$
+is cartesian in the category of topological spaces and such that
+$\pi_0(X') = \pi_0(Y)$ as spaces over $\pi_0(X)$, see
+Lemma \ref{lemma-construct-profinite}. By
+Lemma \ref{lemma-silly} we see that $X'$ is w-local and
+the set of closed points $X'_0 \subset X'$ is the inverse image of $X_0$.
+
+\medskip\noindent
+We obtain a continuous map $Y \to X'$ of underlying topological spaces
+over $X$ identifying $\pi_0(Y)$ with $\pi_0(X')$. By
+Lemma \ref{lemma-local-isomorphism-fully-faithful}
+(and Lemma \ref{lemma-ind-zariski-implies})
+this corresponds to a morphism of affine schemes $Y \to X'$
+over $X$. Since $Y \to X$ maps $Y_0$ into $X_0$ we see that
+$Y \to X'$ maps $Y_0$ into $X'_0$, i.e., $Y \to X'$ is w-local.
+By Lemma \ref{lemma-w-local-morphism-equal-points-stalks-is-iso}
+we see that $Y \cong X'$ and we win.
+\end{proof}
+
+\noindent
+The following proposition is a warm up for the type of result
+we will prove later.
+
+\begin{proposition}
+\label{proposition-maps-wich-identify-local-rings}
+Let $A \to B$ be a ring map which identifies local rings.
+Then there exists a faithfully flat, ind-Zariski ring map
+$B \to B'$ such that $A \to B'$ is ind-Zariski.
+\end{proposition}
+
+\begin{proof}
+Let $A \to A_w$, resp. $B \to B_w$ be the faithfully flat, ind-Zariski ring
+map constructed in Lemma \ref{lemma-make-w-local} for $A$, resp.\ $B$.
+Since $\Spec(B_w)$ is w-local, there exists a unique factorization
+$A \to A_w \to B_w$ such that $\Spec(B_w) \to \Spec(A_w)$ is w-local
+by Lemma \ref{lemma-universal}. Note that $A_w \to B_w$ identifies
+local rings, see
+Lemma \ref{lemma-local-isomorphism-permanence}.
+By Lemma \ref{lemma-w-local-morphism-equal-stalks-is-ind-zariski}
+this means $A_w \to B_w$ is ind-Zariski. Since $B \to B_w$ is
+faithfully flat, ind-Zariski (Lemma \ref{lemma-make-w-local})
+and the composition $A \to B \to B_w$ is ind-Zariski
+(Lemma \ref{lemma-composition-ind-zariski})
+the proposition is proved.
+\end{proof}

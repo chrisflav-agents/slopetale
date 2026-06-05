@@ -1,5 +1,6 @@
 \chapter{Henselian pair for étale algebras over henselian local rings}
 \label{chap:Mathlib_RingTheory_Etale_HenselianPair}
+% archon:covers Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean Proetale/Mathlib/RingTheory/Etale/HenselianPairLift.lean Proetale/Mathlib/RingTheory/Etale/HenselianPairCharpolyDescent.lean
 
 This chapter formalises the headline statement underpinning the
 Stacks~04GG / 09XK ``Henselian pair'' fragment used throughout
@@ -126,6 +127,235 @@ The Mathlib hooks confirmed available (iter-054 plan survey):
   \texttt{Ideal.jacobson\_bot}: glue the per-maximal containment
   into the Jacobson statement.
 \end{itemize}
+
+% NOTE: iter-147 pivot — Route X (Cayley–Hamilton descent through
+% `descend_root_from_mAB_newton`) is preserved below for context but
+% is no longer the primary closure of `idempotent_lift_limit`. The
+% 4-hypothesis Hensel-bridge in `alpha_zero_via_per_coord_henselian`
+% has a concrete counterexample (A = ℤ_(p), d = 0); the direct route
+% via Stacks 04GH does not encounter this obstacle. The chain
+% `per_coord_polynomial_of_charpoly_descent` +
+% `alpha_zero_via_per_coord_henselian` is to be deprecated once
+% Theorem \ref{thm:henselianPair-idempotent-lift-limit-via-04gh}
+% closes inline in `HenselianPairLift.lean::idempotent_lift_limit`.
+
+\section{Direct closure of \texttt{idempotent\_lift\_limit} via Stacks 04GH (primary route, iter-147 pivot)}
+
+This section gives the iter-147 primary closure of
+\cref{lem:henselianPair-l3a-limit-identification}
+(\texttt{Algebra.Etale.idempotent\_lift\_limit}). It bypasses the
+Cayley--Hamilton-descent recipe of the Route X material in the
+``Hensel lift via residue-product reduction'' section below
+(centred on
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent} and
+\texttt{alpha\_zero\_via\_per\_coord\_henselian}) and instead reduces
+the idempotent-lift to a per-component application of
+\texttt{HenselianLocalRing.is\_henselian} on the monic polynomial
+$f := X^2 - X$, after splitting the finite étale algebra into a
+product of henselian local rings via \stacksproject{04GH}.
+
+\emph{Why the pivot.} The iter-146 prover identified that the
+four-hypothesis Hensel-bridge sitting in
+\texttt{alpha\_zero\_via\_per\_coord\_henselian}
+($\mathfrak m_A^{d+1}$-modular eval at $\alpha_i$, exact eval-zero
+at $0$, unit derivative mod $\mathfrak m_A$) has a concrete
+counterexample: take $A := \mathbb{Z}_{(p)}$ (Noetherian henselian
+local), $d := 0$, $\mathfrak m_A = (p)$, $\alpha_i := p \in
+\mathfrak m_A^{1}$, $p_{\mathrm{coord},i} := X$. All four
+hypotheses hold (modular eval at $\alpha_i$: $p \in \mathfrak m_A$;
+exact eval at $0$: $0$; unit derivative: $1 \pmod{\mathfrak m_A}$),
+yet $\alpha_i = p \neq 0$. The bridge can be saved only with one
+of (i)~$\mathfrak m_A$-adic completeness on $A$ plus a Hensel-tower
+iteration, (ii)~$A$ Noetherian plus a Krull-intersection bootstrap,
+or (iii)~strengthening the supplier
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent} back to
+exact eval-zero plus monicity. Each option requires fresh
+infrastructure or re-introduces the iter-115/116 oscillation
+between exact-zero and modular-zero suppliers.
+
+The direct route below avoids the bridge entirely. The closure goes
+through the product decomposition $B \simeq \prod_i B_i$ supplied by
+\stacksproject{04GH}, after which the idempotent $\bar e \in B/IB$
+factors componentwise into idempotents $\bar e_i \in B_i / IB_i$,
+each of which lives over a residue field $B_i / \mathfrak m_{B_i}$
+and is therefore $0$ or $1$. Henselian local rings lift such
+residue-field idempotents uniquely, and the lifts reassemble in
+$\prod_i B_i \simeq B$.
+
+% SOURCE: Stacks Project, Tag 04GH (Lemma 15.11.x —
+% lemma-finite-over-henselian), Algebra chapter, Section
+% "Henselian local rings" (read from references/stacks-04gg.tex)
+% SOURCE QUOTE:
+% \begin{lemma}
+% \label{lemma-finite-over-henselian}
+% Let $(R, \mathfrak m, \kappa)$ be a henselian local ring.
+% \begin{enumerate}
+% \item If $R \to S$ is a finite ring map then $S$ is
+% a finite product of henselian local rings each finite over $R$.
+% \item If $R \to S$ is a finite ring map and $S$ is local, then
+% $S$ is a henselian local ring and $R \to S$ is a (finite) local ring map.
+% \item If $R \to S$ is a finite type ring map, and $\mathfrak q$ is
+% a prime of $S$ lying over $\mathfrak m$ at which $R \to S$ is quasi-finite,
+% then $S_{\mathfrak q}$ is henselian and finite over $R$.
+% \item If $R \to S$ is quasi-finite then $S_{\mathfrak q}$ is henselian
+% and finite over $R$ for every prime $\mathfrak q$ lying over $\mathfrak m$.
+% \end{enumerate}
+% \end{lemma}
+\textit{Source: \stacksproject{04GH} (Algebra,
+\texttt{lemma-finite-over-henselian}, part (1)).}
+
+\begin{lemma}[Henselian lift of a residue idempotent for $f := X^2 - X$]
+\label{lem:henselianPair-idempotent-lift-x2-minus-x}
+\lean{Algebra.Etale.lift_residue_idempotent_x2_minus_x}
+Let $R$ be a henselian local ring with maximal ideal $\mathfrak m_R$
+and residue field $\kappa_R := R / \mathfrak m_R$. Let
+$\bar e \in \kappa_R$ be an idempotent of $\kappa_R$, i.e.\
+$\bar e^2 = \bar e$ in $\kappa_R$; since $\kappa_R$ is a field
+this forces $\bar e \in \{0, 1\}$. Then there exists a unique
+$e \in R$ such that $e^2 - e = 0$ in $R$ and $e \equiv \bar e
+\pmod{\mathfrak m_R}$. Concretely $e = 0$ when $\bar e = 0$ and
+$e = 1$ when $\bar e = 1$.
+\end{lemma}
+
+\begin{proof}
+\uses{thm:henselianRing-map-maximalIdeal}
+Apply the Hensel-lift property of $R$
+(\texttt{HenselianLocalRing.is\_henselian}) to the monic polynomial
+$f := X^2 - X \in R[X]$ at the seed root $\bar e \in \kappa_R$.
+The reduction $\bar f \in \kappa_R[X]$ is again $X^2 - X = X(X - 1)$,
+which has $\bar e \in \{0, 1\}$ as a (simple) root; the derivative
+$f' = 2X - 1$ evaluates to $-1$ at $\bar e = 0$ and to $1$ at
+$\bar e = 1$, both units in $\kappa_R$ (a field, every nonzero
+element is a unit). Hensel produces $e \in R$ with $f(e) = 0$,
+i.e.\ $e^2 = e$, and $e \equiv \bar e \pmod{\mathfrak m_R}$.
+
+Uniqueness follows from Hensel uniqueness on the simple-root branch
+(\stacksproject{04GG}, equivalently the uniqueness clause of
+\texttt{HenselianLocalRing.is\_henselian} as packaged in Mathlib):
+the trivial root $0$ (resp.\ $1$) already lifts $\bar e = 0$
+(resp.\ $\bar e = 1$) and has unit derivative, so by Hensel
+uniqueness $e = 0$ (resp.\ $e = 1$) is the lift.
+\end{proof}
+
+\begin{theorem}[Direct componentwise-Hensel closure of \texttt{idempotent\_lift\_limit}]
+\label{thm:henselianPair-idempotent-lift-limit-via-04gh}
+\lean{Algebra.Etale.idempotent_lift_limit_via_04gh}
+\uses{lem:henselianPair-idempotent-lift-x2-minus-x,
+      thm:henselianRing-map-maximalIdeal}
+Let $A$ be a henselian local ring with maximal ideal $\mathfrak m_A$,
+let $B$ be a finite étale $A$-algebra, and let $I \subseteq A$ be an
+ideal with $I \subseteq \mathfrak m_A$. Then for every idempotent
+$\bar e$ of $B / IB$ there exists an idempotent $e \in B$ with
+$e^2 = e$ in $B$ and $e \equiv \bar e \pmod{IB}$.
+\end{theorem}
+
+% SOURCE QUOTE PROOF:
+% \begin{proof}
+% Part (2) implies part (1) since $S$ as in part (1) is a finite product
+% of its localizations at the primes lying over $\mathfrak m$ by
+% Lemma \ref{lemma-characterize-henselian} part (10).
+% Part (2) also follows from Lemma \ref{lemma-characterize-henselian} part (10)
+% since any finite $S$-algebra is also a finite $R$-algebra (of course
+% any finite ring map between local rings is local).
+% \end{proof}
+\begin{proof}
+\uses{lem:henselianPair-idempotent-lift-x2-minus-x,
+      lem:henselianPair-jac}
+\textit{Source: \stacksproject{04GH} for the product decomposition
+(Step~1); per-component Hensel lift for $X^2 - X$
+(\cref{lem:henselianPair-idempotent-lift-x2-minus-x}) for
+Steps~3--4.}
+
+\textbf{Step 1 (Product decomposition via 04GH).}
+By \stacksproject{04GH} part~(1), the finite map $A \to B$ makes
+$B$ a finite product
+\[
+\Phi\,:\,B \;\xrightarrow{\,\sim\,}\; \prod_{i = 1}^{n} B_i
+\]
+of henselian local rings $B_i$, each finite over $A$. The
+$B_i$ correspond canonically to the maximal ideals
+$\mathfrak m_{B_i} \subset B$ via
+$B_i \simeq B_{\mathfrak m_{B_i}}$, and these maximal ideals are in
+bijection with the maximal ideals of the artinian quotient
+$B / \mathfrak m_A B$ (which is in turn an étale $\kappa_A$-algebra,
+hence a finite product of finite separable extensions of $\kappa_A$;
+this is the residue-product side of \stacksproject{04GG} for finite
+étale $A$-algebras over a henselian local $A$).
+
+\textbf{Step 2 (Componentwise factorisation of the residue idempotent).}
+The isomorphism $\Phi$ induces an isomorphism on quotients,
+\[
+\bar\Phi\,:\,B / IB \;\xrightarrow{\,\sim\,}\; \prod_{i} B_i / IB_i,
+\]
+because $\Phi$ sends $IB$ onto $\bigoplus_i IB_i$ (the image of an
+ideal under a ring isomorphism is the corresponding ideal). An
+idempotent $\bar e \in B/IB$ therefore corresponds under
+$\bar\Phi$ to a tuple $(\bar e_i)_{i}$ with each
+$\bar e_i \in B_i / IB_i$ idempotent. Since $I \subseteq
+\mathfrak m_A$, we have $IB_i \subseteq \mathfrak m_A B_i \subseteq
+\mathfrak m_{B_i}$ (the second inclusion is the henselian-pair
+Jacobson containment for the finite $A$-algebra $B_i$;
+cf.\ \cref{lem:henselianPair-jac} applied per factor). The further
+quotient $B_i / IB_i \twoheadrightarrow B_i / \mathfrak m_{B_i}
+=: \kappa_{B_i}$ sends $\bar e_i$ to an idempotent of
+$\kappa_{B_i}$, hence (the residue is a field) to either $0$ or $1$.
+
+\textbf{Step 3 (Per-component Hensel lift via $X^2 - X$).}
+Apply \cref{lem:henselianPair-idempotent-lift-x2-minus-x} to each
+henselian local $B_i$, with seed equal to the image of $\bar e_i$
+in $\kappa_{B_i} \in \{0, 1\}$. This yields a unique $e_i \in B_i$
+with $e_i^2 = e_i$ in $B_i$ and $e_i \equiv \bar e_i \pmod{\mathfrak
+m_{B_i}}$. Concretely $e_i = 0$ when $\bar e_i \equiv 0
+\pmod{\mathfrak m_{B_i}}$ and $e_i = 1$ otherwise. The
+$e_i \in \{0, 1\} \subseteq B_i$ are therefore already idempotents
+of $B_i$ in a trivial way; the Hensel-lift content is the
+identification $e_i \equiv \bar e_i \pmod{\mathfrak m_{B_i}}$,
+not the construction of the root.
+
+\textbf{Step 4 (Reassembly and verification of $\bar e$-congruence).}
+Set $e := \Phi^{-1}\bigl((e_i)_{i}\bigr) \in B$. Then $e^2 = e$ in
+$B$ because $\Phi$ is a ring isomorphism and the relation holds
+componentwise. For the congruence $e \equiv \bar e \pmod{IB}$:
+on each factor the residue $e_i \in \{0,1\}$ equals
+$\bar e_i \pmod{\mathfrak m_{B_i}}$ by Step~3. Composing with the
+canonical projection $B_i / IB_i \twoheadrightarrow
+B_i / \mathfrak m_{B_i}$ and using that $\bar e_i$ is itself
+idempotent in the intermediate quotient $B_i / IB_i$, one checks
+$e_i \equiv \bar e_i \pmod{IB_i}$ as follows: both $e_i$ and
+$\bar e_i$ lift the same element of $B_i / \mathfrak m_{B_i}$
+($0$ or $1$), and any two such lifts differ by an element of
+$\mathfrak m_{B_i} \cap (\text{idempotents of } B_i / IB_i)$;
+inside $B_i / IB_i$, an idempotent whose image in
+$B_i / \mathfrak m_{B_i}$ is $0$ equals $0$ (because
+$\mathfrak m_{B_i} / IB_i$ is contained in the Jacobson radical
+of $B_i / IB_i$, and a Jacobson-radical idempotent vanishes),
+and similarly an idempotent whose image is $1$ equals $1$;
+hence $e_i$ and $\bar e_i$ coincide in $B_i / IB_i$, i.e.\
+$e_i - \bar e_i \in IB_i$. Reassembling via $\bar\Phi^{-1}$ gives
+$e - \bar e \in IB$.
+\end{proof}
+
+\textbf{Supersession of Route X.}
+\cref{thm:henselianPair-idempotent-lift-limit-via-04gh}
+\emph{supersedes} the Route X closure of
+\cref{lem:henselianPair-l3a-limit-identification}
+(\texttt{Algebra.Etale.idempotent\_lift\_limit}) that was previously
+routed through the Cayley--Hamilton-descent chain
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent}
+$\to$ \texttt{alpha\_zero\_via\_per\_coord\_henselian} documented in
+the next section. The latter chain remains in the chapter as a
+partial result on Cayley--Hamilton descent (the polynomial-
+construction half is mathematically correct as an
+$\mathfrak m_A^{d+1}$-modular eval-zero supplier), but it is no
+longer the active closure of the headline idempotent-lift sorry;
+the Lean delivery for
+\texttt{Algebra.Etale.idempotent\_lift\_limit} in
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPairLift.lean}
+is to be re-routed in iter-148 to consume
+\cref{thm:henselianPair-idempotent-lift-limit-via-04gh} directly,
+at which point the \texttt{per\_coord\_polynomial\_of\_charpoly\_descent}
++ \texttt{alpha\_zero\_via\_per\_coord\_henselian} pair becomes
+dead code.
 
 \section{Hensel lift via residue-product reduction}
 
@@ -258,6 +488,344 @@ end-to-end, or — if monolithic close exceeds the iter LOC budget
 — to extract L3a/L3b/L3c as named typed sub-helpers and close at
 least L3a sorry-free. Either outcome advances the project.
 
+\begin{lemma}[Stacks 04GE / 0DXB; finite over henselian local
+decomposes]
+\label{lem:henselianPair-l3b-product-decomposition}
+\lean{Algebra.Etale.product_decomposition_of_henselian}
+\uses{thm:etale-henselian-cop-lift,
+      lem:henselianPair-jac}
+Let $A$ be a Noetherian henselian local ring with maximal ideal
+$\mathfrak m$, and let $B$ be a finite $A$-algebra. Suppose the
+residue ring decomposes as
+$B / \mathfrak m B \xrightarrow{\sim} \prod_{i \in I} k_i$ with
+$I$ a finite index set and each $k_i$ a finite separable
+extension of $k := A / \mathfrak m$ (for instance when $B/A$ is
+finite étale, by the structure decomposition supplied via
+\texttt{Algebra.Etale.iff\_exists\_algEquiv\_prod} as referenced in
+the L3a paragraph above). Let
+$\{e_i\}_{i \in I} \subset \prod_j k_j$ be the orthogonal
+idempotents of the residue product, and let
+$\{\tilde e_i\}_{i \in I} \subset B$ be a complete orthogonal
+family lifting $\{e_i\}$, as produced by
+\cref{thm:etale-henselian-cop-lift}
+(\texttt{Algebra.Etale.exists\_completeOrthogonalIdempotents\_lift\_of\_henselian}),
+which directly outputs a \texttt{CompleteOrthogonalIdempotents}
+structure rather than requiring componentwise assembly from
+\cref{lem:henselianPair-l3a-idempotent-lift}.
+Then the canonical map
+\[
+  \Phi : B \xrightarrow{\ \sim\ }
+  \prod_{i \in I} B_i,
+  \qquad
+  B_i := \tilde e_i \cdot B,
+  \qquad
+  b \longmapsto (\tilde e_i \cdot b)_{i \in I},
+\]
+is an isomorphism of $A$-algebras, each factor $B_i$ is a finite
+$A$-algebra, and each $B_i$ is a local ring. (The per-factor
+residue-field identification $B_i / \mathfrak m B_i \simeq k_i$
+and the maximal-ideal description $\mathfrak m_{B_i} = \tilde e_i
+\cdot \mathfrak m B$ are established in the proof and packaged as
+the separate sibling
+\cref{lem:henselianPair-l3b-bis-residue-field} below, which is
+what downstream consumers invoke when they need the canonical
+residue iso.)
+\end{lemma}
+
+\begin{proof}
+\uses{thm:etale-henselian-cop-lift, lem:henselianPair-l1-separation, lem:henselianPair-jac}
+The complete orthogonal family $\{\tilde e_i\}_{i \in I} \subset B$
+— satisfying completeness $\sum_i \tilde e_i = 1$, idempotence
+$\tilde e_i^{\,2} = \tilde e_i$, and pairwise orthogonality
+$\tilde e_i \tilde e_j = 0$ for $i \ne j$ — is the direct output
+of the banked theorem
+\texttt{Algebra.Etale.exists\_completeOrthogonalIdempotents\_lift\_of\_henselian}
+(\cref{thm:etale-henselian-cop-lift}), which packages the lift as
+a \texttt{CompleteOrthogonalIdempotents} structure rather than
+asking the caller to assemble orthogonality componentwise from a
+single-idempotent lift.
+
+\emph{Direct sum isomorphism.} The forward map
+$\Phi(b) = (\tilde e_i b)_i$ has inverse
+$\Psi : (b_i)_i \mapsto \sum_i b_i$. Indeed
+$\Psi \circ \Phi(b) = \sum_i \tilde e_i \cdot b = b$ by
+completeness, and for the $j$-th coordinate of
+$\Phi \circ \Psi((b_i)_i)$ one has $\tilde e_j \sum_i b_i =
+\tilde e_j b_j = b_j$ — the first equality by orthogonality
+($\tilde e_j b_i = \tilde e_j \tilde e_i b_i' = 0$ for $i \ne j$,
+writing $b_i = \tilde e_i b_i'$), the second by
+$b_j \in B_j = \tilde e_j B$ and idempotence. Both $\Phi$ and
+$\Psi$ are $A$-linear ring homomorphisms; in Mathlib terms this
+is the standard decomposition along a complete orthogonal
+idempotent family. The primary carrier path is
+\texttt{CompleteOrthogonalIdempotents.equivPi}, which directly
+consumes the \texttt{CompleteOrthogonalIdempotents} family output
+by \cref{thm:etale-henselian-cop-lift} and returns the
+\texttt{RingEquiv} $B \simeq \prod_i B_i$ in exactly the shape
+required here. Should the precise carrier name or return shape
+diverge on the current Mathlib bump, the new project-side
+declaration
+\texttt{Algebra.Etale.product\_decomposition\_of\_henselian} (the
+Lean carrier pinned by the \texttt{\textbackslash lean\{\dots\}}
+hint on this lemma) provides the bridge: it packages the
+ring-equiv together with the per-factor finiteness and locality
+needed downstream by
+\cref{lem:henselianPair-l3c-finite-over-henselian-is-henselian}.
+The per-factor residue-field identification
+$B_i / \mathfrak m B_i \simeq k_i$ is the content of the sibling
+\cref{lem:henselianPair-l3b-bis-residue-field}, which downstream
+consumers (route-(D) Step 3 below) invoke directly when they
+need the canonical residue iso.
+
+\emph{Finite over $A$.} Each $B_i$ is the image of the $A$-linear
+endomorphism $b \mapsto \tilde e_i b$ on $B$, hence an
+$A$-submodule of $B$. Since $A$ is Noetherian and $B$ is finite
+over $A$, $B$ is Noetherian as an $A$-module, so the submodule
+$B_i$ is finitely generated; equivalently, the surjection
+$B \twoheadrightarrow B_i$ (multiplication by $\tilde e_i$ onto
+its image) and \texttt{Module.Finite.of\_surjective} make $B_i$
+finite over $A$.
+
+\emph{Residue identification.} Reducing modulo $\mathfrak m$
+gives
+\[
+  B_i / \mathfrak m B_i
+  \;=\; (\tilde e_i \cdot B) / (\tilde e_i \cdot \mathfrak m B)
+  \;\simeq\; \tilde e_i \cdot (B / \mathfrak m B)
+  \;\simeq\; \tilde e_i \cdot \prod_j k_j
+  \;\simeq\; k_i,
+\]
+the last isomorphism because the residue of $\tilde e_i$ is
+$e_i \in \prod_j k_j$, satisfying $e_i \cdot e_j = \delta_{ij}
+e_i$, so multiplication by $e_i$ on $\prod_j k_j$ is the
+projection onto the $i$-th coordinate.
+
+\emph{Local with the named maximal.} The residue field
+$B_i / \mathfrak m B_i \simeq k_i$ is a field, so $\mathfrak m
+B_i = \tilde e_i \cdot \mathfrak m B$ is maximal in $B_i$. Every
+prime of $B_i$ contracts (via the inclusion $A \hookrightarrow
+B_i$ induced by $a \mapsto \tilde e_i a$, valid because
+$\tilde e_i$ is the unit of $B_i$) to a prime of $A$ containing
+$\mathfrak m$ (going-up for the finite extension $A \to B_i$
+combined with $A$ local), hence to $\mathfrak m$ itself; this
+prime therefore contains $\mathfrak m B_i$ and, descending modulo
+$\mathfrak m B_i$ to the field $k_i$, equals $\mathfrak m B_i$.
+Thus $B_i$ is local with maximal ideal $\tilde e_i \cdot
+\mathfrak m B$ and residue field $k_i$.
+\end{proof}
+
+\begin{lemma}
+[Residue-field identification for the L3b factors]
+\label{lem:henselianPair-l3b-bis-residue-field}
+\lean{Algebra.Etale.bi_residue_field_iso_of_henselian}
+\uses{lem:henselianPair-l3b-product-decomposition,
+      thm:etale-henselian-cop-lift}
+Under the hypotheses of
+\cref{lem:henselianPair-l3b-product-decomposition}, let
+$B_i := \tilde e_i \cdot B$ be the factors of the product
+decomposition. Then for each $i \in I$ there is a canonical
+isomorphism of $k$-algebras
+\[
+  B_i / \mathfrak m B_i \;\xrightarrow{\ \sim\ }\; k_i,
+\]
+where the source is the residue ring of the factor and the
+target is the $i$-th finite separable residue field of the L3a
+decomposition $B / \mathfrak m B \simeq \prod_j k_j$. Equivalently,
+the maximal ideal of $B_i$ is $\mathfrak m_{B_i} = \tilde e_i
+\cdot \mathfrak m B$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:henselianPair-l3b-product-decomposition,
+      thm:etale-henselian-cop-lift}
+Reduce modulo $\mathfrak m$ on each side of the L3b ring iso
+$B \simeq \prod_i B_i$:
+\[
+  B_i / \mathfrak m B_i
+  \;=\; (\tilde e_i \cdot B) / (\tilde e_i \cdot \mathfrak m B)
+  \;\simeq\; \tilde e_i \cdot (B / \mathfrak m B)
+  \;\simeq\; \tilde e_i \cdot \prod_j k_j
+  \;\simeq\; k_i,
+\]
+the last isomorphism because the residue of $\tilde e_i$ is
+$e_i \in \prod_j k_j$, satisfying $e_i \cdot e_j = \delta_{ij}
+e_i$, so multiplication by $e_i$ on $\prod_j k_j$ is the
+projection onto the $i$-th coordinate. The maximal-ideal
+description $\mathfrak m_{B_i} = \tilde e_i \cdot \mathfrak m B$
+follows from this iso: the displayed quotient identifies $k_i$,
+which is a field, so its kernel
+$\tilde e_i \cdot \mathfrak m B$ is the unique maximal ideal of
+$B_i$ (using the locality of $B_i$ supplied by
+\cref{lem:henselianPair-l3b-product-decomposition}).
+\end{proof}
+
+\begin{lemma}\leanok
+[Stacks 04GH; finite extension of henselian local is
+henselian local]
+\label{lem:henselianPair-l3c-finite-over-henselian-is-henselian}
+\lean{Algebra.Etale.henselianLocalRing_of_finite_over_henselianLocal}
+% NOTE: This lemma duplicates lem:henselianPair-l3c-finite-henselian
+% (statement-level, both Stacks 04GH). The Lean carrier
+% Algebra.Etale.henselianLocalRing_of_finite_over_henselianLocal is
+% shared. The iter-119 amendment paragraph Step 4 consumes this
+% carrier on each B_i factor produced by L3b; B_i is module-finite
+% over the noetherian local A hence Module.Free A B_i, supplying the
+% existing carrier's [Module.Free A B] hypothesis.
+\uses{thm:henselianRing-map-maximalIdeal,
+      lem:henselianPair-newton-step,
+      lem:henselianPair-jac}
+Let $A$ be a henselian local ring with maximal ideal $\mathfrak
+m$, and let $B'$ be a finite $A$-algebra which is itself local,
+with maximal ideal $\mathfrak n$ lying over $\mathfrak m$. Then
+$B'$ carries a \texttt{HenselianLocalRing} structure: for every
+monic $g \in B'[Y]$ and $\alpha_0 \in B'$ with $g(\alpha_0) \in
+\mathfrak n$ and $g'(\alpha_0) \in (B')^\times$, there exists a
+unique $\alpha \in B'$ with $g(\alpha) = 0$ and $\alpha -
+\alpha_0 \in \mathfrak n$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:henselianPair-newton-step, lem:henselianPair-l1-separation, lem:henselianPair-jac}
+\leanok
+The proof reduces the Hensel-lift property of $B'$ to a
+Hensel-lift property either of $A$ or, equivalently, of an
+already-Newton-iterated sequence inside $B'$ itself.
+
+\emph{Presentation route (preferred when available in Mathlib).}
+Since $B'$ is finite local over the henselian local $A$, the
+residue extension $B'/\mathfrak n$ over $k = A/\mathfrak m$ is a
+single finite (separable, in our application via L3b) field
+extension generated by a primitive element $\bar\theta$. Lift
+$\bar\theta$ to $\theta \in B'$. Because $A$ is henselian local
+and $B'$ is finite local over $A$, the inclusion $A[\theta]
+\hookrightarrow B'$ is surjective (Nakayama applied to
+$B'/A[\theta]$, whose residue $B'/(\mathfrak m B' + A[\theta]) =
+k_i / k(\bar\theta) = 0$), and the minimal monic relation
+$h(\theta) = 0$ produces an isomorphism of $A$-algebras
+$A[T]/(h) \xrightarrow{\sim} B'$ for some monic $h \in A[T]$. The
+Hensel-lift property of $A$ —
+\texttt{HenselianLocalRing.is\_henselian} — transports along this
+isomorphism to a Hensel-lift property of $B'$: given $g \in B'[Y]$
+monic and $\alpha_0 \in B'$ as above, pull back to a problem over
+$A[T]/(h)$, then lift along the canonical isomorphism. The
+candidate Mathlib carrier for the transport step is something of
+the shape
+\texttt{HenselianLocalRing.adjoin\_henselianLocalRing} or
+\texttt{HenselianLocalRing.quotient\_polynomial}, both of which
+should be verified via \texttt{lean\_leansearch} at the
+iter-120 prover lane; if absent, the transport is a small new
+project lemma.
+
+\emph{Direct Newton route (always available, no Mathlib transport
+required).} Apply \cref{lem:henselianPair-newton-step} with the
+roles played by $A$ and the finite local extension $B'$ in place
+of $A$ and $B$ (the hypotheses of the Newton-step lemma — $A$
+noetherian henselian local, $B$ finite over $A$, and the
+Jacobson containment $\mathfrak m B \subseteq
+\mathrm{jacobson}\,B$ via \cref{lem:henselianPair-jac} — apply
+verbatim to $A \to B'$, since $B'$ is finite local over $A$ and
+$\mathfrak m B' \subseteq \mathfrak n = \mathrm{jacobson}\,B'$).
+The Newton sequence $\alpha_{n+1} := \alpha_n - g(\alpha_n)
+g'(\alpha_n)^{-1}$ in $B'$ satisfies $g(\alpha_n) \in (\mathfrak
+m B')^{n+1}$ and $\alpha_{n+1} - \alpha_n \in (\mathfrak m
+B')^{n+1}$. Convergence to a unique limit in $B'$ then follows
+from $\mathfrak m B'$-adic separation
+$\bigcap_n (\mathfrak m B')^n = 0$ (the descent of
+\cref{lem:henselianPair-l1-separation} to $B'$, which inherits
+the Noetherian-finite-over-$A$ hypothesis); identification of the
+limit as a genuine element of $B'$ (not merely a formal Cauchy
+class) uses that $B'/\mathfrak m B'$ is Artinian and that
+$\mathfrak n$ is nilpotent modulo $\mathfrak m B'$, so the
+Cauchy condition stabilises modulo every fixed power
+$(\mathfrak m B')^N$ to a single class in the finite quotient,
+which assembles to the desired $\alpha \in B'$.
+
+\emph{Note for the prover.} In the application via L3b each
+factor $B_i$ comes equipped with the local structure produced by
+\cref{lem:henselianPair-l3b-product-decomposition}; the
+Lean-side signature of this lemma must accept a generic finite
+local $A$-algebra $B'$ and not lock in the specific
+$B' = \tilde e_i \cdot B$ shape, so the L3-closure reassembly
+paragraph below can plug in each $B_i$ uniformly. The two routes
+above are mathematically the same proof; the prover may pick
+whichever yields a shorter Lean formalisation.
+\end{proof}
+
+\paragraph{iter-119 amendment --- route (D) closure of
+\cref{lem:henselianPair-is-henselian} via L3a+L3b+L3c.}
+The route-(A) Newton-direct programme that produced the
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent} chain
+(documented in §A.3 below and frozen as of iter-118) is being
+superseded by the present route-(D) idempotent-lifting programme.
+The Lean carrier of the supersession is the body of the
+\texttt{is\_henselian} field on
+\texttt{Algebra.Etale.henselianRing\_map\_maximalIdeal}, currently
+routed through
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent} and its
+sealed siblings; under route (D), this body invokes the L3a/L3b/L3c
+chain instead, with the route-(A) helpers becoming dead code
+queued for cleanup-refactor dispatch in the iter immediately
+after route (D) closes \texttt{is\_henselian}.
+
+The route-(D) close of \cref{lem:henselianPair-is-henselian}
+proceeds as follows. Given $f \in B[Y]$ monic and $a_0 \in B$
+with $f(a_0) \in \mathfrak m B$ and the image of $f'(a_0)$ in
+$B/\mathfrak m B$ a unit:
+\begin{enumerate}
+\item Apply
+\texttt{Algebra.Etale.exists\_completeOrthogonalIdempotents\_lift\_of\_henselian}
+(the L3a carrier, banked in
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianIdempotentLift.lean})
+to obtain a complete orthogonal family
+$\{\tilde e_i\}_{i \in I} \subset B$ lifting the residue
+idempotents of $B/\mathfrak m B \xrightarrow{\sim}
+\prod_i k_i$.
+\item Apply
+\cref{lem:henselianPair-l3b-product-decomposition} to obtain the
+ring isomorphism $\Phi : B \xrightarrow{\sim} \prod_i B_i$ with
+$B_i := \tilde e_i \cdot B$ finite local over $A$. The
+per-factor residue identification $B_i / \mathfrak m B_i \simeq
+k_i$ and the maximal-ideal description $\mathfrak m_{B_i} =
+\tilde e_i \cdot \mathfrak m B$ are supplied by
+\cref{lem:henselianPair-l3b-bis-residue-field}.
+\item For each $i \in I$, push $f$ and $a_0$ forward along
+$\Phi$ to obtain $f_i \in B_i[Y]$ monic and $a_{0,i} \in B_i$
+with $f_i(a_{0,i}) \in \mathfrak m B_i$ and $f_i'(a_{0,i}) \in
+(B_i)^\times$. (Monicity is preserved because $\Phi$ is a ring
+isomorphism. The unit condition on $f_i'(a_{0,i})$ transports
+from the original unit condition on $f'(a_0)$ modulo
+$\mathfrak m B$ because each composition $B \twoheadrightarrow
+B_i \twoheadrightarrow k_i$ factors through $B/\mathfrak m B
+\xrightarrow{\sim} \prod_j k_j$, so a unit modulo
+$\mathfrak m B$ remains a unit modulo $\mathfrak m B_i$, hence
+by \cref{lem:henselianPair-jac} a unit in $B_i$.)
+\item Apply
+\cref{lem:henselianPair-l3c-finite-over-henselian-is-henselian}
+per factor to obtain $\alpha_i \in B_i$ with $f_i(\alpha_i) = 0$
+and $\alpha_i - a_{0,i} \in \mathfrak m B_i$.
+\item Reassemble $\alpha := \Phi^{-1}((\alpha_i)_{i \in I}) \in
+B$. Verification: $f(\alpha) = 0$ because $\Phi$ is a ring
+homomorphism and $f(\alpha) = \Phi^{-1}((f_i(\alpha_i))_i) =
+\Phi^{-1}(0) = 0$; and $\alpha - a_0 = \Phi^{-1}((\alpha_i -
+a_{0,i})_i) \in \mathfrak m B$ because each
+$\alpha_i - a_{0,i} \in \mathfrak m B_i = \tilde e_i \cdot
+\mathfrak m B$ and the sum reassembles to an element of
+$\mathfrak m B$.
+\end{enumerate}
+The route-(A) helpers in
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean} —
+the \texttt{per\_coord\_polynomial\_of\_charpoly\_descent} family
+and its sealed siblings \texttt{kappaCoefficient},
+\texttt{r\_n\_minus\_r\_1\_in\_gamma\_finsupp},
+\texttt{exists\_xi\_for\_per\_coord\_polynomial} and the
+strengthened-$\xi$ existential infrastructure — are no longer
+load-bearing under this reassembly. A cleanup-refactor dispatch
+is queued for the iter immediately after route (D) closes
+\texttt{is\_henselian}, to delete these helpers and re-collect
+their imports and namespace footprint. iter-119 prover scope
+does not include route-(D) Lean work; iter-120 is the first
+prover lane on route (D).
+
 \begin{lemma}[Stage 1 — $\mathfrak m B$-adic separation]
 \label{lem:henselianPair-l1-separation}
 \lean{Algebra.Etale.maximalIdeal_map_iInf_pow_eq_bot}
@@ -315,6 +883,34 @@ in $B$ and satisfies $e^2 = e$ with $e \equiv e_0 \equiv \bar e$
 modulo $\mathfrak m B$.
 \end{proof}
 
+% SOURCE: Stacks Project, Tag 09XI (Lemma 15.11.6, "characterize henselian
+% pair"), Chapter 15 ("More on Algebra"), Section 15.11 ("Henselian pairs")
+% (read from references/stacks-09xi.tex)
+% SOURCE QUOTE:
+% \begin{lemma}
+% \label{lemma-characterize-henselian-pair}
+% \begin{reference}
+% \cite[Chapter XI]{Henselian} and \cite[Proposition 1]{Gabber-henselian}
+% \end{reference}
+% Let $(A, I)$ be a pair. The following are equivalent
+% \begin{enumerate}
+% \item $(A, I)$ is a henselian pair,
+% \item given an \'etale ring map $A \to A'$ and an $A$-algebra map
+% $\sigma : A' \to A/I$, there exists an $A$-algebra map $A' \to A$
+% lifting $\sigma$,
+% \item for any finite $A$-algebra $B$ the map $B \to B/IB$ induces
+% a bijection on idempotents,
+% \item for any integral $A$-algebra $B$ the map $B \to B/IB$ induces
+% a bijection on idempotents, and
+% \item (Gabber) $I$ is contained in the Jacobson radical of $A$ and
+% every monic polynomial $f(T) \in A[T]$ of the form
+% $$
+% f(T) = T^n(T - 1) + a_n T^n + \ldots + a_1 T + a_0
+% $$
+% with $a_n, \ldots, a_0 \in I$ and $n \ge 1$ has a root $\alpha \in 1 + I$.
+% \end{enumerate}
+% Moreover, in part (5) the root is unique.
+% \end{lemma}
 \begin{lemma}
 
 \leanok
@@ -324,7 +920,7 @@ modulo $\mathfrak m B$.
 \uses{lem:henselianPair-newton-step,
       lem:henselianPair-l1-separation,
       lem:henselianPair-jac,
-      lem:henselianPair-l3c-newton-convergence}
+      lem:henselianPair-l3a-newton-root}
 Let $A$ be a Noetherian henselian local ring and $B$ a finite étale
 $A$-algebra. Let $e_0 \in B$ with $e_0^2 - e_0 \in \mathfrak m B$
 and such that the residue of $2 e_0 - 1$ in $B/\mathfrak m B$ is a
@@ -332,23 +928,422 @@ unit. Then there exists $e \in B$ with $e^2 = e$ and $e - e_0 \in
 \mathfrak m B$.
 \end{lemma}
 
-\begin{proof}
+% SOURCE: Stacks Project, Tag 09XI (Lemma 15.11.6, "characterize henselian
+% pair"), Chapter 15 ("More on Algebra"), Section 15.11 ("Henselian pairs")
+% (read from references/stacks-09xi.tex)
+% SOURCE QUOTE PROOF:
+% \begin{proof}
 
 \leanok
-This is the substantive limit-identification step extracted from
-\cref{lem:henselianPair-l3a-idempotent-lift}. \cref{lem:henselianPair-newton-step}
-applied to $f := Y^2 - Y$ at $e_0$ produces a Cauchy sequence
-$(a_n)$ in $B$ with $a_n^2 - a_n \in (\mathfrak m B)^{n+1}$ and
-$a_{n+1} - a_n \in (\mathfrak m B)^{n+1}$. Uniqueness of any limit
-modulo every power of $\mathfrak m B$ is provided by
-\cref{lem:henselianPair-l1-separation}. Existence of the limit
-admits two routes: either a direct $Y^2 - Y$-specific descent to
-$A$ via the characteristic polynomial of multiplication-by-$e_0$
-on $B$ combined with $A$'s henselianness, or — preferred — a
-specialisation of \cref{lem:henselianPair-l3c-newton-convergence}
-at $g := Y^2 - Y$ once the multivariate convergence is in place.
-The reverse specialisation does not hold, so the direction of
-dependency is fixed.
+% Assume (2) holds. Then $I$ is contained in the Jacobson radical of $A$, since
+% otherwise there would be a nonunit $f \in A$ congruent to $1$ modulo $I$
+% and the map $A \to A_f$ would contradict (2). Hence $IB \subset B$
+% is contained in the Jacobson radical of $B$ for $B$ integral over $A$
+% because $\Spec(B) \to \Spec(A)$ is closed by
+% Algebra, Lemmas \ref{algebra-lemma-going-up-closed} and
+% \ref{algebra-lemma-integral-going-up}.
+% Thus the map from idempotents of $B$ to idempotents of $B/IB$
+% is injective by Lemma \ref{lemma-idempotents-determined-modulo-radical}.
+% On the other hand, since (2) holds, every idempotent
+% of $B/IB$ lifts to an idempotent of $B$
+% by Lemma \ref{lemma-lift-idempotent-upstairs}.
+% In this way we see that (2) implies (4).
+%
+% \medskip\noindent
+% The implication (4) $\Rightarrow$ (3) is trivial.
+%
+% \medskip\noindent
+% Assume (3). Let $\mathfrak m$ be a maximal ideal and consider the
+% finite map $A \to B = A/(I \cap \mathfrak m)$. The condition that
+% $B \to B/IB$ induces a bijection on idempotents implies that
+% $I \subset \mathfrak m$ (if not, then $B = A/I \times A/\mathfrak m$
+% and $B/IB = A/I$). Thus we see that $I$ is contained in the Jacobson
+% radical of $A$. Let $f \in A[T]$ be monic and suppose given a
+% factorization $\overline{f} = g_0h_0$ with $g_0, h_0 \in A/I[T]$ monic
+% generating the unit ideal in $A/I[T]$.
+% Set $B = A[T]/(f)$. Let $\overline{e}$ be the idempotent
+% of $B/IB$ corresponding to the decomposition
+% $$
+% B/IB = A/I[T]/(g_0) \times A/I[T]/(h_0)
+% $$
+% of $A$-algebras. Let $e \in B$ be an idempotent lifting $\overline{e}$
+% which exists as we assumed (3). This gives a product decomposition
+% $$
+% B = eB \times (1 - e)B
+% $$
+% Note that $B$ is free of rank $\deg(f)$ as an $A$-module.
+% Hence $eB$ and $(1 - e)B$ are finite locally free $A$-modules.
+% However, since $eB$ and $(1 - e)B$ have constant rank
+% $\deg(g_0)$ and $\deg(h_0)$ over $A/I$ we find that the same
+% is true over $\Spec(A)$. We conclude that
+% \begin{align*}
+% f & = \text{CharPol}_A(T : B \to B) \\
+% & =
+% \text{CharPol}_A(T : eB \to eB)
+% \text{CharPol}_A(T : (1 - e)B \to (1 - e)B)
+% \end{align*}
+% is a factorization into monic polynomials reducing to the given
+% factorization modulo $I$. Here $\text{CharPol}_A$ denotes the characteristic
+% polynomial of an endomorphism of a finite locally free module over $A$.
+% If the module is free the $\text{CharPol}_A$ is defined as the
+% characteristic polynomial of the corresponding matrix and in
+% general one uses Algebra, Lemma \ref{algebra-lemma-standard-covering} to
+% glue. Details omitted. Thus (3) implies (1).
+%
+% \medskip\noindent
+% Assume (1). Let $f$ be as in (5). The factorization of $f \bmod I$
+% as $T^n$ times $T - 1$ lifts to a factorization $f = gh$ with $g$
+% and $h$ monic by Definition \ref{definition-henselian-pair}.
+% Then $h$ has to have degree $1$
+% and we see that $f$ has a root reducing to $1$ modulo $I$.
+% Finally, $I$ is contained in the Jacobson radical by
+% the definition of a henselian pair.
+% Thus (1) implies (5).
+%
+% \medskip\noindent
+% Before we give the proof of the last step, let us show that
+% the root $\alpha$ in (5), if it exists, is unique. Namely,
+% due to the explicit shape of $f(T)$, we have
+% $f'(\alpha) \in 1 + I$ where $f'$ is the derivative of $f$ with
+% respect to $T$. An elementary argument shows that
+% $$
+% f(T) = f(\alpha + T - \alpha) =
+% f(\alpha) + f'(\alpha) \cdot (T - \alpha) \bmod
+% (T - \alpha)^2 A[T]
+% $$
+% This shows that any other root $\alpha' \in 1 + I$ of $f(T)$
+% satisfies $0 = f(\alpha') - f(\alpha) = (\alpha' - \alpha)(1 + i)$
+% for some $i \in I$, so that, since $1 + i$ is a unit in $A$,
+% we have $\alpha = \alpha'$.
+%
+% \medskip\noindent
+% Assume (5). We will show that (2) holds, in other words, that
+% for every \'etale map $A \to A'$, every section $\sigma : A' \to A/I$
+% modulo $I$ lifts to a section $A' \to A$.
+% Since $A \to A'$ is \'etale, the section $\sigma$
+% determines a decomposition
+% \begin{equation}
+% \label{equation-GCHP}
+% A'/IA' \cong A/I \times C
+% \end{equation}
+% of $A/I$-algebras. Namely, the surjective ring map
+% $A'/IA' \to A/I$ is \'etale by
+% Algebra, Lemma \ref{algebra-lemma-map-between-etale}
+% and then we get the desired idempotent by
+% Algebra, Lemma \ref{algebra-lemma-surjective-flat-finitely-presented}.
+% We will show that this decomposition lifts to a decomposition
+% \begin{equation}
+% \label{equation-GCHP-want}
+% A' \cong A'_1 \times A'_2
+% \end{equation}
+% of $A$-algebras with $A'_1$ integral over $A$. Then $A \to A'_1$
+% is integral and \'etale and $A/I \to A'_1/IA'_1$ is an isomorphism,
+% thus $A \to A'_1$ is an isomorphism by
+% Lemma \ref{lemma-check-isomorphism-zariski}
+% (here we also use that an \'etale ring map is flat
+% and of finite presentation, see Algebra, Lemma \ref{algebra-lemma-etale}).
+%
+% \medskip\noindent
+% Let $B'$ be the integral closure of $A$ in $A'$. By
+% Lemma \ref{lemma-helper-finite-type}
+% we may decompose
+% \begin{equation}
+% \label{equation-dec-mod-I}
+% B'/IB' \cong A/I \times C'
+% \end{equation}
+% as $A/I$-algebras compatibly with (\ref{equation-GCHP})
+% and we may find $b \in B'$ that lifts $(1, 0)$ such that
+% $B'_b \to A'_b$ is an isomorphism. If the decomposition
+% (\ref{equation-dec-mod-I}) lifts to a decomposition
+% \begin{equation}
+% \label{equation-want-2}
+% B' \cong B'_1 \times B'_2
+% \end{equation}
+% of $A$-algebras, then the induced decomposition
+% $A' = A'_1 \times A'_2$ will give the
+% desired (\ref{equation-GCHP-want}): indeed, since $b$ is a unit in $B'_1$
+% (details omitted),
+% we will have $B'_1 \cong A'_1$, so that $A'_1$ will be integral over $A$.
+%
+% \medskip\noindent
+% Choose a finite $A$-subalgebra $B'' \subset B'$ containing $b$
+% (observe that any finitely generated $A$-subalgebra of $B'$
+% is finite over $A$). After enlarging $B''$ we may assume
+% $b$ maps to an idempotent in $B''/IB''$ producing
+% \begin{equation}
+% \label{equation-again-dec-mod-I}
+% B''/IB'' \cong C''_1 \times C''_2
+% \end{equation}
+% Since $B'_b \cong A'_b$ we see that $B'_b$ is of finite type over $A$.
+% Say $B'_b$ is generated by $b_1/b^n, \ldots, b_t/b^n$ over $A$
+% and enlarge $B''$ so that $b_1, \ldots, b_t \in B''$. Then
+% $B''_b \to B'_b$ is surjective as well as injective, hence an isomorphism.
+% In particular, we see that $C''_1 = A/I$! Therefore $A/I \to C''_1$
+% is an isomorphism, in particular surjective.
+% By Lemma \ref{lemma-helper-finite} we can find
+% an $f(T) \in A[T]$ of the form
+% $$
+% f(T) = T^n(T - 1) + a_n T^n + \ldots + a_1 T + a_0
+% $$
+% with $a_n, \ldots, a_0 \in I$ and $n \ge 1$ such that $f(b) = 0$.
+% In particular, we find that $B'$ is a $A[T]/(f)$-algebra.
+% By (5) we deduce there is a root $a \in 1 + I$ of $f$.
+% This produces a product decomposition $A[T]/(f) = A[T]/(T - a) \times D$
+% compatible with the splitting (\ref{equation-dec-mod-I}) of $B'/IB'$.
+% The induced splitting of $B'$ is then a desired (\ref{equation-want-2}).
+% \end{proof}
+\begin{proof}
+\uses{lem:henselianPair-newton-step,
+      lem:henselianPair-jac,
+      lem:henselianPair-l3a-newton-root}
+
+\leanok
+\textit{Source: Stacks Project, Tag 09XI (Newton-iteration fragment of the proof of Lemma 15.11.6).}
+
+We follow the Newton-iteration route — the same construction that
+underlies the verbatim 09XI proof (see the \texttt{SOURCE QUOTE PROOF}
+comment block above for the ambient $T^n(T-1) + \cdots$ Newton-polynomial
+recipe). Apply the Newton-step lemma
+\cref{lem:henselianPair-newton-step} to the monic polynomial
+$f(Y) := Y^2 - Y \in B[Y]$ and the seed $a_0 := e_0$:
+\begin{itemize}
+\item $f(e_0) = e_0^2 - e_0 \in \mathfrak m B$ by hypothesis.
+\item $f'(Y) = 2Y - 1$, so $f'(e_0) = 2 e_0 - 1$. By hypothesis the
+  residue of $2 e_0 - 1$ in $B / \mathfrak m B$ is a unit. The in-file
+  Nakayama upgrade
+  \texttt{Algebra.Etale.isUnit\_of\_isUnit\_quotient\_mk\_maximalIdeal\_map}
+  (substantively: $\mathfrak m B \subseteq \mathrm{jacobson}\,B$ via
+  \cref{lem:henselianPair-jac}, so any element whose residue is a unit
+  is itself a unit in $B$) promotes this to $f'(e_0) \in B^\times$.
+\end{itemize}
+\cref{lem:henselianPair-newton-step} therefore produces a sequence
+$(a_n)_{n \ge 0} \subset B$ with $a_0 = e_0$ and the Newton-Cauchy
+invariants
+\[
+  f(a_n) \in (\mathfrak m B)^{n+1},
+  \qquad
+  a_{n+1} - a_n \in (\mathfrak m B)^{n+1}
+  \qquad \text{for every } n.
+\]
+
+Feed this sequence into the limit-extraction
+lemma~\cref{lem:henselianPair-l3a-newton-root}, which produces an
+element $e \in B$ with $f(e) = 0$ and $e - a_0 \in \mathfrak m B$.
+Since $f(e) = e^2 - e$, the conclusion $f(e) = 0$ rearranges to
+$e^2 = e$; and $a_0 = e_0$ identifies $e - e_0 = e - a_0 \in
+\mathfrak m B$, as required.
+\end{proof}
+
+% NOTE (review iter-142): Lane B prover (iter-142) confirms the same
+% structural gap reported iter-136 --- the L275 signature for
+% `Algebra.Etale.exists_root_of_newton_seq_henselianPair` lacks
+% `hg : f.Monic` and `h_unit : IsUnit (f.derivative.eval (a 0))`, which
+% are required by the iter-136 closure recipe via
+% `descend_root_from_mAB_newton`. The Newton-Cauchy invariants
+% `_h_eval` + `_h_diff` alone cannot produce these (counterexamples:
+% `f = 0` satisfies `_h_eval` but is not monic; `f = 2 X^2 - X` is
+% non-monic with non-unit derivative at chosen `a 0`). This is the
+% second consecutive iter the gap has fired; the iter-136
+% progress-critic STUCK precondition now triggers. Plan agent iter-143:
+% per `task_results/Proetale_Mathlib_RingTheory_Etale_HenselianPairLift.lean.md`
+% (Recommended next step), choose one of (a) STRATEGY revision
+% authorising a signature-change escalation (add `hg` + `h_unit` as
+% explicit hypotheses to L275, thread through `idempotent_lift_limit`),
+% (b) document mathematical-impossibility of the Cauchy-completeness
+% alternative + dispatch a strategy update, or (c) inline-rewrite
+% `idempotent_lift_limit` to invoke `descend_root_from_mAB_newton`
+% directly (gated on INVIOLABLE RULE 1 plan-sanctioned exception).
+% No sixth iter on current trajectory.
+
+\begin{lemma}
+
+\leanok
+[L3a-root — Newton-Cauchy sequence converges to a root via Cayley--Hamilton descent (non-local-$B$ regime)]
+\label{lem:henselianPair-l3a-newton-root}
+\lean{Algebra.Etale.exists_root_of_newton_seq_henselianPair}
+\uses{lem:henselianPair-l1-separation,
+      lem:henselianPair-jac}
+Let $A$ be a Noetherian henselian local ring with maximal ideal
+$\mathfrak m$, and let $B$ be a finite étale $A$-algebra (\emph{not}
+assumed to be local). Set $\mathfrak m B := \mathfrak m \cdot B =
+(\mathrm{algebraMap}\,A\,B)_*(\mathfrak m)$. Let $f \in B[Y]$ be a
+polynomial and let $(a_n)_{n \ge 0} \subset B$ satisfy
+\[
+  f(a_n) \in (\mathfrak m B)^{n+1},
+  \qquad
+  a_{n+1} - a_n \in (\mathfrak m B)^{n+1}
+  \qquad \text{for every } n \ge 0.
+\]
+Then there exists $e \in B$ with $f(e) = 0$ and $e - a_0 \in \mathfrak
+m B$.
+\end{lemma}
+
+\begin{proof}
+\leanok
+\uses{lem:henselianPair-l1-separation,
+      lem:henselianPair-jac}
+
+This is the non-local-$B$ analogue of the L3c charpoly-descent chain
+(\cref{lem:henselianPair-l3c-charpoly-descent} and the helpers below
+it), which handles the parallel claim under the additional hypothesis
+$\mathrm{IsLocalRing}\,B$. The role played there by residue Nakayama
+in the per-coordinate Hensel step is played here by the in-file unit
+upgrade
+\texttt{Algebra.Etale.isUnit\_of\_isUnit\_quotient\_mk\_maximalIdeal\_map}
+(substantively: $\mathfrak m B \subseteq \mathrm{jacobson}\,B$ via
+\cref{lem:henselianPair-jac}), so the local-$B$ hypothesis can be
+dropped throughout.
+
+\emph{Step 1 (Free $A$-module structure on $B$).} The class
+\texttt{Algebra.Etale} extends \texttt{Algebra.FormallyEtale} and hence
+(via $\mathrm{Etale} \Rightarrow \mathrm{Smooth} \Rightarrow
+\mathrm{Flat}$, Mathlib's \texttt{Algebra.Smooth.flat}) gives
+$\mathrm{Module.Flat}\,A\,B$. Combined with
+$\mathrm{Module.Finite}\,A\,B$ and $\mathrm{IsLocalRing}\,A$ (provided
+by $\mathrm{HenselianLocalRing}\,A$), Mathlib's
+\texttt{Module.free\_of\_flat\_of\_isLocalRing} promotes this to
+$\mathrm{Module.Free}\,A\,B$. Extract a finite basis $(b_i)_{i \in
+\iota}$ of $B$ over $A$ via \texttt{Module.Free.chooseBasis}. Because
+$B$ is free of finite rank as an $A$-module, the image ideal
+$\mathfrak m B$ satisfies $(\mathfrak m B)^k = \mathfrak m^k \cdot B$
+for every $k \ge 0$, and the basis identifies $\mathfrak m^k \cdot B$
+with the $A$-submodule of $B$ spanned by basis-coordinate tuples in
+$\mathfrak m^k$.
+
+\emph{Step 2 (Coordinate decomposition of the sequence).} Telescoping
+the hypothesis $a_{n+1} - a_n \in (\mathfrak m B)^{n+1}$ yields $a_n -
+a_0 \in \mathfrak m B$ for every $n \ge 0$ (so in particular the
+required closeness $e - a_0 \in \mathfrak m B$ will be automatic once
+$e$ is identified as a limit of the sequence). Expand each
+displacement in the basis: $a_n - a_0 = \sum_{i \in \iota}
+(\mathrm{algebraMap}\,A\,B)(\gamma_{n,i})\,b_i$ with $\gamma_{n,i} \in
+A$. By the free-module identification of Step~1, the strong invariant
+$a_{n+1} - a_n \in (\mathfrak m B)^{n+1} = \mathfrak m^{n+1} \cdot B$
+forces each coordinate sequence to be $\mathfrak m$-adic Cauchy in
+$A$:
+\[
+  \gamma_{n+1, i} - \gamma_{n, i} \in \mathfrak m^{n+1}
+  \qquad (i \in \iota,\ n \ge 0).
+\]
+Similarly, expanding $f(a_n)$ in the basis (using that the polynomial
+operation $b \mapsto f(b)$ commutes with the $A$-module structure
+modulo lower-order terms) shows that each basis coordinate of $f(a_n)$
+lies in $\mathfrak m^{n+1}$.
+
+\emph{Step 3 (Cayley--Hamilton on multiplication-by-$(a_n - a_0)$).}
+View $T_n : B \to B$, $T_n(b) := (a_n - a_0)\,b$ as an $A$-linear
+endomorphism of the finite free $A$-module $B$. Let $\chi_n \in A[X]$
+be its characteristic polynomial (\texttt{LinearMap.charpoly}, monic
+of degree $d := \mathrm{rank}_A\,B$). Cayley--Hamilton
+(\texttt{LinearMap.aeval\_self\_charpoly}, or equivalently the
+Submodule version
+\texttt{LinearMap.exists\_monic\_and\_natDegree\_eq\_and\_coeff\_mem\_pow\_and\_aeval\_eq\_zero}
+specialised to the ambient module) gives $\chi_n(a_n - a_0) = 0$ in
+$B$ (applied at $1 \in B$).
+
+\emph{Coefficient filtration claim.} Write $v := a_n - a_0 \in
+\mathfrak m B$ and let $T_v : B \to B$ denote multiplication by $v$.
+Then the characteristic polynomial
+\[
+  \chi_{T_v}(X) \;=\; X^d \;-\; \mathrm{tr}(T_v)\,X^{d-1} \;+\; \cdots \;+\;
+  (-1)^d \det(T_v) \;\in\; A[X]
+\]
+satisfies the $\mathfrak m$-power filtration
+\[
+  [X^{d-k}]\,\chi_{T_v} \;\in\; \mathfrak m^k \subseteq A
+  \qquad (0 \le k \le d),
+\]
+i.e.\ the coefficient of $X^{d-k}$ (counting from the leading term
+down) lies in $\mathfrak m^k \cdot A$. In particular the trace
+$\mathrm{tr}(T_v) = [X^{d-1}]\,(-\chi_{T_v})$ lies in $\mathfrak m$,
+the next coefficient $[X^{d-2}]\,\chi_{T_v}$ lies in $\mathfrak m^2$,
+and the constant term $(-1)^d \det(T_v)$ lies in $\mathfrak m^d$.
+
+\emph{Justification of the filtration.} Fix the chosen $A$-basis
+$(b_i)_{i \in \iota}$ of $B$ from Step~1, and let $M_v \in
+\mathrm{Mat}_{d \times d}(A)$ be the matrix of $T_v$ in this basis,
+so $\chi_{T_v} = \det(X \cdot I - M_v)$ (cf.\ Mathlib's
+\texttt{LinearMap.charpoly\_eq\_charpoly\_toMatrix} /
+\texttt{Matrix.charpoly} development). Because $v \in \mathfrak m B$,
+its basis coordinates lie in $\mathfrak m \cdot A$; expanding the
+$A$-bilinear product $v \cdot b_j$ in the basis $(b_i)$ shows that
+each entry $(M_v)_{ij}$ of $M_v$ is an $A$-linear combination (with
+coefficients given by the structure constants of $B/A$ in the chosen
+basis) of the basis coordinates of $v$. Hence every entry of $M_v$
+lies in $\mathfrak m$. The $(d - k)$-th coefficient of $\chi_{T_v}(X)
+= \det(X \cdot I - M_v)$ is, up to sign, the $k$-th elementary
+symmetric function of the eigenvalues, and equivalently — via the
+explicit cofactor / Leibniz expansion of the determinant — a signed
+sum of $k$-fold products of entries of $M_v$ (specifically, the sum
+over $k$-element principal minors of $M_v$). Each such $k$-fold
+product of entries of $M_v$ is a product of $k$ elements of
+$\mathfrak m$, hence lies in $\mathfrak m^k$ by closure of ideal
+powers under multiplication (Mathlib lemma
+\texttt{Ideal.pow\_mem\_pow} together with the iterative
+\texttt{Ideal.mul\_mem\_mul} step, or the cleaner direct
+\texttt{Submodule.prod\_mem\_pow} shape). A finite $A$-linear sum of
+elements of $\mathfrak m^k$ remains in $\mathfrak m^k$, so the
+$(d-k)$-th coefficient of $\chi_{T_v}$ lies in $\mathfrak m^k$ as
+claimed.
+
+Applied to $v = a_n - a_0 \in \mathfrak m B$, the non-leading
+coefficients of $\chi_n$ thus inherit this $\mathfrak m$-power
+filtration on $A$: the coefficient of $X^{d-k}$ in $\chi_n$ lies in
+$\mathfrak m^k$ for $1 \le k \le d$.
+
+\emph{Step 4 (Per-coordinate Hensel polynomial in $A[X]$).} Combine
+the Cayley--Hamilton annihilator $\chi_n$ with the basis-coordinate
+expansion of $f$ to manufacture, for each $i \in \iota$, a
+single-variable monic polynomial $h_i \in A[X]$ with $h_i(0) \in
+\mathfrak m$ and $h_i'(0) \in A \setminus \mathfrak m$. (Conceptually,
+$h_i$ is the $i$-th component of $f$ expanded along $(b_i)$ and then
+``inverted'' against the linearised derivative $f'(a_0)$, with the
+Cayley--Hamilton step ensuring that the higher-order terms can be
+absorbed into a monic polynomial of bounded degree. The detailed
+recipe parallels Step~4 of the proof of
+\cref{lem:henselianPair-l3c-per-coord-hensel-polynomial}, with the
+local-$B$ residue-Nakayama step there replaced by the unit upgrade
+\texttt{isUnit\_of\_isUnit\_quotient\_mk\_maximalIdeal\_map}.)
+
+\emph{Cycle obstruction note.} The L3c per-coord polynomial machinery
+lives in \texttt{HenselianPair.lean} as a chain of \texttt{private}
+helpers (\texttt{descend\_root\_via\_charpoly},
+\texttt{exists\_per\_coord\_hensel\_polynomial},
+\texttt{exists\_hensel\_root\_from\_coherent\_witness}), which sits
+\emph{downstream} of \texttt{HenselianPairLift.lean} in the import
+DAG and itself terminates at a residual \texttt{sorry} on
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent}
+(\texttt{HenselianPair.lean} L2572). Closing
+\texttt{exists\_root\_of\_newton\_seq\_henselianPair} by importing
+the L3c chain is therefore \textbf{not} a valid strategy in the
+present module layout; the project plan is to refactor the
+substantive L3c content (parametrised on the unit-propagation
+method) into a fresh shared upstream module that both
+\texttt{HenselianPair.lean} and \texttt{HenselianPairLift.lean} can
+consume. Until that refactor lands, this lemma remains a typed
+sub-sorry.
+
+\emph{Step 5 (Hensel lift in $A$, basis reassembly).} For each $i \in
+\iota$, apply $\mathrm{HenselianLocalRing}\,A\mathrm{.is\_henselian}$
+to $h_i$ at the seed $0$: there exists $\alpha_i \in \mathfrak m$
+with $h_i(\alpha_i) = 0$. Reassemble
+\[
+  e \;:=\; a_0 \;+\; \sum_{i \in \iota}
+  (\mathrm{algebraMap}\,A\,B)(\alpha_i) \cdot b_i \;\in\; B.
+\]
+The per-coordinate root conditions $h_i(\alpha_i) = 0$ combine via the
+basis expansion to give $f(e) = 0$, and $e - a_0 = \sum_i
+(\mathrm{algebraMap}\,A\,B)(\alpha_i)\,b_i \in \mathfrak m B$ because
+each $\alpha_i \in \mathfrak m$.
+
+\emph{Uniqueness and consistency with the sequence.} The Krull
+separation $\bigcap_n (\mathfrak m B)^n = (0)$
+(\cref{lem:henselianPair-l1-separation}) guarantees that any root $e
+\in B$ of $f$ with $e - a_0 \in \mathfrak m B$ produced from the
+Cayley--Hamilton recipe agrees with the unique limit of the sequence
+$(a_n)$ in the $\mathfrak m B$-adic separated quotient of $B$ — but
+the existence claim above does not need this uniqueness, only the
+constructive output of Step~5.
 \end{proof}
 
 \begin{lemma}\leanok
@@ -1720,6 +2715,19 @@ parent express ``the constant term of $g(b_0)$'' as a single
 coordinate in the basis), but it cannot be loaded with the
 unit-bridge claim that it was previously asked to support.
 
+% NOTE: iter-147 — Route X is no longer the primary closure of
+% idempotent_lift_limit. See
+% \cref{thm:henselianPair-idempotent-lift-limit-via-04gh} for the
+% replacement. The four-hypothesis Hensel-bridge
+% `alpha_zero_via_per_coord_henselian` has a counterexample (see
+% iter-146 prover task report); the supplier
+% `per_coord_polynomial_of_charpoly_descent` produces
+% mA^(d+1)-modular eval-zero, which is insufficient to bridge to
+% exact equality without one of `[IsAdicComplete]` + Hensel tower,
+% `[IsNoetherianRing]` + Krull, or supplier-side strengthening.
+% The route is preserved as documentary content; it is not the
+% iter-147+ active closure.
+
 \textbf{A.3. Construction of the per-coordinate polynomial.}
 Under the corrected unit-bridge of \textbf{A.2}, the per-coordinate
 polynomial $p_i \in A[X]$ takes the form
@@ -2224,9 +3232,10 @@ one more application of $h_{cCH\,\mathrm{eq}}$ at $r_1^{d+m}$,
 without enlarging the polynomial degree. The leading coefficient
 at $X^{d - 1}$ of the bracket inside $q_i$ matches the
 $c^{\mathrm{CH}}_0(d-1)$ term of the level-$0$ C--H expansion (up
-to sign and the adjugate prefactor), so $q_i$ has degree
-$\le d - 1$, and $p_i := X \cdot q_i$ has degree
-$\le d$. Furthermore:
+to sign and the adjugate prefactor), so the bracket
+$\sum_j \kappa_{i,j} X^j$ has degree $\le d - 1$, hence $q_i$ has
+degree $\le d$ and $p_i := X \cdot q_i$ has degree $\le d + 1$.
+Furthermore:
 \[
 q_i.\mathrm{eval}\,0 \;=\; \det(M)
 \quad\Longrightarrow\quad
@@ -2319,10 +3328,11 @@ $\Delta_m(l)$. By the bridge lemma's witness $\tau_{n, \cdot, \cdot}$
 (the $A$-tuple constructed in
 \cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp}) this
 extraction is a finite $A$-linear combination of the
-$\tau_{m+1, \cdot, l}$ entries with rational coefficients arising
-from the basis structure constants $\xi_{j,l}$ of
-\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp} ---
-i.e.\ a concrete, computable formula.
+$\tau_{m+1, \cdot, l}$ entries with coefficients arising from the
+$A$-basis structure of $B$ under the chosen basis
+$(\mathrm{basis}(l))_{l < k}$, packaged into the free parameter
+$\xi$ supplied by the parent helper as per the implementation
+hint below --- i.e.\ a concrete, computable formula.
 
 \item \emph{Membership $\xi_{m,j,l} \in A$ (not in
 $\mathfrak m_A^{\bullet}$).} The structure constants $\xi_{m,j,l}$
@@ -2359,10 +3369,329 @@ lemma's $\tau$) is hidden inside the supplier of $\xi$.
 The membership $\kappa_{i,j} \in \mathfrak m_A^{d}$ follows from
 $c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$, the
 $A$-finiteness of the sum, and absorption of the
-$\mathrm{adj}(M)_{il}\,\xi_{m,j,l}$ structure constants (no
-ideal-power loss). The level cap $m \le d - 1$ is the
+$\mathrm{adj}(M)_{il}\,\xi_{m,j,l}$ structure constants. The
+Lean-side formalisation (iter-113) further encodes a depth bound
+$\xi_{m,j,l} \in \mathfrak m_A^{(j - m)^{+}}$ (Nat-subtraction,
+trivial when $m \ge j$); the product
+$c^{\mathrm{CH}}_m(j)\,\xi_{m,j,l}$ then lies in
+$\mathfrak m_A^{(d + m - j) + (j - m)^{+}} \subseteq
+\mathfrak m_A^{d}$ for both $m \ge j$ and $m < j$, via simple
+ideal-power arithmetic. The level cap $m \le d - 1$ is the
 P5 stabilisation $M^* = d - 1$ (see Step P5 below).
 \end{definition}
+
+\begin{lemma}[Companion membership lemma for $\kappa_{i,j}$]
+\label{lem:henselianPair-kappa-coefficient-mem}
+\lean{Algebra.Etale.kappaCoefficient_mem}
+\uses{def:henselianPair-kappa-coefficient}
+With $d, k, \mathrm{adj}(M), c^{\mathrm{CH}}, \xi$ as in
+\cref{def:henselianPair-kappa-coefficient}, if for every
+$m \in \mathbb N$ and $j \in \mathrm{Fin}\,d$ we have
+$c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$, and for
+every $m, j, l$ we have
+$\xi_{m,j,l} \in \mathfrak m_A^{(j - m)^{+}}$
+(Nat-subtraction), then
+\[
+\kappa_{i,j} \;\in\; \mathfrak m_A^{d}, \qquad
+\forall i \in \mathrm{Fin}\,k,\ j \in \mathrm{Fin}\,d.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{def:henselianPair-kappa-coefficient}
+By definition $\kappa_{i,j} = \sum_{m, l} \mathrm{adj}(M)_{il}
+\,c^{\mathrm{CH}}_m(j)\,\xi_{m,j,l}$. Each summand lies in
+$\mathfrak m_A^{d}$ by ideal-power arithmetic:
+$c^{\mathrm{CH}}_m(j) \in \mathfrak m_A^{d + m - j}$ and
+$\xi_{m,j,l} \in \mathfrak m_A^{(j - m)^{+}}$ multiply to
+$\mathfrak m_A^{(d + m - j) + (j - m)^{+}}$; on both branches of
+the Nat-subtraction the exponent simplifies to $\ge d$
+(omega-style). The $\mathrm{adj}(M)_{il}$ factor is absorbed by
+$\mathfrak m_A^{d}$-left-multiplication, and summation closes by
+$\mathfrak m_A^{d}$ being a submodule.
+\end{proof}
+
+\paragraph{Lean-side $\xi$ existential signature (iter-116
+strengthening).} The Lean-side iter-113 introduced
+$\xi : \mathbb N \to \mathrm{Fin}\,d \to \mathrm{Fin}\,k \to A$
+via the existential
+\[
+\exists \xi.\ \forall m\,j\,l,\ \xi_{m,j,l}
+\in \mathfrak m_A^{(j - m)^{+}},
+\]
+which carries only the depth bound. The iter-115 prover closed
+it with the $\gamma$-difference witness
+$\xi_{m,j,l} := \gamma_{(j - m)^{+}}(l) - \gamma_{(j - m)^{+} - 1}(l)$,
+satisfying the depth contract. \emph{However}, the downstream
+P5 stabilisation in this proof sketch (L2440) explicitly uses
+the structural content of $\xi_{m,j,l}$: each slot
+$\alpha_i^{m+1}$ of $p_i = X \cdot q_i$ accumulates the
+\emph{specific} $A$-coefficient extracted by items (1)--(4) above
+(basis-projection of $\Delta_m(l)$ after C--H collapse, read at
+the $r_1^{j+1}$ slot). A free $\xi$ satisfying only the depth
+bound does not in general make $\alpha_i \cdot
+q_i.\mathrm{eval}\,\alpha_i = 0$ hold in $A$.
+
+The iter-116 plan-agent strategic response: \emph{strengthen the
+Lean existential at the producer's $\exists \xi$ line to demand
+the eval-zero identity as a second conjunct.}
+Concretely the strengthened existential reads
+\[
+\exists \xi.\ \bigl(\forall m\,j\,l,\
+\xi_{m,j,l} \in \mathfrak m_A^{(j - m)^{+}}\bigr) \;\land\;
+\bigl(\forall i,\ \alpha_i \cdot
+(C\,\det M - X \cdot \tsum_j C\,\kappa_{i,j}(\xi)\,X^j)
+.\mathrm{eval}\,\alpha_i = 0\bigr),
+\]
+where $\kappa_{i,j}(\xi) := \sum_{m,l}
+\mathrm{adj}(M)_{il}\,c^{\mathrm{CH}}_m(j)\,\xi_{m,j,l}$
+(i.e., \texttt{kappaCoefficient}\ applied to $\xi$).
+
+This conjunctive contract has two consequences:
+\begin{itemize}
+\item The downstream Q7 property \texttt{hq\_eval\_zero}
+becomes mechanically dischargeable by directly applying the
+second conjunct (one-line proof, no P1--P5 chain in the consumer
+position).
+\item The witness $\xi$ must now be the basis-projection
+extraction from items (1)--(4), not the $\gamma$-difference (which
+fails the second conjunct in general). The iter-115 closure is
+invalidated by the strengthened contract; this is the intended
+re-cast.
+\end{itemize}
+
+The proof obligation for the second conjunct \emph{is} the
+P1--P5 chain below, repackaged: instead of being executed inside
+the consumer of $\xi$, the chain is executed inside the supplier
+of $\xi$ (the producer of the existential). The mathematical
+content is identical; only the structural location changes.
+
+\paragraph{iter-118 amendment --- concrete $\tau$ at the Lean level.}
+The iter-115/116/117 prover rounds closed only the depth
+conjunct of the strengthened $\xi$ existential and re-banked the
+eval-zero conjunct on witnesses that the prover itself has
+acknowledged cannot in general close it: the $\gamma$-difference
+(iter-115), a depth-only repackaging (iter-116), and finally the
+degenerate $\tau \equiv 0$ floor (iter-117). The progress-critic
+identifies the root cause as the absence, at the Lean level, of a
+written-down formula for $\xi_{m,j,l}$ bound to the project's
+already-banked Lean carriers. This amendment supplies that
+formula. Throughout, we name the carriers verbatim as they appear
+in the Lean source
+\texttt{Proetale/Mathlib/RingTheory/Etale/HenselianPair.lean};
+this paragraph is prose only, and does not require any new Lean
+syntax.
+
+\textbf{Part A (concrete $P_{m,l}(X) \in A[X]$).} The substantive
+Lean-side carrier realising items (1)--(3) of the recipe above is
+the polynomial
+\[
+P_{m,l}(X) \;:=\;
+\sum_{n \in \mathrm{Finset.range}\,(m + 1)}
+   \mathrm{C}\bigl(\mathrm{mBasis.coord}\,l \,(\Delta_n(l))\bigr)\,X^n
+\quad\in\quad A[X],
+\]
+where the inputs are all in scope at the parent helper's body
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent} (Lean
+L1934, body L2055--L2889):
+\begin{itemize}
+\item the bridge witness $\tau_{\mathrm{bridge}} : \mathbb N \to
+\mathrm{Fin}\,k \to A$ produced by
+\cref{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp}
+(Lean \texttt{r\_n\_minus\_r\_1\_in\_gamma\_finsupp}, L1749), at
+the parent-body destructuring \texttt{h\_bridge\_available}
+(Lean L2016--L2022), with the contract $\tau_{\mathrm{bridge}}(j,
+i) \in \mathfrak m_A^{j + 1}$;
+\item the level-$n$ Newton increment packet $\Delta_n(l) :=
+\eta_n(l) - \mu_{n + 1}(l) - \rho_n(l) \in B$ assembled from the
+route-(A) carriers $\eta, \mu_m, \rho$ banked at the parent-scope
+L2127-region (in the present Lean carriers,
+\texttt{η}, \texttt{ε}, and the implicit
+\texttt{μm}-as-telescope-of-$\alpha^{\mathrm{Hi}}$ data already
+chosen during the iter-101 Q1 banking step);
+\item the basis-coordinate functional $\mathrm{mBasis.coord}\,l :
+B \to_A A$, where $\mathrm{mBasis} : \mathrm{Module.Basis}\,(\mathrm{Fin}\,k)\,A\,B$
+is the basis declared at Lean L2127 via
+$\mathrm{Module.Basis.mk}\,h_{\mathrm{lin}}\,h_{\mathrm{span}}.\mathrm{ge}$.
+\end{itemize}
+The iter-117 sibling triple \texttt{basisProjPoly} (Lean L1840),
+\texttt{basisProjCoeff} (L1857), and
+\texttt{basisProjCoeff\_zero\_mem} (L1873) is the materialised
+structural extraction of this recipe at the Lean level; its
+iter-117 instantiation $\tau := \mathrm{fun}\,\_\ \_\ \Rightarrow
+0$ is degenerate (the polynomial collapses to $0$ identically,
+the modular reduction is $0$, the coefficient is $0$, and the
+eval-zero conjunct cannot be closed from such a witness). The
+iter-118+ substantive instantiation discharges the floor by
+setting $\tau := \tau_{\mathrm{bridge}}$ obtained at L2016--L2022.
+
+\textbf{Part B ($\xi$ via $\mathrm{modByMonic}$).} The
+analogist's recipe for $\xi$ reads
+\[
+\xi_{m,j,l}
+\;:=\;
+\bigl(P_{m,l} \mathbin{\%_{\mathrm{m}}} p\bigr)
+.\mathrm{coeff}\,(j + 1),
+\]
+where $p$ is the parent helper's input monic-of-degree-$d$
+polynomial: the Lean signature of
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent} (L1934)
+takes $p \in A[X]$ together with the hypotheses
+\texttt{hp\_monic} ($p.\mathrm{Monic}$), \texttt{hp\_coeff}
+(every non-leading coefficient lies in $\mathfrak m_A$), and
+\texttt{hp\_aeval} ($\mathrm{aeval}\,r_1\,p = 0$). This $p$ is
+the substantive Cayley--Hamilton annihilator of $r_1$ that is
+in scope at the parent body; the level-$m$ C--H power-expansion
+identities of $r_1^{d + m}$ against $p$ are pre-banked as
+\texttt{hcCH\_eq m} (parent body L2227--L2235, derived from
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}
+\texttt{cayley\_hamilton\_power\_expansion} applied to $p$).
+Here $\mathbin{\%_{\mathrm{m}}}$ is
+\texttt{Polynomial.modByMonic}.
+
+The Lean-side $P$-piece carrier
+\texttt{basisProjCoeff}\,$\tau$\,$M_{\mathrm{charpoly}}$\,$m$\,$j$\,$l$
+(L1857) is generic over the monic polynomial slot
+$M_{\mathrm{charpoly}}$ (it requires only that the slot is monic
+of degree $d$, by inspection of the depth-extraction route).
+The iter-118+ prover therefore instantiates the slot with the
+parent's input polynomial $p$ at the call site rather than with
+the leftMul-matrix charpoly. Note: an alternative banked monic of
+degree $d$ in the parent scope is
+$M.\mathrm{charpoly}$ for $M := \mathrm{Algebra.leftMulMatrix}\,
+\mathrm{mBasis}\,(g.\mathrm{derivative.eval}\,b_0)$ (Lean
+L2270--L2272, the iter-101 banking step that introduces
+\texttt{M} and \texttt{adjM}); but this matrix charpoly
+annihilates $g'(b_0)$-multiplication, not $r_1$, so it is
+\emph{not} the right slot for the $r_1^{d + m}$-fold the P-piece
+chain consumes. The canonical choice is $p$.
+
+The Mathlib lemmas the iter-118+ prover invokes are:
+\textit{Mathlib:} \texttt{Module.Basis.coord} and
+\texttt{Module.Basis.coord\_apply}
+(\texttt{Mathlib.LinearAlgebra.Basis.Defs}) for the
+$B \to_A A$ basis-projection functional; and
+\texttt{Polynomial.modByMonic} together with
+\texttt{Polynomial.coeff\_modByMonic}
+(\texttt{Mathlib.Algebra.Polynomial.Div}) for the
+$\mathbin{\%_{\mathrm{m}}} + .\mathrm{coeff}\,(j+1)$ pair. The
+fold of $r_1^{d + m}$ into the degree-$< d$ range is not invoked
+through a Mathlib charpoly lemma here: it comes from the
+parent-banked level-$m$ C--H identity \texttt{hcCH\_eq m} (see
+above), which is the C--H power-expansion against $p$, not
+against a leftMul-matrix charpoly.
+
+\textbf{Part C (depth bound on $\xi$).} The depth contract
+$\xi_{m,j,l} \in \mathfrak m_A^{(j : \mathbb N) - m}$
+(Nat-subtraction) holds for the substantive $\tau_{\mathrm{bridge}}$
+because:
+\begin{itemize}
+\item the basis-projection
+$\mathrm{mBasis.coord}\,l\,(\Delta_n(l))$ inherits an
+$\mathfrak m_A^{?}$-band from the bridge $\tau_{\mathrm{bridge}}$
+carrier ($\tau_{\mathrm{bridge}}(j, i) \in \mathfrak m_A^{j + 1}$
+by \texttt{r\_n\_minus\_r\_1\_in\_gamma\_finsupp}, L1758) and
+from the route-(A) carriers $\eta, \mu_m, \rho$ already at the
+$\mathfrak m_A^{d + 1}$ band (Lean L2034--L2042 for $\eta$ and
+the matched bound for the descent residuals $\varepsilon$,
+$\rho$);
+\item \texttt{Polynomial.modByMonic} against any monic of degree
+$d$ preserves the $\mathfrak m_A$-band on the $(j + 1)$-th
+coefficient without any subleading-in-$\mathfrak m_A$ side
+condition on the monic. The depth contract
+$\mathfrak m_A^{(j : \mathbb N) - m}$ collapses to
+$\mathfrak m_A^0 = \top$ exactly on the indices $m > j$ where
+$\mathbin{\%_{\mathrm{m}}}$ could non-trivially mix
+coefficients; on the remaining indices, $P_{m,l}$ is a sum of
+monomials of degree $\le m < d$ (and so sits inside the
+degree-$< d$ window of any monic of degree $d$), so
+\texttt{Polynomial.modByMonic\_eq\_self\_iff} makes the reduction
+the identity on $P_{m,l}$, and the $(j + 1)$-th coefficient is
+structurally $0$ (the index $j + 1 \ge m + 1$ lies outside the
+$\mathrm{Finset.range}\,(m + 1)$ summation index set of
+$P_{m,l}$). The working Mathlib chain is therefore
+\texttt{Polynomial.modByMonic\_eq\_self\_iff},
+\texttt{Polynomial.natDegree\_sum\_le\_of\_forall\_le},
+\texttt{Polynomial.natDegree\_C\_mul\_le}, and
+\texttt{Polynomial.natDegree\_X\_pow}, with no appeal to any
+subleading-in-$\mathfrak m_A$ bound on the monic.
+\end{itemize}
+The iter-117 sibling \texttt{basisProjCoeff\_zero\_mem} (L1873)
+is the degenerate-$\tau$ floor of this depth contract; the
+iter-118 substantive analogue is the depth-transfer lemma
+\texttt{basisProjCoeff\_tau\_mem} (Lean L1916--L1957), which
+discharges the bound for any monic of degree $d$ in the slot --
+in particular for the parent's input $p$ at the iter-118+ call
+site -- without any subleading-in-$\mathfrak m_A$ band on the
+monic. This generic-monic depth contract is what allows the
+substitution $M_{\mathrm{charpoly}} \rightsquigarrow p$ described
+in Part B without any change to the depth lemma.
+
+\textbf{Part D (eval-zero discharge: concrete P1--P5 names).}
+With $\xi$ pinned by the formula above, the eval-zero conjunct
+discharges through the P1--P5 chain (L2461--L2574) as follows.
+For each step we name (a) the chapter line range of the abstract
+P-step, (b) the parent-scope Lean carrier already banked inline,
+and (c) the key Mathlib lemma the prover invokes.
+\begin{itemize}
+\item \textbf{P1} (chapter L2466--L2475): the level-$0$ Newton
+identity multiplied by the adjugate. Parent-scope carrier:
+\texttt{hα0\_rec} (Lean L2181) and the adjugate identities
+\texttt{hadjM\_mul} (L2274), \texttt{hmul\_adjM} (L2276) with the
+unit-determinant carrier \texttt{hdet\_unit} (L2287--L2289).
+\textit{Mathlib:} \texttt{Matrix.adjugate\_mul} and
+\texttt{Matrix.mul\_adjugate}
+(\texttt{Mathlib.LinearAlgebra.Matrix.Adjugate}); the adjugate-
+times-vector formula via \texttt{Matrix.adjugate\_mulVec}.
+\item \textbf{P2} (chapter L2477--L2487): telescope via
+$h_{\mathrm{tele}}$. Parent-scope carrier: \texttt{htele} (Lean
+L2237--L2253) and the level-$0$ instantiation
+\texttt{hα0\_rec} (L2181). \textit{Mathlib:}
+\texttt{Finset.sum\_range\_succ} and basic linearity of
+$\sum$/$\mathrm{algebraMap}$
+(\texttt{Mathlib.Algebra.BigOperators.Basic}).
+\item \textbf{P3} (chapter L2489--L2496): iterate over $m$ using
+$h\alpha_{\mathrm{succ}}^{\mathrm{rec}}$. Parent-scope carrier:
+\texttt{hα\_succ\_rec} (Lean L2202--L2225), iterated via
+\texttt{htele} (L2237--L2253). \textit{Mathlib:}
+\texttt{Nat.rec} / induction on $m$ together with
+\texttt{Finset.sum\_range\_succ} for the telescope step.
+\item \textbf{P4} (chapter L2498--L2514): sum the telescope and
+apply C--H expansion to stabilise at $M^* = d - 1$. Parent-scope
+carrier: \texttt{per\_coord\_q6\_finite\_collapse\_closure} (Lean
+L1790, invoked at the parent body's L2758-region) supplies the
+three Q6 carriers $h\gamma_{\mathrm{telescope}},
+h\gamma_{\mathrm{cumulative\,mem}}, h\gamma_{\mathrm{finite\,chain\,mem}}$
+exactly tailored to the level-cap $M^* = d - 1$.
+\textit{Mathlib:} the C--H expansion is
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}
+together with the Mathlib carrier
+\texttt{Matrix.aeval\_self\_charpoly}
+(\texttt{Mathlib.LinearAlgebra.Matrix.Charpoly.Basic}).
+\item \textbf{P5} (chapter L2516--L2574): identification with
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i$ at $m = M^*$. The
+$A$-coefficient is read off by the
+$\mathbin{\%_{\mathrm{m}}}\,p + .\mathrm{coeff}\,(j + 1)$ recipe
+of Part B, threaded through the $r_1^{d + m}$-fold of P4.
+\textit{Mathlib + parent banking:} the level-$m$ identity
+\texttt{hcCH\_eq m} (parent-scope C--H power expansion of
+$r_1^{d + m}$ against $p$, banked at L2227--L2235 from
+\cref{lem:henselianPair-cayley-hamilton-power-expansion}) folds
+the $r_1^{d + m}$ slot into the degree-$< d$ range against $p$;
+\texttt{Polynomial.coeff\_modByMonic}
+(\texttt{Mathlib.Algebra.Polynomial.Div}) reads the
+$(j + 1)$-th coefficient; \texttt{Module.Basis.coord\_apply}
+(\texttt{Mathlib.LinearAlgebra.Basis.Defs}) extracts the
+$A$-scalar via the $l$-th basis-projection. Combining these with
+the iter-117 carrier \texttt{basisProjCoeff} (L1857) yields
+exactly the polynomial-rearranged form
+$\sum_{j < d} \kappa_{i,j}\,\alpha_i^{j + 1}$ that matches
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i$ in $A$.
+\end{itemize}
+This bound formula is the concrete $\tau$ the iter-118+ prover
+threads through the parent helper, replacing the iter-117
+degenerate floor and supplying the eval-zero conjunct via the
+P1--P5 chain executed at the supplier side.
 
 \paragraph{Proof sketch of $(X \cdot q_i).\mathrm{eval}\,\alpha_i
 = 0$ in $A$ (the substantive \texttt{hpCoord\_eval\_α} carrier).}
@@ -2429,9 +3758,10 @@ right-hand side \emph{stabilises} at a concrete finite level
 M^* \;:=\; d - 1,
 \]
 not because of any convergence assumption on $A$, but
-mechanically by the C--H collapse: $q_i$ has degree $\le d - 1$
-in $X$, so its $A$-coefficients are determined by the
-$\alpha_i^0, \alpha_i^1, \ldots, \alpha_i^{d-1}$ slots, and each
+mechanically by the C--H collapse: $q_i$ has degree $\le d$ in
+$X$, so $p_i = X \cdot q_i$ has degree $\le d + 1$; the
+$A$-coefficients of $p_i$ are determined by the
+$\alpha_i^1, \alpha_i^2, \ldots, \alpha_i^{d+1}$ slots, and each
 slot $\alpha_i^{j+1}$ ($j = 0, \ldots, d - 1$) accumulates a
 contribution from levels $m = 0, 1, \ldots, d - 1$ via the
 $\xi_{m,j,l}$ structure constants of
@@ -2472,11 +3802,40 @@ $\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i$ on the left and
 the matched RHS on the right; both sides also pick up an
 honest correction
 $\det(M)(\gamma_{d+M^*+1}(i) - \gamma_d(i))$ that lives in
-$\mathfrak m_A^{d+1}$ by Step Q5.b, and the resulting equality
-in $A$ is
+$\mathfrak m_A^{d+1}$ by Step Q5.b. Hence the resulting identity
+in $A$ is \emph{not} an exact equality but an
+$\mathfrak m_A^{d+1}$-modular eval-zero
 \[
-\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i \;=\; 0 \quad\text{in } A.
+\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i \;\in\;
+\mathfrak m_A^{d+1}.
 \]
+This is precisely the input shape consumed by Hensel's lemma in
+the henselian local ring $A$ (Mathlib carrier
+\texttt{HenselianLocalRing.is\_henselian}): combined with the
+unit-derivative hypothesis
+$\overline{(X \cdot q_i)'(\alpha_i)} \in (A / \mathfrak m_A)^\times$
+from the chapter, Hensel extracts an exact root $\beta_i \in A$
+with $(X \cdot q_i).\mathrm{eval}\,\beta_i = 0$ in $A$ and
+$\beta_i \equiv \alpha_i \pmod{\mathfrak m_A}$. Since
+$\alpha_i \in \mathfrak m_A^{d+1} \subseteq \mathfrak m_A$, the
+Hensel root satisfies $\beta_i \equiv 0 \pmod{\mathfrak m_A}$,
+and the trivial root $\beta_i = 0$ is the unique such lift,
+giving $\alpha_i = 0$ in $A$ --- the conclusion of the
+downstream consumer
+\cref{lem:henselianPair-l3c-root-descent-charpoly-multiples}.
+
+\textbf{Lean delivery (Route X).} The substantive identity
+$\alpha_i \cdot q_i.\mathrm{eval}\,\alpha_i \in \mathfrak m_A^{d+1}$
+is the conclusion of
+\texttt{per\_coord\_polynomial\_of\_charpoly\_descent}'s first
+conjunct (the existential witness $q$); the second conjunct
+asserts the unit-derivative mod-$\mathfrak m_A$. The
+Hensel-bridge from the modular eval-zero to exact equality
+$\alpha_i = 0$ in $A$ is performed in the downstream consumer
+\texttt{exists\_root\_descent\_charpoly\_multiples}, which
+applies \texttt{HenselianLocalRing.is\_henselian} and derives
+$\alpha_i = 0$ from $\alpha_i \in \mathfrak m_A^{d+1}$ together
+with the modular eval-zero and the unit-derivative hypothesis.
 
 \paragraph{Substantive open content.}
 The chain above is at pseudo-Lean granularity but contains one
@@ -2539,6 +3898,7 @@ for a downstream reason.
 \label{lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp}
 \lean{Algebra.Etale.r_n_minus_r_1_in_gamma_finsupp}
 \uses{lem:henselianPair-cayley-hamilton-power-expansion}
+\leanok
 [$r_n$-vs-$r_1$ bridge via $\gamma$-finsupp (iter-108 named
 sub-helper).]
 With the route-(A) carriers
@@ -2590,17 +3950,10 @@ the C--H-collapse step as a typed sub-sub-helper
 \texttt{Algebra.Etale.per\_coord\_polynomial\_of\_charpoly\_descent}
 (placeholder name; not yet a declared Lean target — the Lean
 prover will give it the canonical name during formalisation).
-The four polynomial-bundle properties consumed by the helper
+The three polynomial-bundle properties consumed by the helper
 \cref{lem:henselianPair-alpha-zero-via-per-coord-henselian} are
 then satisfied as follows:
 \begin{enumerate}
-\item $p_i.\mathrm{Monic}$ — by construction of $q_i$ at Step Q7
-the leading coefficient of $p_i = X \cdot q_i$ at degree $d + 1$
-is the $X^d$-coefficient of $q_i$, which is $-\kappa_{i, d-1}$
-(or its sign-adjusted form); normalise by scaling
-$q_i \mapsto q_i / (\text{leading unit})$ if needed (the leading
-coefficient is a unit by inheritance from $\det M$ being a unit;
-scaling preserves Steps P1--P5).
 \item $p_i.\mathrm{eval}\,\alpha_i = 0$ exactly in $A$ — by the
 P1--P5 chain above.
 \item $p_i.\mathrm{eval}\,0 = 0$ — by construction $p_i = X \cdot
@@ -2614,6 +3967,31 @@ and $p_i'(\alpha_i) = q_i.\mathrm{eval}\,\alpha_i + \alpha_i
 \cref{lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal}
 to conclude $\det(M)$ is a unit mod $\mathfrak m_A$.
 \end{enumerate}
+
+\paragraph{Why $p_i.\mathrm{Monic}$ is not required (iter-115
+amendment).} The Q7 opener $q_i := \det(M) - X \cdot \sum_{j < d}
+\kappa_{i,j}\,X^j$ gives $p_i = X \cdot q_i$ with leading
+coefficient $-\kappa_{i, d-1}$ at degree $d + 1$. The companion
+membership lemma
+\cref{lem:henselianPair-kappa-coefficient-mem} proves
+$\kappa_{i,j} \in \mathfrak m_A^d \subseteq \mathfrak m_A$, hence
+$-\kappa_{i, d-1} \in \mathfrak m_A$ — \emph{not} a unit.
+Earlier prose claimed the leading coefficient was a unit ``by
+inheritance from $\det M$ being a unit''; that claim is
+inconsistent with the $\kappa$ formula and has been removed.
+
+The clean resolution is that $\mathrm{Monic}$ is \emph{not
+consumed downstream}: the consumer
+\cref{lem:henselianPair-alpha-zero-via-per-coord-henselian}
+discharges $\alpha_i = 0$ from the remaining three carriers
+$(\mathrm{eval}\,\alpha_i = 0,\,\mathrm{eval}\,0 = 0,\,
+\mathrm{deriv\;unit\;mod\;}\mathfrak m_A)$ alone, using only
+$\mathrm{Polynomial.divX}$ on the factor $p_i = X \cdot q_i$. The
+Monic hypothesis in the earlier consumer signature was a
+vestigial API carrier (the Lean banking marks it as
+\texttt{let \_ := hpCoord\_monic}); both the producer's
+existential and the consumer's hypothesis are amended at iter-115
+to drop the Monic carrier.
 
 \paragraph{Honest note on substantive content.} The recipe above
 is at pseudo-Lean granularity; nevertheless Step P4's
@@ -2637,11 +4015,8 @@ proves intractable inline.
 \begin{lemma}
 \label{lem:henselianPair-per-coord-polynomial-of-charpoly-descent}
 \lean{Algebra.Etale.per_coord_polynomial_of_charpoly_descent}
-\uses{lem:henselianPair-cayley-hamilton-power-expansion,
-      lem:henselianPair-exists-mAB-pow-decomposition-in-basis,
-      lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal,
-      lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp,
-      def:henselianPair-kappa-coefficient}
+\uses{lem:henselianPair-cayley-hamilton-power-expansion, lem:henselianPair-exists-mAB-pow-decomposition-in-basis, lem:henselianPair-mult-det-isUnit-of-isUnit-mod-maximal, lem:henselianPair-r-n-minus-r-1-in-gamma-finsupp, def:henselianPair-kappa-coefficient}
+\leanok
 [Per-coordinate polynomial of the charpoly descent (iter-100 named
 contract).]
 With the route-(A) carriers $(g, b_0, k, \mathrm{basis}, h_{\mathrm{span}},
@@ -2653,11 +4028,16 @@ h_{\alpha\,\mathrm{eq}}, \alpha^{(\mathrm{Hi})}, h_{\alpha\mathrm{Hi}\,
 h_{\mathrm{Taylor}})$ in scope, there exists a tuple of polynomials
 $q : \mathrm{Fin}\,k \to A[X]$ such that for every $i$:
 \begin{enumerate}
-\item $(X \cdot q_i).\mathrm{Monic}$;
 \item $(X \cdot q_i).\mathrm{eval}\,\alpha_i = 0$ in $A$;
 \item $\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,
   ((X \cdot q_i)'.\mathrm{eval}\,\alpha_i)$ is a unit in $A/\mathfrak m_A$.
 \end{enumerate}
+(The iter-115 amendment removed a third clause asserting
+$(X \cdot q_i).\mathrm{Monic}$; that clause was vestigial — the
+downstream consumer \cref{lem:henselianPair-alpha-zero-via-per-coord-henselian}
+does not consume it, and the iter-113 Q7 opener does not satisfy
+it literally because the leading coefficient $-\kappa_{i, d-1}$
+lies in $\mathfrak m_A$, not the unit group.)
 The construction follows Steps Q1--Q7 (definition of $q_i$ via
 the adjugate of the multiplication matrix $M := M_{g'(b_0)}$ of
 left-multiplication by $g'(b_0)$, in the basis built from
@@ -2951,7 +4331,6 @@ lemma alpha_zero_via_per_coord_henselian
     {k d : ℕ} {α : Fin k → A}
     (h_α_mem : ∀ i, α i ∈ IsLocalRing.maximalIdeal A ^ (d + 1))
     (pCoord : Fin k → Polynomial A)
-    (hpCoord_monic : ∀ i, (pCoord i).Monic)
     (hpCoord_eval_α : ∀ i, (pCoord i).eval (α i) = 0)
     (hpCoord_eval_zero : ∀ i, (pCoord i).eval 0 = 0)
     (hpCoord_deriv_unit : ∀ i,
@@ -2959,6 +4338,9 @@ lemma alpha_zero_via_per_coord_henselian
           ((pCoord i).derivative.eval (α i)))) :
     ∀ i, α i = 0
 \end{verbatim}
+(The iter-115 amendment dropped the vestigial
+\texttt{hpCoord\_monic} carrier; the four-step \textbf{A.4}
+discharge does not consume it.)
 The strengthening from the iter-098 shape:
 \texttt{hpCoord\_eval\_alpha\_mem : (pCoord i).eval (α i) ∈
 mA\^{}(d+1)} is replaced by
@@ -3216,7 +4598,6 @@ for every $i$ (the level-$d$ Newton residual depth, banked by
 $h_{\alpha\mathrm{mem}}$). Suppose for every $i \in \mathrm{Fin}\,k$
 there is a polynomial $p_i \in A[X]$ satisfying:
 \begin{itemize}
-\item ($\mathrm{Monic}$) $p_i$ is monic;
 \item ($\mathrm{eval}\text{-}\alpha\text{-zero}$) $p_i.\mathrm{eval}\,\alpha_i = 0$
 exactly in $A$;
 \item ($\mathrm{eval}\text{-}0\text{-zero}$) $p_i.\mathrm{eval}\,0 = 0$
@@ -3225,6 +4606,9 @@ exactly in $A$ (equivalently, $p_i.\mathrm{coeff}\,0 = 0$);
 $\mathrm{IsUnit}\,(\mathrm{Ideal.Quotient.mk}\,\mathfrak m_A\,
 (p_i.\mathrm{derivative}.\mathrm{eval}\,\alpha_i))$.
 \end{itemize}
+(The iter-115 amendment dropped a Monic clause that originally
+appeared here; the discharge below does not use it, and the
+producer's Q7 opener does not satisfy it literally.)
 Then $\alpha_i = 0$ for every $i$.
 
 \textit{Note on hypotheses.} The $[\mathrm{HenselianLocalRing}\,A]$
@@ -3292,12 +4676,16 @@ $q_i.\mathrm{eval}\,\alpha_i$ (Mathlib:
 \texttt{eq\_zero\_of\_mul\_isUnit\_right}) yields $\alpha_i = 0$,
 as required.
 
-\textbf{Carrier accounting (iter-099).} The discharge above uses
-only the four polynomial-bundle carriers
-(\textsc{Monic}, $\mathrm{eval}\text{-}\alpha\text{-}\mathrm{zero}$,
+\textbf{Carrier accounting (iter-099, amended iter-115).}
+The discharge above uses only the three polynomial-bundle carriers
+($\mathrm{eval}\text{-}\alpha\text{-}\mathrm{zero}$,
 $\mathrm{eval}\text{-}0\text{-}\mathrm{zero}$,
 $\mathrm{deriv}\text{-}\mathrm{unit}$) plus the depth carrier
 $h_{\alpha\mathrm{mem}}$ (in Step 3, to reduce mod $\mathfrak m_A$).
+The iter-099 prose originally listed Monic as a fourth carrier
+``for parent-side API stability''; iter-115 dropped that carrier
+upstream (see the amended consumer signature above and the §A.3
+``Why $p_i.\mathrm{Monic}$ is not required'' paragraph).
 The route-(c) carriers
 $(\eta, \varepsilon_0, \varepsilon,
 h_{\alpha 0\mathrm{rec}}, h_{\alpha\mathrm{succ}\mathrm{rec}},

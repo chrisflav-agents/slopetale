@@ -1,0 +1,60 @@
+\chapter{Localization maps are weakly étale}
+\label{ch:mathlib-weakly-etale-localization}
+
+This chapter backs the infrastructure file
+\texttt{Proetale/Mathlib/RingTheory/WeaklyEtale/Localization.lean}. The
+single statement it carries is item (1) of Stacks \stacksproject{092J}:
+a localization $R \to S^{-1} R$ at a multiplicative submonoid is weakly
+étale. The substantive informal proof currently lives in the sibling
+chapter \texttt{Mathlib\_RingTheory\_WeaklyEtale\_Subalgebra.tex},
+\Cref{lem:weaklyEtale-localization}; the plan agent should migrate the
+prose to this chapter in a future iteration.
+
+\section{Statement}
+
+\begin{lemma}\leanok
+[\stacksproject{092J}, localization clause]
+  \label{lem:mathlib-weaklyEtale-localization-mirror}
+  \lean{Algebra.WeaklyEtale.of_isLocalization}
+  \uses{def:weakly-etale-algebra}
+  Let $R$ be a commutative ring, $S \subseteq R$ a multiplicative
+  submonoid, and $T$ a localization of $R$ at $S$. Then the structure
+  map $R \to T$ is weakly étale.
+\end{lemma}
+
+The Lean rendering exposes the same content as a derived instance
+\lean{Algebra.WeaklyEtale.localization} for the canonical Mathlib
+construction \texttt{Localization S}; the standalone theorem
+\texttt{of\_isLocalization} above is the variant that takes $T$ and the
+\texttt{IsLocalization} witness as inputs (so the explicit submonoid
+needn't be inferable from \texttt{WeaklyEtale R T}).
+
+\section{Proof sketch}
+
+Unwinding Mathlib's definition of \texttt{Algebra.WeaklyEtale}~$R\,T$,
+the obligation is two flatness conditions:
+\begin{enumerate}
+  \item[(F1)] $T$ is flat over $R$ — discharged by
+    \texttt{IsLocalization.flat}.
+  \item[(F2)] The multiplication map
+    $\mathrm{lmul}'_R : T \otimes_R T \to T$ is flat — that is,
+    $T \otimes_R T$ is flat over $T$ via this map. This step uses the
+    canonical $T$-algebra isomorphism
+    $(S^{-1} R) \otimes_R (S^{-1} R) \cong S^{-1}(S^{-1} R)$ and a
+    second application of \texttt{IsLocalization.flat}, this time with
+    base ring $S^{-1} R$.
+\end{enumerate}
+
+(F1) is closed in the present iteration. (F2) is recorded as a
+\texttt{sorry} pending iteration $\geq 136$.
+
+% NOTE (review iter-142): the proof-sketch sentence above is stale. The
+% Lean file `Proetale/Mathlib/RingTheory/WeaklyEtale/Localization.lean`
+% is sorry-free on disk (verified iter-142). (F2) is closed via
+% `RingHom.Flat.of_bijective` applied to
+% `(Algebra.TensorProduct.lmul' R (S := T)).toRingHom`, with bijectivity
+% witnessed by `IsLocalization.bijective_linearMap_mul'` --- i.e.\ the
+% sharper route through `lmul'` being itself bijective, not via the
+% `(S^{-1} R) \otimes_R (S^{-1} R) \cong S^{-1}(S^{-1} R)` identity
+% sketched above. Plan agent: please refresh L32--49 to reflect the
+% landed proof strategy.

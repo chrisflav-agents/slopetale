@@ -557,6 +557,17 @@ private lemma exists_idempotent_lift_isolating_at_maximal
       (∀ p : Ideal B, p.IsPrime →
         ¬((IsLocalRing.maximalIdeal A).map (algebraMap A B) ≤ p) →
         e ∈ p) := by
+  -- iter-142 refactor: sorry-out to restore build; PARKED file gated on Stacks
+  -- 04GG/04GH. The upstream helper `exists_completeOrthogonalIdempotents_lift_of_henselian`
+  -- was strengthened (iter-129) to require `[IsNoetherianRing A] [Module.Finite A B]`,
+  -- which cannot be propagated up the cascade without breaking section-variable
+  -- callers (`stage1_raw_retraction` uses `[IsStrictlyHenselianLocalRing A]`,
+  -- which does not imply `IsNoetherianRing A`, and `Algebra.Etale A B` does not
+  -- imply `Module.Finite A B`). The body is sorry-d at this lowest private
+  -- helper; downstream destructures of the 5-tuple continue to typecheck.
+  sorry
+  /- Original body — kept as comment for reference, fails on the destructure at
+     the upstream-strengthened signature.
   classical
   -- `mB := m · B ≤ n` (from `n.comap = m`).
   have hmB_le_n :
@@ -680,6 +691,7 @@ private lemma exists_idempotent_lift_isolating_at_maximal
     -- product-decomposition form) or an extension of the new helper's
     -- conclusion to bundle horizontal-killing alongside orthogonality.
     sorry
+  -/
 
 /-- **iter-045 shared helper.** For `A` henselian local + `B` étale over `A` + `n`
 maximal over `m = maximalIdeal A`, in any localization `Bb = B[1/b]` where the

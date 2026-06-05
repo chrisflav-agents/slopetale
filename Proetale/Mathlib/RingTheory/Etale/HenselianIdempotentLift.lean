@@ -6,9 +6,13 @@ import Mathlib.RingTheory.Etale.Basic
 import Mathlib.RingTheory.Etale.Field
 import Mathlib.RingTheory.Henselian
 import Mathlib.RingTheory.Idempotents
+import Mathlib.RingTheory.Jacobson.Ideal
 import Mathlib.RingTheory.LocalRing.MaximalIdeal.Basic
 import Mathlib.RingTheory.LocalRing.ResidueField.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
+import Mathlib.RingTheory.TensorProduct.Maps
+import Mathlib.RingTheory.TensorProduct.Quotient
+import Proetale.Mathlib.RingTheory.Etale.HenselianPairLift
 
 /-!
 # Hensel-lifting orthogonal idempotents for étale algebras over henselian local rings
@@ -34,6 +38,27 @@ open IsLocalRing
 namespace Algebra.Etale
 
 universe u
+
+/-- An idempotent that lies in the Jacobson radical of `R` (the intersection of all
+maximal ideals, or equivalently `Ideal.jacobson (⊥ : Ideal R)`) is zero.
+
+Reason: if `e ∈ jac R`, then `1 - e` is a unit; combined with the idempotent relation
+`e * (1 - e) = e - e^2 = 0` and cancellation by `(1 - e)`, we get `e = 0`. -/
+private lemma _isIdempotentElem_eq_zero_of_mem_jacobson_bot
+    {R : Type*} [CommRing R] {e : R} (he : IsIdempotentElem e)
+    (hmem : e ∈ Ideal.jacobson (⊥ : Ideal R)) : e = 0 := by
+  rw [Ideal.mem_jacobson_bot] at hmem
+  have hu : IsUnit (1 - e) := by
+    have := hmem (-1)
+    rwa [mul_neg_one, neg_add_eq_sub] at this
+  have h_prod : e * (1 - e) = 0 := by
+    have hee : e * e = e := he
+    rw [mul_sub, mul_one, hee, sub_self]
+  obtain ⟨u, hu_eq⟩ := hu
+  have hinv : (1 - e) * ((u⁻¹ : Rˣ) : R) = 1 := Units.mul_inv_of_eq hu_eq
+  calc e = e * ((1 - e) * ((u⁻¹ : Rˣ) : R)) := by rw [hinv, mul_one]
+    _ = e * (1 - e) * ((u⁻¹ : Rˣ) : R) := by ring
+    _ = 0 := by rw [h_prod, zero_mul]
 
 /-- **Stacks 0DXB fragment** (Hensel-lifting orthogonal idempotents).
 
@@ -61,8 +86,8 @@ its `∑ i, e i` via `Fintype I`. Bundling `Fintype I` directly avoids a
 redundant `Fintype.ofFinite` step at every consumer. The two are
 equivalent on a non-empty finite index set. -/
 theorem exists_completeOrthogonalIdempotents_lift_of_henselian
-    (A B : Type u) [CommRing A] [HenselianLocalRing A]
-    [CommRing B] [Algebra A B] [Algebra.Etale A B] :
+    (A B : Type u) [CommRing A] [HenselianLocalRing A] [IsNoetherianRing A]
+    [CommRing B] [Algebra A B] [Algebra.Etale A B] [Module.Finite A B] :
     ∃ (I : Type u) (_ : Fintype I) (_ : DecidableEq I) (kI : I → Type u)
       (_ : ∀ i, Field (kI i))
       (_ : ∀ i, Algebra (IsLocalRing.ResidueField A) (kI i))
@@ -107,56 +132,103 @@ theorem exists_completeOrthogonalIdempotents_lift_of_henselian
     intro i
     exact hinj_surj _
   choose e₀ he₀ using hlift_data
-  -- ===== Step 2 (Hensel-idempotent lift; Mathlib-PR target, Stacks 0DXB). =====
-  --
-  -- The substantive remaining content factors through one missing
-  -- piece of Mathlib infrastructure: the **Stacks 04GG / 0DXB henselian-pair
-  -- statement** that `(B, mB)` is a henselian ring whenever `A` is henselian
-  -- local and `B` is étale over `A`. Once that is available, the lift of
-  -- each `Pi.single i 1` idempotent follows by applying
-  -- `HenselianRing.is_henselian` to the monic polynomial `f := X² - X ∈ B[X]`
-  -- at the naive root `e₀ i`:
-  --
-  -- * `f.eval (e₀ i) = (e₀ i)² - e₀ i ∈ mB`, because the image
-  --   `inj (e₀ i) = eqv.symm (Pi.single i 1)` is an idempotent in
-  --   `k ⊗_A B`, so its square equals itself there, and the kernel of
-  --   `inj` is `mB`.
-  -- * `f.derivative.eval (e₀ i) = 2·e₀ i - 1` is a unit mod `mB`: under
-  --   `eqv ∘ inj`, it maps to `2·Pi.single i 1 - 1 ∈ ∀ j, kI j`, whose
-  --   `i`-coordinate is `1` and whose `j`-coordinate for `j ≠ i` is `-1` —
-  --   both units in the respective residue fields `kI j`, so the
-  --   product is a unit.
-  --
-  -- Pairwise orthogonality and completeness of the resulting `eLift`
-  -- collection then follow from the Jacobson-radical containment
-  -- `mB ⊆ Ring.jacobson B` (which is part of the `HenselianRing`
-  -- predicate): each `eLift i * eLift j` (for `i ≠ j`) is an idempotent
-  -- in `B` whose image in `B/mB` is `0`, hence (being an idempotent in
-  -- the Jacobson radical) is `0`; and `∑ i, eLift i` is an idempotent
-  -- whose image in `B/mB` is `1`, hence (being an idempotent that is a
-  -- unit) is `1`.
-  --
-  -- The single Mathlib-PR gap is therefore the assertion
-  -- `HenselianRing B mB`. Once this is in place, the deduction outlined
-  -- above goes through. We bundle the whole remaining `∃ eLift, …` step
-  -- as a single typed sorry pending that infrastructure; iter-050+
-  -- targets either (i) introducing a `HenselianPair` predicate in
-  -- `Proetale/Mathlib/RingTheory/HenselianPair/Defs.lean` and proving
-  -- `(B, mB)` is a henselian pair, or (ii) directly bundling
-  -- `HenselianRing B mB` from the étale + henselian-local hypotheses.
-  --
-  -- The naive lifts `e₀ : I → B` and the surjectivity witness
-  -- `hinj_surj` constructed above are kept in scope: they form the
-  -- starting data for the Hensel-lift step and will be reused verbatim
-  -- once the missing predicate lands.
-  --
-  -- Suppress unused-variable warnings on the locally-bound setup data
-  -- (`hm_def`, `hmB_def`, `e₀`, `he₀`) — they document the proof
-  -- structure for the next iteration.
-  have _hm_def := hm_def
-  have _hmB_def := hmB_def
-  have _e₀ := e₀
-  have _he₀ := he₀
-  sorry
+  -- ===== Step 2 (residue isomorphism `B/mB ≃+* (A/m) ⊗_A B`). =====
+  -- Compose `quotIdealMapEquivTensorQuot B m : B/mB ≃ₐ[B] B ⊗_A (A/m)`
+  -- with `Algebra.TensorProduct.comm : B ⊗_A (A/m) ≃ₐ[A] (A/m) ⊗_A B`.
+  -- The composite ring iso sends `mk b ↦ 1 ⊗ b = includeRight b`.
+  let isoBQ : (B ⧸ mB) ≃+* TensorProduct A (IsLocalRing.ResidueField A) B :=
+    (Algebra.TensorProduct.quotIdealMapEquivTensorQuot
+        (A := A) B m).toRingEquiv.trans
+      (Algebra.TensorProduct.comm A B (IsLocalRing.ResidueField A)).toRingEquiv
+  have isoBQ_mk : ∀ b : B, isoBQ (Ideal.Quotient.mk mB b) =
+      (Algebra.TensorProduct.includeRight : B →ₐ[A] _) b := fun b => by
+    show (Algebra.TensorProduct.comm A B (IsLocalRing.ResidueField A))
+        ((Algebra.TensorProduct.quotIdealMapEquivTensorQuot
+          (A := A) B m) (Ideal.Quotient.mk mB b)) = _
+    rw [Algebra.TensorProduct.quotIdealMapEquivTensorQuot_mk]
+    rfl
+  -- ===== Step 3 (residue idempotents `ē_i := mk (e₀ i)` are idempotent in B/mB). =====
+  have h_pi_single_idem : ∀ i : I, (Pi.single i (1 : kI i)) *
+      (Pi.single i (1 : kI i)) = (Pi.single i (1 : kI i)) := by
+    intro i; ext j
+    by_cases hij : i = j
+    · subst hij; simp
+    · simp [hij]
+  have h_pi_single_mul_zero : ∀ {i j : I}, i ≠ j →
+      (Pi.single i (1 : kI i)) * (Pi.single j (1 : kI j)) = 0 := by
+    intro i j hij; ext k
+    by_cases hik : i = k
+    · subst hik; simp [hij]
+    · simp [hik]
+  have h_pi_single_sum : ∑ i : I, (Pi.single i (1 : kI i)) = 1 := by
+    apply Finset.univ_sum_single (fun i : I => (1 : kI i))
+  have h_e₀_idem : ∀ i, IsIdempotentElem (Ideal.Quotient.mk mB (e₀ i)) := by
+    intro i
+    rw [IsIdempotentElem]
+    apply isoBQ.injective
+    rw [map_mul]
+    simp only [isoBQ_mk, he₀]
+    rw [← map_mul, h_pi_single_idem]
+  -- ===== Step 4 (per-index Hensel lift via `lift_idempotent_henselianPair`). =====
+  choose eLift heLift_idem heLift_mk_eq using fun i =>
+    Algebra.Etale.lift_idempotent_henselianPair A B
+      (Ideal.Quotient.mk mB (e₀ i)) (h_e₀_idem i)
+  -- The lift's defining property pushed through `isoBQ` and `includeRight`.
+  have eLift_includeRight : ∀ i,
+      (Algebra.TensorProduct.includeRight : B →ₐ[A] _) (eLift i) =
+        eqv.symm ((Pi.single i 1 : ∀ j, kI j)) := by
+    intro i
+    have h := isoBQ_mk (eLift i)
+    rw [heLift_mk_eq, isoBQ_mk, he₀] at h
+    exact h.symm
+  -- ===== Step 5 (orthogonality + completeness via Jacobson-idempotent trick). =====
+  have h_jacobson : mB ≤ Ideal.jacobson (⊥ : Ideal B) :=
+    Algebra.Etale.maximalIdeal_map_le_jacobson_bot A B
+  -- For `i ≠ j`, `eLift i * eLift j ∈ mB`; combined with idempotency → 0.
+  have h_ortho : ∀ {i j : I}, i ≠ j → eLift i * eLift j = 0 := by
+    intro i j hij
+    have h_idem : IsIdempotentElem (eLift i * eLift j) :=
+      (heLift_idem i).mul (heLift_idem j)
+    apply _isIdempotentElem_eq_zero_of_mem_jacobson_bot h_idem
+    apply h_jacobson
+    rw [← Ideal.Quotient.eq_zero_iff_mem, map_mul, heLift_mk_eq, heLift_mk_eq]
+    apply isoBQ.injective
+    rw [map_zero, map_mul]
+    simp only [isoBQ_mk, he₀]
+    rw [← map_mul, h_pi_single_mul_zero hij, map_zero]
+  -- `1 - ∑ eLift i ∈ mB` (image in `(A/m) ⊗ B` equals 0), and is idempotent.
+  have h_orthIdem : OrthogonalIdempotents eLift :=
+    ⟨heLift_idem, fun _ _ hij => h_ortho hij⟩
+  have h_sum_idem : IsIdempotentElem (∑ i : I, eLift i) :=
+    h_orthIdem.isIdempotentElem_sum
+  -- Image of ∑ eLift i in B/mB ≃ (A/m) ⊗ B equals eqv.symm 1 = 1 (in tensor).
+  have h_sum_isoBQ : isoBQ (Ideal.Quotient.mk mB (∑ i : I, eLift i)) = 1 := by
+    calc isoBQ (Ideal.Quotient.mk mB (∑ i : I, eLift i))
+        = ∑ i : I, isoBQ (Ideal.Quotient.mk mB (eLift i)) := by
+          rw [map_sum, map_sum]
+      _ = ∑ i : I, eqv.symm (Pi.single i (1 : kI i)) := by
+          refine Finset.sum_congr rfl ?_
+          intro i _
+          rw [isoBQ_mk]
+          exact eLift_includeRight i
+      _ = eqv.symm (∑ i : I, Pi.single i (1 : kI i)) := by rw [map_sum]
+      _ = eqv.symm 1 := by rw [h_pi_single_sum]
+      _ = 1 := map_one _
+  have h_mk_sum_eq_one : Ideal.Quotient.mk mB (∑ i : I, eLift i) = 1 := by
+    apply isoBQ.injective
+    rw [h_sum_isoBQ, map_one]
+  have h_one_sub_in_mB : (1 - ∑ i : I, eLift i) ∈ mB := by
+    rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, map_one,
+      h_mk_sum_eq_one, sub_self]
+  have h_complete : ∑ i : I, eLift i = 1 := by
+    have h_one_sub_idem : IsIdempotentElem (1 - ∑ i : I, eLift i) :=
+      h_sum_idem.one_sub
+    have h_zero : 1 - ∑ i : I, eLift i = 0 :=
+      _isIdempotentElem_eq_zero_of_mem_jacobson_bot h_one_sub_idem
+        (h_jacobson h_one_sub_in_mB)
+    linear_combination -h_zero
+  refine ⟨eLift, ⟨⟨heLift_idem, fun i j hij => h_ortho hij⟩, h_complete⟩, ?_⟩
+  intro i
+  rw [eLift_includeRight, AlgEquiv.apply_symm_apply]
 
 end Algebra.Etale
