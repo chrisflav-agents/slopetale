@@ -11,6 +11,7 @@ import Proetale.Algebra.IndBijectiveOnStalks
 import Proetale.Algebra.IndEtale
 import Proetale.Algebra.IndWeaklyEtale
 import Proetale.Algebra.IndZariski
+import Proetale.Algebra.IntegralLocal
 import Proetale.Algebra.LocalIso
 import Proetale.Algebra.Preliminaries.Ideal
 import Proetale.Algebra.ProEtaleContraction
@@ -37,12 +38,14 @@ import Proetale.Mathlib.Algebra.Category.Ring.FilteredColimits
 import Proetale.Mathlib.Algebra.Category.Ring.FilteredDescent
 import Proetale.Mathlib.Algebra.Homology.ShortComplex.Exact
 import Proetale.Mathlib.Algebra.LocalIso.Spreads
+import Proetale.Mathlib.AlgebraicGeometry.AffineTransitionLimit
 import Proetale.Mathlib.AlgebraicGeometry.Cover.MorphismProperty
 import Proetale.Mathlib.AlgebraicGeometry.Extensive
 import Proetale.Mathlib.AlgebraicGeometry.Morphisms.FinitePresentation
 import Proetale.Mathlib.AlgebraicGeometry.Morphisms.RingHomProperties
 import Proetale.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
 import Proetale.Mathlib.AlgebraicGeometry.Morphisms.WeaklyEtale
+import Proetale.Mathlib.AlgebraicGeometry.Sites.AffineEtale
 import Proetale.Mathlib.AlgebraicGeometry.Sites.AffineRefinement
 import Proetale.Mathlib.AlgebraicGeometry.Sites.BigZariski
 import Proetale.Mathlib.AlgebraicGeometry.Sites.MorphismProperty
@@ -54,6 +57,7 @@ import Proetale.Mathlib.CategoryTheory.Limits.MorphismProperty
 import Proetale.Mathlib.CategoryTheory.Limits.Presentation
 import Proetale.Mathlib.CategoryTheory.Limits.Preserves.Finite
 import Proetale.Mathlib.CategoryTheory.Limits.Preserves.Limits
+import Proetale.Mathlib.CategoryTheory.Limits.Preserves.Shapes.Multiequalizer
 import Proetale.Mathlib.CategoryTheory.Limits.Preserves.Shapes.Zero
 import Proetale.Mathlib.CategoryTheory.Limits.Shapes.FiniteLimits
 import Proetale.Mathlib.CategoryTheory.Limits.Shapes.Pullback.HasPullback
@@ -77,9 +81,11 @@ import Proetale.Mathlib.CategoryTheory.Sites.InducedTopology
 import Proetale.Mathlib.CategoryTheory.Sites.IsSheafFor
 import Proetale.Mathlib.CategoryTheory.Sites.MorphismProperty
 import Proetale.Mathlib.CategoryTheory.Sites.Precoverage
+import Proetale.Mathlib.CategoryTheory.Sites.PrecoverageGenerating
 import Proetale.Mathlib.CategoryTheory.Sites.Sieves
 import Proetale.Mathlib.FieldTheory.IsSepClosed
 import Proetale.Mathlib.Order.BooleanAlgebra.Set
+import Proetale.Mathlib.RingTheory.Etale.Field
 import Proetale.Mathlib.RingTheory.Etale.HenselianIdempotentLift
 import Proetale.Mathlib.RingTheory.Etale.HenselianPair
 import Proetale.Mathlib.RingTheory.Etale.HenselianPairCharpolyDescent
@@ -93,6 +99,7 @@ import Proetale.Mathlib.RingTheory.Flat.Pi
 import Proetale.Mathlib.RingTheory.Henselian
 import Proetale.Mathlib.RingTheory.Ideal.GoingDown
 import Proetale.Mathlib.RingTheory.Ideal.Pure
+import Proetale.Mathlib.RingTheory.Idempotents
 import Proetale.Mathlib.RingTheory.Localization.AtIdempotent
 import Proetale.Mathlib.RingTheory.Localization.Prod
 import Proetale.Mathlib.RingTheory.RingHom.Flat
@@ -122,6 +129,7 @@ import Proetale.Mathlib.Topology.Spectral.Prespectral
 import Proetale.Morphisms.ProAffineEtale
 import Proetale.Morphisms.WeaklyEtale
 import Proetale.Pro.Basic
+import Proetale.Pro.Generating
 import Proetale.Pro.PresheafColimit
 import Proetale.Replete.WeaklyContractible
 import Proetale.Topology.Coherent.Affine
