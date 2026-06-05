@@ -91,6 +91,7 @@ import Proetale.Mathlib.RingTheory.Etale.HenselianPair
 import Proetale.Mathlib.RingTheory.Etale.HenselianPairCharpolyDescent
 import Proetale.Mathlib.RingTheory.Etale.HenselianPairLift
 import Proetale.Mathlib.RingTheory.Etale.IndSpreads
+import Proetale.Mathlib.RingTheory.Etale.LocalisationFiniteAtMaximal
 import Proetale.Mathlib.RingTheory.Etale.Prod
 import Proetale.Mathlib.RingTheory.Etale.StrictlyHenselian
 import Proetale.Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
@@ -102,6 +103,7 @@ import Proetale.Mathlib.RingTheory.Ideal.Pure
 import Proetale.Mathlib.RingTheory.Idempotents
 import Proetale.Mathlib.RingTheory.Localization.AtIdempotent
 import Proetale.Mathlib.RingTheory.Localization.Prod
+import Proetale.Mathlib.RingTheory.Module.FiniteResidue
 import Proetale.Mathlib.RingTheory.RingHom.Flat
 import Proetale.Mathlib.RingTheory.RingHom.OpenImmersion
 import Proetale.Mathlib.RingTheory.Spectrum.Prime.RingHom
