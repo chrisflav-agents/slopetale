@@ -120,10 +120,6 @@ instance : (toProEt S).Full :=
 instance : (toProEt S).Faithful :=
   inferInstanceAs <| (MorphismProperty.Over.changeProp _ proAffineEtale_le_weaklyEtale le_rfl).Faithful
 
-/-- Every object of `S.AffineProEt` has affine underlying scheme. -/
-instance (X : S.AffineProEt) : IsAffine X.left :=
-  AlgebraicGeometry.proAffineEtale_isAffine_source X.prop
-
 /-- `proAffineEtale` is closed under `WalkingCospan`-limits in `Over S`: the pullback
 of a cospan in `Over S` whose three objects have `proAffineEtale` structural maps
 again has `proAffineEtale` structural map. This is the affine-target replacement for
@@ -134,7 +130,7 @@ instance : (proAffineEtale.overObj (X := S)).IsClosedUnderLimitsOfShape WalkingC
   limitsOfShape_le := by
     rintro Y ⟨p⟩
     haveI : ∀ j : WalkingCospan, IsAffine (p.diag.obj j).left := fun j =>
-      AlgebraicGeometry.proAffineEtale_isAffine_source (p.prop_diag_obj j)
+      (p.prop_diag_obj j).isAffine
     haveI : IsAffineHom (p.diag.map WalkingCospan.Hom.inl).left :=
       isAffineHom_of_isAffine _
     -- The explicit type annotation forces Lean to compose `Over.forget S` with `p.diag`
@@ -337,7 +333,7 @@ instance : (toProEt S).LocallyCoverDense (ProEt.zariskiTopology S) := by
     simp only [Set.mem_iUnion, Set.mem_range]
     obtain ⟨j, y, hy⟩ := Scheme.Cover.exists_eq 𝒰 x
     exact ⟨j, y, hy⟩
-  haveI hXAff : IsAffine X.toComma.left := proAffineEtale_isAffine_source X.prop
+  haveI hXAff : IsAffine X.toComma.left := X.prop.isAffine
   obtain ⟨idx, g, e, hmem, he⟩ :=
     AlgebraicGeometry.exists_basicOpen_lift_of_isAffine_cover 𝒰.f hcov
   -- idx : X.toComma.left → 𝒰.I₀
@@ -1022,7 +1018,7 @@ instance : PreservesLimitsOfShape WalkingCospan (AffineEtale.toAffineProEt S) :=
 of `1`-hypercovers in the affine étale site. -/
 instance :
     (GrothendieckTopology.oneHypercoverRelativelyRepresentable.{u}
-      (AffineEtale.toAffineProEt S) (Type u)
+      (AffineEtale.toAffineProEt S)
       (AffineEtale.topology S) (AffineProEt.topology S)).IsGenerating := by
   -- Strategy: For each affine pro-étale `X` (`X = lim Xᵢ` with `Xᵢ` affine étale
   -- over `S`), a basis of `AffineProEt.topology` covers of `X` is obtained from
