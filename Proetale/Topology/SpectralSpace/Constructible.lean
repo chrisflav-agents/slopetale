@@ -82,3 +82,33 @@ instance SpectralSpace.totallySeparatedSpace [SpectralSpace X] [T1Space X] :
     PrespectralSpace.isTopologicalBasis.exists_subset_of_mem_open
       (show x ∈ ({y} : Set X)ᶜ by simp [hxy]) isClosed_singleton.isOpen_compl
   exact ⟨W, clopen W hWo hWc, hxW, fun hyW ↦ hWy hyW rfl⟩
+
+/-- If every quasi-compact open subset of a spectral space `X` is closed,
+then `X` is totally separated.
+
+This is the substantive content of Stacks 0905: a spectral space in which every
+quasi-compact open is closed is profinite (= compact T2 totally disconnected).
+The `CompactSpace` part is built into `SpectralSpace`; the `T2Space` and
+`TotallyDisconnectedSpace` parts follow from `TotallySeparatedSpace`. -/
+theorem SpectralSpace.totallySeparatedSpace_of_isClosed_of_isCompact_of_isOpen
+    [SpectralSpace X] (h : ∀ U : Set X, IsOpen U → IsCompact U → IsClosed U) :
+    TotallySeparatedSpace X := by
+  -- Every quasi-compact open is clopen by the hypothesis.
+  have clopen (U : Set X) (hUo : IsOpen U) (hUc : IsCompact U) : IsClopen U :=
+    ⟨h U hUo hUc, hUo⟩
+  rw [totallySeparatedSpace_iff_exists_isClopen]
+  intro x y hxy
+  -- `X` is T0 (as a spectral space), so some open set separates `x` and `y`.
+  obtain ⟨U, hUo, hxy_xor⟩ := exists_isOpen_xor_mem hxy
+  rcases hxy_xor with ⟨hxU, hyU⟩ | ⟨hyU, hxU⟩
+  · -- Case: `x ∈ U`, `y ∉ U`. Find a quasi-compact open `W ⊆ U` containing `x`;
+    -- it is clopen and separates `x` from `y`.
+    obtain ⟨W, ⟨hWo, hWc⟩, hxW, hWU⟩ :=
+      PrespectralSpace.isTopologicalBasis.exists_subset_of_mem_open hxU hUo
+    exact ⟨W, clopen W hWo hWc, hxW, fun hyW ↦ hyU (hWU hyW)⟩
+  · -- Case: `y ∈ U`, `x ∉ U`. Symmetric: find a quasi-compact open `W ⊆ U`
+    -- containing `y`; then `Wᶜ` is clopen and separates `x` from `y`.
+    obtain ⟨W, ⟨hWo, hWc⟩, hyW, hWU⟩ :=
+      PrespectralSpace.isTopologicalBasis.exists_subset_of_mem_open hyU hUo
+    refine ⟨Wᶜ, (clopen W hWo hWc).compl, fun hxW ↦ hxU (hWU hxW), ?_⟩
+    simpa using hyW
