@@ -83,40 +83,6 @@ noncomputable abbrev sheafAdjunction :
     ProEt.sheafPullback S A ⊣ ProEt.sheafPushforward S A :=
   (toProEtale S).sheafAdjunctionContinuous _ _ _
 
--- needs more assumptions on `A`
-/-- The unit of the adjunction `sheafPullback ⊣ sheafPushforward` is an isomorphism.
-
-This is the geometric form of `\lemma:pullback-fully-faithful` (Bhatt–Scholze
-Lemma 5.1.2, fully faithful part): the pullback functor `ν^*` from étale sheaves
-to pro-étale sheaves is fully faithful, which is equivalent to the unit being
-an iso.
-
-The proof depends on `\lemma:pullback-unit-iso` (`F → ν_* ν^* F` is an iso for
-every étale sheaf `F`), which in turn relies on `\lemma:pullback-section-affproet`:
-for any étale sheaf `F` and `U = lim Uᵢ` in `affproet`,
-`ν^* F (U) = colim F(Uᵢ)`.
-
-Formalisation requires:
-* the affine pro-étale comparison `isEquivalence_sheafPushforwardContinuous_toProEt`
-  (already available in `Proetale/Topology/Comparison/Affine.lean`);
-* a description of `ν^*` on objects of `S.AffineProEt` via the colimit over the
-  presentation, which needs `A` to admit suitable filtered colimits (concretely:
-  `HasFilteredColimitsOfSize` plus their preservation by enough forgetful
-  functors), and the colimit being a sheaf;
-* invoking the small-étale cover `affet → et` to reduce checking the unit-iso to
-  affine étale objects, where the colimit is trivial.
-
-These prerequisites are not yet packaged in the current development; leaving as
-`sorry`. -/
-instance isIso_unit_sheafAdjunction : IsIso (sheafAdjunction S A).unit :=
-  sorry
-
-instance faithful_sheafPullback : (sheafPullback S A).Faithful :=
-  (sheafAdjunction S A).faithful_L_of_mono_unit_app
-
-instance full_sheafPullback : (sheafPullback S A).Full :=
-  (sheafAdjunction S A).full_L_of_isSplitEpi_unit_app
-
 end ProEt
 
 end AlgebraicGeometry.Scheme

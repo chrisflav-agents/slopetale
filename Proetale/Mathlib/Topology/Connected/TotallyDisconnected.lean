@@ -1,3 +1,4 @@
+import Mathlib.Topology.Category.TopCat.Limits.Basic
 import Mathlib.Topology.Connected.TotallyDisconnected
 import Mathlib.Topology.Homeomorph.Lemmas
 import Mathlib.Topology.Inseparable
@@ -10,6 +11,17 @@ lemma Specializes.connectedComponents_mk_eq {a b : X} (hab : a ⤳ b) :
   ConnectedComponents.coe_eq_coe.mpr <| connectedComponent_eq <|
     isConnected_singleton.closure.subset_connectedComponent
       (subset_closure rfl) hab.mem_closure
+
+/-- Any preimage under `ConnectedComponents.mk` is a union of connected components. -/
+lemma ConnectedComponents.iUnion_connectedComponent_preimage_mk
+    (T : Set (ConnectedComponents X)) :
+    ⋃ x ∈ (ConnectedComponents.mk ⁻¹' T : Set X), connectedComponent x =
+      ConnectedComponents.mk ⁻¹' T := by
+  ext x
+  simp only [Set.mem_iUnion, Set.mem_preimage, exists_prop]
+  refine ⟨?_, fun hx ↦ ⟨x, hx, mem_connectedComponent⟩⟩
+  rintro ⟨y, hy, hxy⟩
+  exact (ConnectedComponents.coe_eq_coe'.mpr hxy) ▸ hy
 
 -- add `@[stacks 0906]` to `ConnectedComponents.totallyDisconnectedSpace`
 
@@ -117,81 +129,32 @@ theorem connectedComponent.prod (s : S) (t : T) :
       hconn_prod.subset_connectedComponent hmem
     exact hsub ⟨hs, ht⟩
 
+theorem ConnectedComponents.bijective_connectedComponentsLift_prod :
+    Function.Bijective (Continuous.connectedComponentsLift
+      (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) := by
+  refine ⟨Continuous.connectedComponentsLift_injective _ ?_, ?_⟩
+  · rintro ⟨c, d⟩
+    obtain ⟨s, rfl⟩ := ConnectedComponents.surjective_coe c
+    obtain ⟨t, rfl⟩ := ConnectedComponents.surjective_coe d
+    have heq : (fun x : S × T ↦ (ConnectedComponents.mk x.1, ConnectedComponents.mk x.2)) ⁻¹'
+        {(ConnectedComponents.mk s, ConnectedComponents.mk t)} =
+        connectedComponent s ×ˢ connectedComponent t := by
+      ext ⟨s', t'⟩
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq,
+        Set.mem_prod, ConnectedComponents.coe_eq_coe']
+    rw [heq]
+    exact isPreconnected_connectedComponent.prod isPreconnected_connectedComponent
+  · rintro ⟨c, d⟩
+    obtain ⟨s, rfl⟩ := ConnectedComponents.surjective_coe c
+    obtain ⟨t, rfl⟩ := ConnectedComponents.surjective_coe d
+    exact ⟨ConnectedComponents.mk (s, t), rfl⟩
+
 theorem ConnectedComponents.isHomeomorph_connectedComponentsLift_prod :
     IsHomeomorph (Continuous.connectedComponentsLift
     (f := fun x : S × T ↦ (mk x.1, mk x.2)) (by continuity)) where
   continuous := Continuous.connectedComponentsLift_continuous (by continuity)
-  isOpenMap := by
-    -- Goal: for U open in ConnectedComponents (S × T), the image under the lift `g` is open.
-    -- Since g ∘ mk_{S×T} = mk_S × mk_T and mk_{S×T} is surjective, the image equals
-    -- (mk_S × mk_T)(W) where W = mk_{S×T}⁻¹(U) is open and saturated in S × T (saturated
-    -- under cc-equivalence, equivalently under product cc by `connectedComponent.prod`).
-    -- Goal reduces to: (mk_S × mk_T) of a saturated open set is open in the product topology.
-    -- This is equivalent to saying `mk_S × mk_T` is a quotient map, which requires either
-    -- one of the spaces to be locally compact / `mk` to be open, or some similar hypothesis.
-    -- Under our generic hypotheses we proceed by reducing to a basic-open argument on saturated
-    -- opens of the product.
-    intro U hU
-    rw [isOpen_prod_iff]
-    rintro c d hcd
-    -- Find a representative (s, t) in the saturated open preimage W of U.
-    obtain ⟨s, rfl⟩ := ConnectedComponents.surjective_coe c
-    obtain ⟨t, rfl⟩ := ConnectedComponents.surjective_coe d
-    obtain ⟨p, hp_mem, hp_eq⟩ := hcd
-    obtain ⟨⟨s₀, t₀⟩, rfl⟩ := ConnectedComponents.surjective_coe p
-    -- Set W := mk_{S×T}⁻¹(U); it is open and saturated (a union of connected components).
-    set W : Set (S × T) := ((↑) : S × T → ConnectedComponents (S × T)) ⁻¹' U with hW_def
-    have hW_open : IsOpen W := hU.preimage ConnectedComponents.continuous_coe
-    have hst₀_in : (s₀, t₀) ∈ W := hp_mem
-    -- From `hp_eq` we get (mk s₀, mk t₀) = (mk s, mk t), hence CC(s) = CC(s₀), CC(t) = CC(t₀).
-    have hcs : ConnectedComponents.mk s₀ = ConnectedComponents.mk s :=
-      (Prod.mk.injEq ..).mp hp_eq |>.1
-    have hct : ConnectedComponents.mk t₀ = ConnectedComponents.mk t :=
-      (Prod.mk.injEq ..).mp hp_eq |>.2
-    have hCC_s : connectedComponent s = connectedComponent s₀ :=
-      (ConnectedComponents.coe_eq_coe.mp hcs.symm)
-    have hCC_t : connectedComponent t = connectedComponent t₀ :=
-      (ConnectedComponents.coe_eq_coe.mp hct.symm)
-    -- W is saturated: it contains the connected component of each of its points.
-    have hW_sat : ∀ x ∈ W, connectedComponent x ⊆ W := fun x hx y hy => by
-      have : ConnectedComponents.mk y = ConnectedComponents.mk x :=
-        ConnectedComponents.coe_eq_coe.mpr (connectedComponent_eq hy).symm
-      show ConnectedComponents.mk y ∈ U
-      rw [this]; exact hx
-    have hst_in_W : (s, t) ∈ W := by
-      apply hW_sat _ hst₀_in
-      rw [connectedComponent.prod]
-      exact ⟨hCC_s ▸ mem_connectedComponent, hCC_t ▸ mem_connectedComponent⟩
-    -- Find an open rectangle A₀ × B₀ ⊆ W with (s, t) ∈ A₀ × B₀.
-    rw [isOpen_prod_iff] at hW_open
-    obtain ⟨A₀, B₀, hA₀, hB₀, hsA, htB, hAB⟩ := hW_open s t hst_in_W
-    -- The remaining step requires producing open sets A ⊆ cc S, B ⊆ cc T with
-    -- (mk s, mk t) ∈ A × B and A × B ⊆ image. The natural candidates A = mk_S(A₀),
-    -- B = mk_T(B₀) require the saturations of A₀, B₀ to be open in S, T respectively
-    -- (equivalently, mk_S × mk_T being a quotient map). This is NOT true in general:
-    -- one needs hypotheses such as `[LocallyConnectedSpace S] [LocallyConnectedSpace T]`,
-    -- or `[CompactSpace S] [T2Space S] [CompactSpace T] [T2Space T]`, for the
-    -- continuous bijection `g` to be a homeomorphism. With only generic S, T this
-    -- step is unprovable; the theorem statement needs to be strengthened with
-    -- additional hypotheses at the plan-agent level.
-    sorry
-  bijective := by
-    refine ⟨Continuous.connectedComponentsLift_injective _ ?_, ?_⟩
-    · rintro ⟨c, d⟩
-      obtain ⟨s, rfl⟩ := ConnectedComponents.surjective_coe c
-      obtain ⟨t, rfl⟩ := ConnectedComponents.surjective_coe d
-      have heq : (fun x : S × T => (ConnectedComponents.mk x.1, ConnectedComponents.mk x.2)) ⁻¹'
-          {(ConnectedComponents.mk s, ConnectedComponents.mk t)} =
-          connectedComponent s ×ˢ connectedComponent t := by
-        ext ⟨s', t'⟩
-        simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq,
-          Set.mem_prod, ConnectedComponents.coe_eq_coe']
-      rw [heq]
-      exact isPreconnected_connectedComponent.prod isPreconnected_connectedComponent
-    · rintro ⟨c, d⟩
-      obtain ⟨s, rfl⟩ := ConnectedComponents.surjective_coe c
-      obtain ⟨t, rfl⟩ := ConnectedComponents.surjective_coe d
-      exact ⟨ConnectedComponents.mk (s, t), rfl⟩
+  isOpenMap := sorry
+  bijective := bijective_connectedComponentsLift_prod S T
 
 variable {S T} in
 noncomputable def ConnectedComponents.prodMap :
@@ -207,3 +170,16 @@ def ConnectedComponents.mkHomeomorph [TotallyDisconnectedSpace S] : S ≃ₜ Con
   right_inv := ConnectedComponents.surjective_coe.forall.2 fun _ => rfl
   continuous_toFun := continuous_coe
   continuous_invFun := continuous_id.connectedComponentsLift_continuous
+
+open CategoryTheory CategoryTheory.Limits
+
+universe v u
+
+/-- The inverse limit of a system of totally disconnected topological spaces is
+totally disconnected. -/
+instance TopCat.limitCone_pt_totallyDisconnectedSpace
+    {J : Type v} [SmallCategory J] (F : J ⥤ TopCat.{max v u})
+    [∀ j, TotallyDisconnectedSpace (F.obj j)] :
+    TotallyDisconnectedSpace (TopCat.limitCone.{v, u} F).pt := by
+  change TotallyDisconnectedSpace ({ u : ∀ j : J, F.obj j | _ } : Type _)
+  exact Subtype.totallyDisconnectedSpace
