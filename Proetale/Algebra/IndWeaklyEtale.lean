@@ -117,28 +117,6 @@ theorem Algebra.WeaklyEtale.indEtale_of_isField (K B : Type u) [Field K] [CommRi
   -- We delegate here so that any future closure there immediately closes this theorem.
   exact Algebra.WeaklyEtale.indEtale_field K B
 
-/-- (Stacks 097Z, Olivier.) Let `A` be a strictly henselian local ring and `A → B` a local,
-weakly étale ring map of local rings. Then `algebraMap A B` is bijective (so `A = B` as
-`A`-algebras).
-
-The Stacks proof reduces to showing every prime `p ⊂ A` has a unique prime of `B` over it
-with the same residue field; this uses `Algebra.WeaklyEtale.indEtale_of_isField` applied to
-the fibre rings, plus the idempotent-lifting available in henselian local rings with
-separably closed residue field. -/
-theorem Algebra.WeaklyEtale.bijective_of_isStrictlyHenselianLocalRing
-    (A B : Type u) [CommRing A] [CommRing B] [IsLocalRing A] [IsLocalRing B]
-    [IsStrictlyHenselianLocalRing A] [Algebra A B] [IsLocalHom (algebraMap A B)]
-    [Algebra.WeaklyEtale A B] :
-    Function.Bijective (algebraMap A B) :=
-  -- Blueprint: thm:weakly-etale-over-henselian-sep-closed
-  --            (more-on-local-structure.tex L779) + thm:weakly-etale-over-sh (L814).
-  -- A strictly henselian local ring is, by definition, a henselian local ring with
-  -- separably closed residue field. The Olivier statement for that combined hypothesis
-  -- is already scaffolded as `Algebra.WeaklyEtale.bijective_of_henselianLocalRing`
-  -- in `Proetale/Algebra/HenselianLocalRing.lean`; we delegate so the obligation
-  -- lives at a single source.
-  Algebra.WeaklyEtale.bijective_of_henselianLocalRing
-
 /-- Reduction sub-lemma for Stacks 097Y. If `T` is a w-contractible ring (so every local
 ring of `T` at a maximal ideal is strictly henselian) and `R → T` is weakly étale, then
 `R → T` is automatically ind-étale.
