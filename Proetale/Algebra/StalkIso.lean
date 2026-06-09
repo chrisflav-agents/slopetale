@@ -306,40 +306,121 @@ lemma bijective_of_bijective {f : R →+* S} (hf : f.BijectiveOnStalks)
       exact ⟨hr₁m, hqm' ▸ hb⟩)
   exact ⟨hinj, hsurj⟩
 
-/-
-NOTE: The statement of `prod` below is **missing hypotheses**. The blueprint statement
-(`thm:finite-product-identifies-local-rings`) requires that each of `f` and `g` already
-identifies local rings, i.e. `f.BijectiveOnStalks` and `g.BijectiveOnStalks`. Without
-those, the claim is false. Counterexample: take `R = ℤ`, `S = ℤ`, `T = ℤ/2`, `f = id`,
-`g = ℤ → ℤ/2`. The prime `p = ℤ × (0)` of `ℤ × ℤ/2` comaps to `(2) ⊂ ℤ`, and the
-localization `(ℤ × ℤ/2)_p` is `ℤ/2`. The induced map `ℤ_(2) → ℤ/2` is not bijective.
-
-The earlier version of this lemma (see commit ef79ab2) carried the missing hypotheses,
-but they were dropped in a subsequent refactor. The statement is frozen per agent
-rules, so the proof is left as `sorry` and the issue is flagged to the plan agent in
-`task_results/Algebra_StalkIso.lean.md`.
-
-For reference, with the missing hypotheses `(hf : f.BijectiveOnStalks)` and
-`(hg : g.BijectiveOnStalks)` the proof goes by case analysis on primes of `S × T`
-via `Ideal.ideal_prod_prime`, reducing each case to the localization of `f` (resp. `g`)
-at the corresponding prime, using that `(S × T)_{q × T} ≅ S_q` via `fst`.
--/
-lemma prod {T : Type*} [CommRing T] {f : R →+* S} {g : R →+* T} :
+-- The hypotheses `hf` and `hg` are required: see Stacks 096D / the algebraic stalks API.
+-- Without them, `R = ℤ`, `S = ℤ`, `T = ℤ/2` with `f = id` and `g` the quotient is a
+-- counterexample (the prime `ℤ × (0)` of `ℤ × ℤ/2` comaps to `(2) ⊂ ℤ`, but the induced
+-- map `ℤ_(2) → ℤ/2` is not bijective).
+lemma prod {T : Type*} [CommRing T] {f : R →+* S} {g : R →+* T}
+    (hf : f.BijectiveOnStalks) (hg : g.BijectiveOnStalks) :
     RingHom.BijectiveOnStalks (f.prod g) := by
   intro p hp
   obtain ⟨q, hq, rfl⟩ | ⟨q, hq, rfl⟩ := (Ideal.ideal_prod_prime p).mp hp
   · -- Case 1: p = q.prod ⊤, q a prime of S.
-    -- The comap satisfies `(q.prod ⊤).comap (f.prod g) = q.comap f`, and
-    -- `Localization.AtPrime (q.prod ⊤) ≅ Localization.AtPrime q` via the first projection
-    -- (Mathlib: `Localization.AtPrime.mapPiEvalRingHom_bijective` provides the Pi-version;
-    -- the binary version follows from `IsLocalization.away_fst`).
-    -- The composition `R_{q.comap f} → (S × T)_{q.prod ⊤} → S_q` equals the local ring hom
-    -- of `f` at `q`, so bijectivity of the first arrow is equivalent to `f.BijectiveOnStalks`
-    -- at `q`. Since that hypothesis is not in scope, the goal cannot be closed.
-    sorry
+    -- The first projection π₁ : S × T → S identifies (S × T)_{q × ⊤} ≅ S_q,
+    -- and the composition `R_{q.comap f} → (S × T)_{q.prod ⊤} → S_q` equals
+    -- the local ring hom of `f` at `q`, which is bijective by `hf q`.
+    have hcomap_fst : Ideal.prod q (⊤ : Ideal T) = q.comap (RingHom.fst S T) := by
+      ext ⟨a, b⟩; simp [Ideal.mem_prod, Ideal.mem_comap]
+    have hq_comap : (Ideal.prod q (⊤ : Ideal T)).comap (f.prod g) = q.comap f := by
+      rw [hcomap_fst, Ideal.comap_comap, RingHom.fst_comp_prod]
+    haveI : (q.comap f).IsPrime := Ideal.IsPrime.comap f
+    -- Reduce to the form with source prime `q.comap f` via the comap identity.
+    suffices h : Function.Bijective
+        (Localization.localRingHom (q.comap f) (Ideal.prod q (⊤ : Ideal T)) (f.prod g)
+          hq_comap.symm) by
+      have aux : ∀ {I : Ideal R} [I.IsPrime] (hI : I = (Ideal.prod q (⊤ : Ideal T)).comap (f.prod g))
+          (_ : Function.Bijective
+              (Localization.localRingHom I (Ideal.prod q (⊤ : Ideal T)) (f.prod g) hI)),
+          Function.Bijective (Localization.localRingHom
+            ((Ideal.prod q (⊤ : Ideal T)).comap (f.prod g))
+            (Ideal.prod q (⊤ : Ideal T)) (f.prod g) rfl) := by
+        rintro I _ rfl hb; exact hb
+      exact aux hq_comap.symm h
+    -- Φ : (S × T)_{q × ⊤} → S_q is bijective. We first prove the canonical-comap form, then
+    -- transport via `subst` to the `Ideal.prod q ⊤` form.
+    haveI hp_alt : (q.comap (RingHom.fst S T)).IsPrime := Ideal.IsPrime.comap _
+    have hΦ_alt : Function.Bijective
+        (Localization.localRingHom (q.comap (RingHom.fst S T)) q (RingHom.fst S T) rfl) := by
+      letI : Algebra (S × T) S := (RingHom.fst S T).toAlgebra
+      haveI hinst0 : IsLocalization.AtPrime (Localization.AtPrime q)
+          (q.comap (algebraMap (S × T) S)) :=
+        IsLocalization.isLocalization_isLocalization_atPrime_isLocalization
+          (Submonoid.powers ((1, 0) : S × T)) (Localization.AtPrime q) q
+      refine IsLocalization.bijective (M := (q.comap (algebraMap (S × T) S)).primeCompl) _ ?_
+      ext x
+      rw [RingHom.comp_apply, Localization.localRingHom_to_map]
+      exact (IsScalarTower.algebraMap_apply (S × T) S (Localization.AtPrime q) x).symm
+    have hΦ : Function.Bijective
+        (Localization.localRingHom (Ideal.prod q (⊤ : Ideal T)) q (RingHom.fst S T) hcomap_fst) := by
+      have aux : ∀ {I : Ideal (S × T)} [I.IsPrime] (h_eq : I = q.comap (RingHom.fst S T))
+          (_ : Function.Bijective
+              (Localization.localRingHom (q.comap (RingHom.fst S T)) q (RingHom.fst S T) rfl)),
+          Function.Bijective (Localization.localRingHom I q (RingHom.fst S T) h_eq) := by
+        rintro I _ rfl hb; exact hb
+      exact aux hcomap_fst hΦ_alt
+    -- Compose Φ with the local ring hom of (f.prod g) at q.prod ⊤ and identify with f's stalk map.
+    have hcomp_eq :
+        Localization.localRingHom (q.comap f) q f rfl =
+        (Localization.localRingHom (Ideal.prod q (⊤ : Ideal T)) q (RingHom.fst S T) hcomap_fst).comp
+          (Localization.localRingHom (q.comap f) (Ideal.prod q (⊤ : Ideal T)) (f.prod g)
+            hq_comap.symm) :=
+      Localization.localRingHom_unique (q.comap f) q f rfl fun x => by
+        simp [Localization.localRingHom_to_map]
+    have hbij_f : Function.Bijective (Localization.localRingHom (q.comap f) q f rfl) := hf q
+    rw [hcomp_eq] at hbij_f
+    -- Φ ∘ ψ bijective + Φ bijective ⇒ ψ bijective.
+    refine (hΦ.of_comp_iff' _).mp ?_
+    rw [← RingHom.coe_comp]
+    exact hbij_f
   · -- Case 2: p = ⊤.prod q, q a prime of T. Symmetric to Case 1 with `g` in place of `f`.
-    -- Requires `g.BijectiveOnStalks` at `q`, which is not in scope.
-    sorry
+    have hcomap_snd : Ideal.prod (⊤ : Ideal S) q = q.comap (RingHom.snd S T) := by
+      ext ⟨a, b⟩; simp [Ideal.mem_prod, Ideal.mem_comap]
+    have hq_comap : (Ideal.prod (⊤ : Ideal S) q).comap (f.prod g) = q.comap g := by
+      rw [hcomap_snd, Ideal.comap_comap, RingHom.snd_comp_prod]
+    haveI : (q.comap g).IsPrime := Ideal.IsPrime.comap g
+    suffices h : Function.Bijective
+        (Localization.localRingHom (q.comap g) (Ideal.prod (⊤ : Ideal S) q) (f.prod g)
+          hq_comap.symm) by
+      have aux : ∀ {I : Ideal R} [I.IsPrime] (hI : I = (Ideal.prod (⊤ : Ideal S) q).comap (f.prod g))
+          (_ : Function.Bijective
+              (Localization.localRingHom I (Ideal.prod (⊤ : Ideal S) q) (f.prod g) hI)),
+          Function.Bijective (Localization.localRingHom
+            ((Ideal.prod (⊤ : Ideal S) q).comap (f.prod g))
+            (Ideal.prod (⊤ : Ideal S) q) (f.prod g) rfl) := by
+        rintro I _ rfl hb; exact hb
+      exact aux hq_comap.symm h
+    haveI hp_alt : (q.comap (RingHom.snd S T)).IsPrime := Ideal.IsPrime.comap _
+    have hΦ_alt : Function.Bijective
+        (Localization.localRingHom (q.comap (RingHom.snd S T)) q (RingHom.snd S T) rfl) := by
+      letI : Algebra (S × T) T := (RingHom.snd S T).toAlgebra
+      haveI hinst0 : IsLocalization.AtPrime (Localization.AtPrime q)
+          (q.comap (algebraMap (S × T) T)) :=
+        IsLocalization.isLocalization_isLocalization_atPrime_isLocalization
+          (Submonoid.powers ((0, 1) : S × T)) (Localization.AtPrime q) q
+      refine IsLocalization.bijective (M := (q.comap (algebraMap (S × T) T)).primeCompl) _ ?_
+      ext x
+      rw [RingHom.comp_apply, Localization.localRingHom_to_map]
+      exact (IsScalarTower.algebraMap_apply (S × T) T (Localization.AtPrime q) x).symm
+    have hΦ : Function.Bijective
+        (Localization.localRingHom (Ideal.prod (⊤ : Ideal S) q) q (RingHom.snd S T) hcomap_snd) := by
+      have aux : ∀ {I : Ideal (S × T)} [I.IsPrime] (h_eq : I = q.comap (RingHom.snd S T))
+          (_ : Function.Bijective
+              (Localization.localRingHom (q.comap (RingHom.snd S T)) q (RingHom.snd S T) rfl)),
+          Function.Bijective (Localization.localRingHom I q (RingHom.snd S T) h_eq) := by
+        rintro I _ rfl hb; exact hb
+      exact aux hcomap_snd hΦ_alt
+    have hcomp_eq :
+        Localization.localRingHom (q.comap g) q g rfl =
+        (Localization.localRingHom (Ideal.prod (⊤ : Ideal S) q) q (RingHom.snd S T) hcomap_snd).comp
+          (Localization.localRingHom (q.comap g) (Ideal.prod (⊤ : Ideal S) q) (f.prod g)
+            hq_comap.symm) :=
+      Localization.localRingHom_unique (q.comap g) q g rfl fun x => by
+        simp [Localization.localRingHom_to_map]
+    have hbij_g : Function.Bijective (Localization.localRingHom (q.comap g) q g rfl) := hg q
+    rw [hcomp_eq] at hbij_g
+    refine (hΦ.of_comp_iff' _).mp ?_
+    rw [← RingHom.coe_comp]
+    exact hbij_g
 
 
 end RingHom.BijectiveOnStalks

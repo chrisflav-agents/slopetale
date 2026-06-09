@@ -1,14 +1,65 @@
 \chapter{Algebras and ring homomorphisms bijective on stalks}
 \label{ch:Proetale_Algebra_StalkIso}
 
-% NOTE: minimal stub created by prover (iter-103) at dispatch's
-% explicit instruction because the file did not yet exist. Plan
-% agent: please flesh out informal prose. The single declaration
-% currently shipped from `Proetale/Algebra/StalkIso.lean` that
-% needs informal coverage is `RingHom.BijectiveOnStalks.prod`,
-% which is PARKED-unsound at the current signature (the missing
-% hypotheses `(hf : f.BijectiveOnStalks)` and
-% `(hg : g.BijectiveOnStalks)` were dropped in a refactor and the
-% statement is false without them — see counterexample in
-% `Proetale/Algebra/StalkIso.lean` L313-316 and recomputation in
-% `.archon/task_results/Algebra_StalkIso.lean.md`).
+This chapter records the \texttt{RingHom.BijectiveOnStalks} predicate
+and its preservation under finite products. The predicate says that
+for every prime $\mathfrak q$ of the target, the induced local ring
+homomorphism on stalks is bijective. The chapter's main result is
+that this property is preserved under binary products of ring
+homomorphisms, provided that both factors are already bijective on
+stalks.
+
+\begin{definition}\leanok
+[BijectiveOnStalks predicate (pointer)]
+  \label{def:bijectiveOnStalks-prod-context}
+  \lean{RingHom.BijectiveOnStalks}
+  \uses{def:identify-local-rings}
+  A ring homomorphism $f : R \to S$ \emph{is bijective on stalks} if,
+  for every prime $\mathfrak q$ of $S$ contracting to
+  $\mathfrak p = f^{-1}(\mathfrak q) \subset R$, the induced local
+  ring homomorphism $R_{\mathfrak p} \to S_{\mathfrak q}$ is
+  bijective. Compare $\Cref{def:identify-local-rings}$ for the
+  algebra-bundled variant \texttt{Algebra.BijectiveOnStalks}.
+\end{definition}
+
+\begin{lemma}\leanok
+[Product of BijectiveOnStalks ring homs]
+  \label{lem:bijectiveOnStalks-prod-correct-signature}
+  \lean{RingHom.BijectiveOnStalks.prod}
+  \uses{def:bijectiveOnStalks-prod-context}
+  Let $R$, $S$, $T$ be commutative rings and let $f : R \to S$ and
+  $g : R \to T$ be ring homomorphisms. Assume that each of $f$ and
+  $g$ is bijective on stalks. Then the product map
+  $f \times g : R \to S \times T$, $r \mapsto (f(r), g(r))$
+  (Lean: \texttt{RingHom.prod f g}) is bijective on stalks.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:bijectiveOnStalks-prod-context}
+  \leanok
+  Every prime $\mathfrak r$ of $S \times T$ has the form
+  $\mathfrak r = \mathfrak q \times T$ for some prime $\mathfrak q$
+  of $S$, or $\mathfrak r = S \times \mathfrak q'$ for some prime
+  $\mathfrak q'$ of $T$ (Mathlib: \texttt{Ideal.ideal\_prod\_prime}).
+  In the first case, the localisation $(S \times T)_{\mathfrak r}$
+  is canonically isomorphic to $S_{\mathfrak q}$ via the first
+  projection: the idempotent $(0, 1) \in S \times T$ lies in
+  $\mathfrak q \times T$ and acts as zero in the localisation, so
+  the second factor becomes the zero ring. The pre-composition with
+  $R \to S \times T \to S_{\mathfrak q}$ equals the local ring map
+  $R_{\mathfrak p} \to S_{\mathfrak q}$ associated to $f$ at
+  $\mathfrak q$, which is bijective by hypothesis on $f$. The
+  second case is symmetric, with $g$ at $\mathfrak q'$ in place of
+  $f$ at $\mathfrak q$. In each case the composed local ring map
+  identifies with one of $f$'s or $g$'s stalk maps and is therefore
+  bijective.
+
+  Concretely, the local ring isomorphism
+  $(S \times T)_{\mathfrak q \times T} \cong S_{\mathfrak q}$ is
+  supplied either by \texttt{RingEquiv.prodZeroRing} after
+  localising at the absorbing idempotent, or by
+  \texttt{Localization.AtPrime.mapPiEvalRingHom\_bijective}
+  (Pi-version) specialised to the two-factor case. The contraction
+  identity $f^{-1}(\mathfrak q) = (f \times g)^{-1}(\mathfrak q
+  \times T)$ is \texttt{RingHom.comap\_prod\_fst}.
+\end{proof}

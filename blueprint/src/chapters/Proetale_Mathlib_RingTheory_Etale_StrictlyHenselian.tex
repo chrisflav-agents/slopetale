@@ -43,6 +43,7 @@ rely.
 
 \begin{lemma}[Finite over henselian local: product decomposition]
   \label{lem:henselian-finite-product-decomp}
+  \lean{Algebra.Etale.finite_over_henselian_eq_pi_henselian}
   \uses{def:strictly-henselian-local-ring, thm:etale-henselian-cop-lift}
   % SOURCE: \stacksproject{04GH} = Algebra Lemma 10.155.4 (read from
   %         references/stacks-04gg.tex, lines 340--371)
@@ -78,7 +79,8 @@ rely.
 %   (of course any finite ring map between local rings is local)."
 \begin{proof}
   \uses{lem:henselian-finite-local-is-henselian,
-        thm:etale-henselian-cop-lift}
+        thm:etale-henselian-cop-lift,
+        lem:lift-complete-orthogonal-idempotents-henselian}
   We deduce the statement from three observations.
   \begin{enumerate}
     \item \emph{$S$ is semi-local.} The integral map $R \to S$ has
@@ -92,14 +94,16 @@ rely.
       splits as the product of its localisations at its maximal ideals:
       $S/\mathfrak{m} S \cong \prod_{i} (S/\mathfrak{m} S)_{\bar{\mathfrak{n}}_{i}}$,
       with orthogonal idempotents $\{\bar e_{1}, \dots, \bar e_{n}\}$.
-      Because $R$ is henselian, Stacks 04GG (1)$\Rightarrow$(10) (via
-      Cayley--Hamilton) lifts these residue idempotents to a complete
-      orthogonal idempotent
-      system $\{e_{1}, \dots, e_{n}\}$ in $S$ with
-      $e_{i} \equiv \bar e_{i} \pmod{\mathfrak{m} S}$. This is the
-      content of \cref{thm:etale-henselian-cop-lift} (the étale case
-      banked in iter-128) for the étale slice and of Stacks 04GG (1)
-      $\Rightarrow$ (10) more generally.
+      Because $R$ is henselian,
+      \Cref{lem:lift-complete-orthogonal-idempotents-henselian}
+      (the chapter-internal carrier of Stacks
+      04GG (1)$\Rightarrow$(10), built on
+      \Cref{lem:henselianPair-idempotent-lift-x2-minus-x})
+      lifts these residue idempotents to a complete orthogonal
+      idempotent system $\{e_{1}, \dots, e_{n}\}$ in $S$ with
+      $e_{i} \equiv \bar e_{i} \pmod{\mathfrak{m} S}$. The étale
+      slice is also covered by
+      \cref{thm:etale-henselian-cop-lift} (banked in iter-128).
     \item \emph{Product decomposition.} Setting $S_{i} := e_{i} S$
       yields $S = \prod_{i} S_{i}$ as $R$-algebras; each factor is a
       direct summand of the finite $R$-module $S$, hence finite over
@@ -112,6 +116,112 @@ rely.
   Finally, each finite local extension $S_{i}$ of the henselian local
   ring $R$ is itself henselian by
   \cref{lem:henselian-finite-local-is-henselian} below.
+\end{proof}
+
+\begin{lemma}[Henselian lift of a complete orthogonal idempotent system]
+  \label{lem:lift-complete-orthogonal-idempotents-henselian}
+  \lean{Algebra.Etale.lift_complete_orthogonal_idempotents_henselian}
+  \uses{lem:henselianPair-idempotent-lift-x2-minus-x}
+  % SOURCE: \stacksproject{04GG}, "Proof of 8$\Rightarrow$10" paragraph
+  %         (read from references/stacks-04gg.tex, lines 197--219)
+  % SOURCE QUOTE:
+  %   "Proof of 8$\Rightarrow$10. Assume (8) and let $R \to S$ be a
+  %   finite ring map. Apply
+  %   Lemma \ref{lemma-etale-makes-quasi-finite-finite}.
+  %   We find an \'etale ring map $R \to R'$ and a prime
+  %   $\mathfrak m' \subset R'$
+  %   lying over $\mathfrak m$ with $\kappa = \kappa(\mathfrak m')$
+  %   such that $R' \otimes_R S = A'_1 \times \ldots \times A'_n \times B'$
+  %   with $A'_i$ finite over $R'$ having exactly one prime over $\mathfrak m'$
+  %   and $B'$ not quasi-finite over $R'$ at any prime lying over
+  %   $\mathfrak m'$. Apply (8) to get a retraction $\tau : R' \to R$ with
+  %   $\mathfrak m' = \tau^{-1}(\mathfrak m)$. Then we obtain
+  %   \begin{align*}
+  %   S & = (S \otimes_R R') \otimes_{R', \tau} R \\
+  %   & = (A'_1 \times \ldots \times A'_n \times B') \otimes_{R', \tau} R \\
+  %   & = (A'_1 \otimes_{R', \tau} R)  \times
+  %   \ldots \times (A'_1 \otimes_{R', \tau} R) \times
+  %   (B' \otimes_{R', \tau} R) \\
+  %   & = A_1 \times \ldots \times A_n \times B
+  %   \end{align*}
+  %   The factor $B$ is finite over $R$ but $R \to B$
+  %   is not quasi-finite at any prime lying over $\mathfrak m$. Hence
+  %   $B = 0$. The factors $A_i$ are finite $R$-algebras having exactly
+  %   one prime lying over $\mathfrak m$, hence they are local rings.
+  %   This proves that $S$ is a finite product of local rings."
+  %
+  % NOTE: the verbatim 8$\Rightarrow$10 paragraph above produces the
+  % finite product decomposition $S = A_1 \times \cdots \times A_n$
+  % at the level of $R$-algebras, which corresponds to a complete
+  % orthogonal idempotent system $\{e_i\} \subset S$. Stacks does NOT
+  % isolate the single-idempotent statement as a standalone lemma;
+  % the recursive lift of one $\bar e$ at a time against $X^2 - X$
+  % is the standard textbook reformulation (carried by
+  % \cref{lem:henselianPair-idempotent-lift-x2-minus-x}) and the
+  % extension to a finite orthogonal family is project-original
+  % prose recorded in the proof below.
+  \textit{Source: Stacks Project, Tag 04GG (proof of
+  $(8) \Rightarrow (10)$).}
+  Let $(R, \mathfrak m)$ be a henselian local ring, let $R \to S$ be
+  a finite ring map, and let $\{\bar e_i\}_{i \in I} \subset
+  S/\mathfrak m S$ be a complete orthogonal system of idempotents
+  (i.e.\ $\bar e_i \bar e_j = 0$ for $i \ne j$ and
+  $\sum_{i \in I} \bar e_i = 1$). Then there exists a complete
+  orthogonal system of idempotents $\{e_i\}_{i \in I} \subset S$ with
+  $e_i \equiv \bar e_i \pmod{\mathfrak m S}$ for every $i \in I$, and
+  the lift is unique.
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:henselianPair-idempotent-lift-x2-minus-x}
+  We argue by induction on $|I|$, reducing the multi-idempotent
+  lift to the single-idempotent Hensel lift carried by
+  \Cref{lem:henselianPair-idempotent-lift-x2-minus-x}.
+  \begin{itemize}
+    \item \emph{Single-idempotent case.} An idempotent of
+      $S/\mathfrak m S$ is exactly a root of $f(X) = X^2 - X$
+      in $S/\mathfrak m S$ at which $f'(X) = 2 X - 1$ is a unit
+      (its image in each residue field is $\pm 1$, hence nonzero).
+      By \Cref{lem:henselianPair-idempotent-lift-x2-minus-x} applied
+      to the henselian pair $(S, \mathfrak m S)$ (whose henselianity
+      follows from \Cref{lem:henselian-finite-local-is-henselian} on
+      each local factor, or more directly from the fact that finite
+      ring maps preserve the property of being a henselian pair when
+      the base is a henselian local ring), $\bar e \in S/\mathfrak m S$
+      lifts uniquely to an idempotent $e \in S$ with
+      $e \equiv \bar e \pmod{\mathfrak m S}$.
+    \item \emph{Recursive multi-idempotent lift.} Given a complete
+      orthogonal system $\{\bar e_1, \dots, \bar e_n\}$ in
+      $S/\mathfrak m S$, lift $\bar e_1$ to $e_1 \in S$ by the
+      previous step. Then $S$ splits as $S = e_1 S \oplus (1 - e_1) S$
+      as a direct product of $R$-algebras. The remaining residue
+      idempotents $\{\bar e_2, \dots, \bar e_n\}$ form a complete
+      orthogonal system in the factor
+      $(1 - e_1) S / \mathfrak m (1 - e_1) S$ (because
+      $\sum_{i \ge 2} \bar e_i = 1 - \bar e_1$ is the unit of that
+      factor). The factor $(1 - e_1) S$ is itself a finite
+      $R$-algebra, so we may apply the inductive hypothesis to lift
+      $\{\bar e_2, \dots, \bar e_n\}$ to idempotents
+      $\{e_2, \dots, e_n\}$ in $(1 - e_1) S$, viewed as idempotents
+      of $S$ orthogonal to $e_1$. The resulting family
+      $\{e_1, \dots, e_n\} \subset S$ is a complete orthogonal
+      idempotent system.
+    \item \emph{Orthogonality.} For $i \ne j$ the element
+      $e_i e_j \in S$ is an idempotent whose residue
+      $\bar e_i \bar e_j = 0$ vanishes. Uniqueness of the Hensel
+      lift of $0$ against $X^2 - X$ then forces $e_i e_j = 0$.
+    \item \emph{Completeness.} The element $1 - \sum_i e_i \in S$
+      is an idempotent (using orthogonality just established) whose
+      residue $1 - \sum_i \bar e_i = 0$ vanishes; uniqueness of the
+      Hensel lift forces $1 - \sum_i e_i = 0$, i.e.\
+      $\sum_i e_i = 1$.
+    \item \emph{Uniqueness of the lift.} Suppose
+      $\{e'_i\}_{i \in I}$ is a second complete orthogonal lift.
+      Each $e'_i$ is an idempotent of $S$ reducing to $\bar e_i$;
+      the single-idempotent uniqueness clause of
+      \Cref{lem:henselianPair-idempotent-lift-x2-minus-x} gives
+      $e'_i = e_i$.
+  \end{itemize}
 \end{proof}
 
 \begin{lemma}\leanok
