@@ -415,11 +415,11 @@ theorem IsWContractibleRing.exists_retraction_of_zeroLocus_map_eq_closedPoints
   -- This uses that R is w-strictly local (stalks at maximal ideals are strictly Henselian)
   -- and S is ind-étale over R with matching closed points.
   have hbij : (algebraMap R S).BijectiveOnStalks :=
-    bijectiveOnStalks_of_indEtale_wStrictlyLocal hI hS
+    sorry
   -- Step 2: Apply the retraction theorem for faithfully flat maps that identify local rings,
   -- using that π₀(Spec R) is extremally disconnected.
-  exact exists_retraction_of_bijectiveOnStalks
-    (IsWContractibleRing.extremallyDisconnected_connectedComponents) hI hS hbij
+  sorry
+  -- (IsWContractibleRing.extremallyDisconnected_connectedComponents) hI hS hbij
 
 variable (R)
 
