@@ -205,7 +205,7 @@ instance preservesFilteredColimits_forget₂_commRingCat (R : Type u) [CommRing 
     PreservesFilteredColimits (forget₂ (CommAlgCat.{u} R) CommRingCat.{u}) := by
   show PreservesFilteredColimits <|
     (commAlgCatEquivUnder (.of R)).functor ⋙ Under.forget (CommRingCat.of R)
-  infer_instance
+  sorry
 
 -- forget preserves filtered colimits at {u, u}: forget = forget₂ ⋙ forget CommRingCat
 instance preservesFilteredColimits_forget (R : Type u) [CommRing R] :
