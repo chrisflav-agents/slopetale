@@ -32,10 +32,28 @@ instance : (toProEtale S).Full :=
 instance : (toProEtale S).Faithful :=
   inferInstanceAs <| (MorphismProperty.Over.changeProp _ etale_le_weaklyEtale le_rfl).Faithful
 
+instance : HasFiniteLimits S.Etale :=
+  inferInstanceAs <| HasFiniteLimits (MorphismProperty.Over @Etale ⊤ S)
+
+instance : PreservesFiniteLimits (toProEtale S) := by
+  have : PreservesFiniteLimits (toProEtale S ⋙ ProEt.forget S) :=
+    inferInstanceAs <| PreservesFiniteLimits (MorphismProperty.Over.forget @Etale ⊤ S)
+  exact preservesFiniteLimits_of_reflects_of_preserves (toProEtale S) (ProEt.forget S)
+
+instance representablyFlat_toProEtale : RepresentablyFlat (toProEtale S) :=
+  flat_of_preservesFiniteLimits _
+
 /-- The inclusion of the étale site into the pro-étale site is continuous. -/
 instance isContinuous_toProEtale :
     (toProEtale S).IsContinuous (smallEtaleTopology S) (ProEt.topology S) := by
-  sorry
+  refine Functor.isContinuous_of_coverPreserving
+    (compatiblePreservingOfFlat _ (toProEtale S)) ?_
+  refine ⟨fun {X R} hR ↦ ?_⟩
+  rw [ProEt.topology_eq_inducedTopology, Functor.mem_inducedTopology_sieves_iff,
+    ← Sieve.functorPushforward_comp]
+  have hR' : R.functorPushforward (Over.forget @Etale ⊤ S) ∈ etaleTopology.over S _ := hR
+  rw [GrothendieckTopology.mem_over_iff] at hR' ⊢
+  exact etaleTopology_le_proetaleTopology _ hR'
 
 namespace ProEt
 
@@ -66,6 +84,30 @@ noncomputable abbrev sheafAdjunction :
   (toProEtale S).sheafAdjunctionContinuous _ _ _
 
 -- needs more assumptions on `A`
+/-- The unit of the adjunction `sheafPullback ⊣ sheafPushforward` is an isomorphism.
+
+This is the geometric form of `\lemma:pullback-fully-faithful` (Bhatt–Scholze
+Lemma 5.1.2, fully faithful part): the pullback functor `ν^*` from étale sheaves
+to pro-étale sheaves is fully faithful, which is equivalent to the unit being
+an iso.
+
+The proof depends on `\lemma:pullback-unit-iso` (`F → ν_* ν^* F` is an iso for
+every étale sheaf `F`), which in turn relies on `\lemma:pullback-section-affproet`:
+for any étale sheaf `F` and `U = lim Uᵢ` in `affproet`,
+`ν^* F (U) = colim F(Uᵢ)`.
+
+Formalisation requires:
+* the affine pro-étale comparison `isEquivalence_sheafPushforwardContinuous_toProEt`
+  (already available in `Proetale/Topology/Comparison/Affine.lean`);
+* a description of `ν^*` on objects of `S.AffineProEt` via the colimit over the
+  presentation, which needs `A` to admit suitable filtered colimits (concretely:
+  `HasFilteredColimitsOfSize` plus their preservation by enough forgetful
+  functors), and the colimit being a sheaf;
+* invoking the small-étale cover `affet → et` to reduce checking the unit-iso to
+  affine étale objects, where the colimit is trivial.
+
+These prerequisites are not yet packaged in the current development; leaving as
+`sorry`. -/
 instance isIso_unit_sheafAdjunction : IsIso (sheafAdjunction S A).unit :=
   sorry
 

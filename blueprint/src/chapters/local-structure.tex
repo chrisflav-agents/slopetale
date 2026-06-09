@@ -1,4 +1,5 @@
 \chapter{Local structures}
+% archon:covers Proetale/Algebra/WContractible.lean Proetale/Algebra/IdentifiesLocalRings.lean
 
 This chapter serves for the first half of the commutative algebra preparation of the remaining part of the paper. The key result is
 \begin{enumerate}
@@ -80,9 +81,9 @@ In general, $\pi_0(X) \times \pi_0(Y)$ is continuous and bijective, but not nece
 
 \begin{lemma}
   \label{thm:pi0-prod}
-  \lean{connectedComponent.prod,ConnectedComponents.isHomeomorph_connectedComponentsLift_prod,
+  \lean{connectedComponent.prod,ConnectedComponents.bijective_connectedComponentsLift_prod,
+    ConnectedComponents.isHomeomorph_connectedComponentsLift_prod,
     ConnectedComponents.prodMap}
-  \leanok
   Let \(X, Y\) be topological spaces. Then we have 
   \(\pi_0 (X \times Y) \simeq \pi_0(X) \times \pi_0(Y)\) as topological spaces.
 \end{lemma}
@@ -121,6 +122,7 @@ In general, $\pi_0(X) \times \pi_0(Y)$ is continuous and bijective, but not nece
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -133,6 +135,7 @@ In general, $\pi_0(X) \times \pi_0(Y)$ is continuous and bijective, but not nece
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -192,7 +195,6 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \end{lemma}
 
 \begin{proof}
-  \leanok
   Omitted.
 \end{proof}
 
@@ -231,12 +233,10 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0906}{Tag 0906}]{stacks-project}}]
   \label{thm:pi0-profinite}
   \lean{compactSpace_connectedComponent,t2Space_connectedComponent}
-  \leanok
   Let $X$ be a spectral space. Then $\pi_0(X)$ is a profinite space.
 \end{lemma}
 
 \begin{proof}
-  \leanok
   \uses{thm:connected-component-intersection-closed-open}
   We will show that \(\pi_0(X)\) is Hausdorff, quasi-compact, and totally disconnected.
   By \Cref{thm:connected-component-intersection-closed-open}, every connected component of \(X\) is the intersection of the open and closed subsets containing it. Since \(\pi_0(X)\) is the image of a quasi-compact space, it is also quasi-compact. It is totally disconnected by construction. Let \(C,D \subset X\) be distinct connected components of \(X\). Write \(C = \bigcap_{\alpha} U_\alpha\) as the intersection of the open and closed subsets of \(X\) containing \(C\). Any finite intersection of \(U_\alpha\)'s is another \(U_\alpha\). Since \(\bigcap_\alpha U_\alpha \cap D = \emptyset\) we conclude that \(U_\alpha \cap D = \emptyset\) for some \(\alpha\) (connected components are closed, thus quasi-compact). Since \(U_\alpha\) is open and closed, it is the union of the connected components it contains, i.e., \(U_\alpha\) is the inverse image of some open and closed subset \(V_\alpha \subset \pi_0(X)\). This proves that the points corresponding to \(C\) and \(D\) are contained in disjoint open subsets, i.e., \(\pi_0(X)\) is Hausdorff.
@@ -246,12 +246,10 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
   \label{thm:closed-subspace-spectral}
   \lean{Topology.IsClosedEmbedding.isOpen_and_isCompact_and_preimage_eq,
     Topology.IsClosedEmbedding.spectralSpace,SpectralSpace.of_isClosed}
-  \leanok
   Let $X$ be a spectral space. Let $Y \subset X$ be a closed subspace. Then $Y$ is spectral.
 \end{lemma}
 
 \begin{proof}
-  \leanok
   The only remaining part in Lean is quasi-separatedness.
   Suppose that \(V\) is open compact in \(Y\), we show that there exists open compact \(U\) in 
   \(X\) such that \(V = U \cap Y\). We can find \(U'\) in \(X\) such that \(V = U' \cap Y\). Write
@@ -282,7 +280,6 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0907}{Tag 0907}]{stacks-project}}]
   \label{thm:spectral-product}
   \lean{QuasiSeparatedSpace.prod,QuasiSober.prod,PrespectralSpace.prod,SpectralSpace.prod}
-  \leanok
   Let $X$ and $Y$ be spectral spaces. Then the product $X \times Y$ is spectral.
 \end{lemma}
 
@@ -308,7 +305,6 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}[{\stacksproject{08ZH}}]
   \label{thm:pullback-closed-embedding-prod}
   \lean{TopCat.isClosedEmbedding_pullback_to_prod}
-  \leanok
   Let \(X\), \(Y\), and \(S\) be topological spaces. Assume that \(S\) is Hausdorff. 
   Let \(f : X \to S\) and \(g : Y \to S\) be continuous maps. The natural map 
   \(X \times_S Y \to X \to Y\) is a closed embedding.
@@ -324,12 +320,10 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}
   \label{thm:homeo-preserves-spectral}
   \lean{Homeomorph.spectralSpace,Homeomorph.t0Space,Homeomorph.t2Space,Homeomorph.quasiSober,Homeomorph.quasiSeparatedSpace,Homeomorph.compactSpace,Homeomorph.prespectralSpace}
-  \leanok
   Let \(X\) and \(Y\) be topological spaces. If \(X\) is spectral (resp. T0, Hausdorff, Sober, quasi-separated, quasi-compact, prespectral) and there is a homeomorphism \(X \cong Y\), then \(Y\) is spectral (resp. T0, Hausdorff, Sober, quasi-separated, quasi-compact, prespectral).
 \end{lemma}
 
 \begin{proof}
-  \leanok
   Omitted.
 \end{proof}
 
@@ -339,12 +333,10 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
     QuasiSober.pullback,CompactSpace.pullback,CategoryTheory.IsPullback.t0Space,
     CategoryTheory.IsPullback.quasiSober,CategoryTheory.IsPullback.compactSpace,
     CategoryTheory.IsPullback.prespectralSpace,CategoryTheory.IsPullback.spectralSpace}
-  \leanok
   Let \(X\) and \(Y\) be spectral spaces. Let \(S\) be a Hausdorff topological space. Let \(f : X \to S\) and \(g : Y \to S\) be continuous maps. Then the fiber product \(X \times_S Y\) is spectral.
 \end{lemma}
 
 \begin{proof}
-  \leanok
   \uses{thm:spectral-product,thm:closed-subspace-spectral,thm:pullback-closed-embedding-prod,
     thm:homeo-preserves-spectral}
   Note that \(X \times_S Y\) is a closed subspace of $X \times Y$ by 
@@ -358,7 +350,6 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \begin{lemma}
   \label{thm:profinite-spectral}
   \lean{Prespectral.of_profinite,Spectral.of_profinite}
-  \leanok
   Let $X$ be a profinite space. Then $X$ is spectral.
 \end{lemma}
 
@@ -370,7 +361,6 @@ The following pure topological lemmas will be used in \Cref{thm:colim-open-close
 \label{thm:cartesian-profinite}
 \uses{def:pi0-to-totally-disconnected}
 \lean{ConnectedComponents.spectralSpace_of_isPullback,ConnectedComponents.lift_bijective_of_isPullback,ConnectedComponents.isHomeomorph_lift_of_isPullback}
-\leanok
 Let $X$ be a spectral space. Let
 \[
 \begin{tikzcd}
@@ -392,7 +382,7 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
 
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/00EA}{Tag 00EA}, (1) + (2)(a)]{stacks-project}}]
   \label{thm:localization-isom-of-going-down}
-  \lean{Algebra.HasGoingDown.factor_bijective_of_subsingleton}
+  \lean{Algebra.HasGoingDown.isLocalization_atPrime_of_subsingleton}
   \leanok
   Let $A \to B$ be a ring map which has going down. Let $\p \subset A$ be a prime ideal and let 
   $\q \subset B$ be a prime ideal lying over $\p$. Assume that and there is at most one prime
@@ -400,13 +390,13 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
 \end{lemma}
 
 \begin{proof}
+  \leanok
   It suffices to show that all the elements of $B - \q$ are all invertible in $B_{\p B}$. Suppose the contrary, let $x \in B - \q$ be an element not invertible in $B_{\p B}$. We can find a prime ideal $\q' \subseteq \p B$ of $B$ containing $x$. By going down there exists a prime $\q'' \subseteq \q$ lying over $\p' = A \cap \q'$. By the uniqueness of primes lying over $\p'$ we see that $\q' = \q''$, which contradicts the fact that $x \notin \q$.
 \end{proof}
 
 \begin{definition}[Local isomorphisms, {\cite[\href{https://stacks.math.columbia.edu/tag/096E}{Tag 096E} (1)]{stacks-project}}]
   \label{def:local-isomorphism}
   \lean{Algebra.IsLocalIso, RingHom.IsLocalIso}
-  \leanok
   We say $A \to B$ is a \emph{local isomorphism} if for every prime $\mathfrak{q} \subset B$ there exists a $g \in B$, $g \notin \mathfrak{q}$ such that $A \to B_g$ induces an open immersion $\Spec (B_g) \to \Spec (A)$.
 \end{definition}
 
@@ -427,6 +417,8 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
 \end{lemma}
 
 \begin{proof}
+
+\leanok
   Omitted.
 \end{proof}
 
@@ -439,6 +431,7 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Omitted.
 \end{proof}
 
@@ -464,30 +457,591 @@ The following pure algebraic lemma will be used in \Cref{thm:isom-of-identifies-
   by sending $B$ to $\Spec(B)$.
 \end{definition}
 
-\begin{lemma}{\cite[\href{https://stacks.math.columbia.edu/tag/096L}{Tag 096L}]{stacks-project}}
+\begin{definition}\leanok
+[Lean carrier for ``Hom over $\Spec A$'' --- Archon-original]
+  \label{def:identifies-local-ring-homover}
+  \uses{def:identify-local-rings}
+  \lean{Algebra.BijectiveOnStalks.HomOver}
+  Let $A$ be a ring, $X = \Spec(A)$, and let $B, C$ be $A$-algebras with
+  structure maps $\alpha_B : A \to B$ and $\alpha_C : A \to C$. Define
+  $\mathrm{HomOver}(A, B, C)$ to be the set of pairs $(\varphi, h)$
+  where $\varphi : \Spec(C) \to \Spec(B)$ is a continuous map and $h$
+  is a witness of the compatibility condition
+  $\Spec(\alpha_B) \circ \varphi = \Spec(\alpha_C)$, i.e. for every
+  $\mathfrak p \in \Spec(C)$ one has
+  $\alpha_B^{-1}(\varphi(\mathfrak p)) = \alpha_C^{-1}(\mathfrak p)$
+  as elements of $\Spec(A)$.
+
+  This concretely materialises $\Hom_{\mathrm{Top}_X}(\Spec C, \Spec B)$ as a
+  set --- the Lean carrier \texttt{Algebra.BijectiveOnStalks.HomOver}
+  is the iter-132 design choice (a concrete \texttt{structure} rather
+  than a \texttt{CategoryTheory.Over} object) made to facilitate
+  \texttt{FunLike} / \texttt{@[ext]} API.
+\end{definition}
+
+\begin{lemma}\leanok
+{\cite[\href{https://stacks.math.columbia.edu/tag/096L}{Tag 096L}]{stacks-project}}
   \label{thm:identifies-local-ring-to-top-fully-faithful}
+  \lean{Algebra.BijectiveOnStalks.algHomEquivContinuousMap}
   \uses{def:identifies-local-ring-to-top}
   Let $A$ be a ring. Set $X = \Spec (A)$. The functor \(F\) constructed in \Cref{def:identifies-local-ring-to-top}
   \[
   B \longmapsto \Spec (B)
   \]
   from the category of $A$-algebras $B$ such that $A \to B$ identifies local rings to the category of topological spaces over $X$ is fully faithful.
+
+  \emph{Lean delivery (iter-132).} The Lean carrier lives in
+  \texttt{Proetale/Algebra/IdentifiesLocalRings.lean} as a hom-set
+  bijection (rather than a full categorical functor) — when $A \to B$
+  and $A \to C$ both identify local rings (Lean class
+  \texttt{Algebra.BijectiveOnStalks}, already present in
+  \texttt{Proetale/Algebra/StalkIso.lean}), the map
+  $\Hom_{A\text{-alg}}(B, C) \to \mathrm{Hom}_{\mathrm{Top}_X}(\Spec C, \Spec B)$
+  is an equivalence of sets. The iter-132 file-skeleton lane scaffolds
+  the statement; the closing proof in subsequent iters formalises the
+  ringed-space identification $\mathcal O_Y = p^{-1} \mathcal O_X$ for
+  $A \to B$ identifying local rings, then invokes the canonical
+  isomorphism $f^{-1}\mathcal O_Y \cong q^{-1}\mathcal O_X \cong
+  \mathcal O_Z$ on the codomain.
+\end{lemma}
+
+% SOURCE QUOTE PROOF: "This follows from Lemma
+% \ref{lemma-fully-faithful-spaces-over-X} and the fact that if $A \to B$
+% identifies local rings, then the pullback of the structure sheaf of
+% $\Spec(A)$ via $p : \Spec(B) \to \Spec(A)$ is equal to the structure
+% sheaf of $\Spec(B)$." (Stacks Project Tag 096L, proof, read from
+% references/stacks-096J.tex L140-145).
+\begin{proof}
+\leanok
+\uses{def:identify-local-rings,def:identifies-local-ring-homover,def:identifies-local-ring-to-top,
+      lem:identifies-local-ring-spec-injective,lem:identifies-local-ring-spec-existence}
+\textit{Source: Stacks Project, Tag 096L, proof.}
+The functor \(F\) factors as the composition
+\[
+  \operatorname{ILR}_A \;\longrightarrow\;
+    \operatorname{LRS}_{/X} \;\longrightarrow\;
+    \operatorname{Top}_{/X},
+\]
+where the first arrow sends \(B\) to \((\Spec B, \mathcal O_{\Spec B}) \to (\Spec A, \mathcal O_{\Spec A})\) and the second forgets the sheaf-level data. The hypothesis that \(A \to B\) identifies local rings is equivalent to the assertion that the pullback of the structure sheaf is the structure sheaf, i.e.\ \(p^{-1}\mathcal O_X = \mathcal O_Y\) for \(p : Y = \Spec B \to X = \Spec A\); under this hypothesis \Cref{lem:identifies-local-ring-spec-spaces-over-X} shows that the second arrow is bijective on hom-sets. The first arrow is bijective on hom-sets by the affine-scheme \(\Spec/\Gamma\) adjunction.
+
+\medskip
+
+\noindent\emph{Lean-side decomposition.} On the formal side the target
+is the equivalence
+\[
+  \mathrm{algHomEquivContinuousMap} \colon
+    \Hom_{A\text{-alg}}(B, C) \;\simeq\; \mathrm{HomOver}(A, B, C),
+\]
+where the right-hand carrier was introduced in
+\Cref{def:identifies-local-ring-homover}. Following the iter-133/134
+proof split, we package this as the pair
+\((\Phi, \Psi)\) of forward and inverse maps and read off the bijection
+from the two halves separately: injectivity of \(\Phi\) is handled in
+\Cref{lem:identifies-local-ring-spec-injective}, and existence of a
+preimage under \(\Phi\) (i.e.\ surjectivity) is handled in
+\Cref{lem:identifies-local-ring-spec-existence}. The bundled equivalence
+\(\mathrm{algHomEquivContinuousMap}\) is then assembled by
+\texttt{Equiv.ofBijective} from the bijection
+\(\Hom_{A\text{-alg}}(B, C) \to \mathrm{HomOver}(A, B, C)\) of
+\Cref{lem:identifies-local-ring-spec-injective} +
+\Cref{lem:identifies-local-ring-spec-existence}.
+\end{proof}
+
+% ------------------------------------------------------------------
+% iter-135 split: the iter-133/134 prover decomposed
+% thm:identifies-local-ring-to-top-fully-faithful into the LRS->Top
+% bijection (Stacks 096K, recorded below as a chapter sub-lemma) plus
+% injectivity and existence halves at the AlgHom <-> HomOver level. The
+% three sub-lemmas below correspond to the Lean declarations
+%   Algebra.BijectiveOnStalks.continuousMap_of_algHom_injective
+%   Algebra.BijectiveOnStalks.exists_algHom_of_continuousMap
+% (the closed/open halves named in
+% .archon/task_results/Algebra_IdentifiesLocalRings.lean.md) plus an
+% explicit chapter record of Stacks 096K used in the parent's proof above.
+% ------------------------------------------------------------------
+
+% SOURCE: Stacks Project, Tag 096K, Lemma 61.3.7
+% (read from references/stacks-096J.tex L108-127).
+% SOURCE QUOTE: "Let $p : (Y, \mathcal{O}_Y) \to (X, \mathcal{O}_X)$ and
+% $q : (Z, \mathcal{O}_Z) \to (X, \mathcal{O}_X)$ be morphisms of locally
+% ringed spaces. If $\mathcal{O}_Y = p^{-1}\mathcal{O}_X$, then
+% $$\Mor_{\text{LRS}/(X, \mathcal{O}_X)}((Z, \mathcal{O}_Z), (Y, \mathcal{O}_Y))
+% \longrightarrow \Mor_{\textit{Top}/X}(Z, Y),\quad (f, f^\sharp) \longmapsto f$$
+% is bijective. Here $\text{LRS}/(X, \mathcal{O}_X)$ is the category of
+% locally ringed spaces over $X$ and $\textit{Top}/X$ is the category of
+% topological spaces over $X$."
+\begin{lemma}[Stacks 096K: LRS-over-$X$ forget-to-Top is bijective when $\mathcal O_Y = p^{-1}\mathcal O_X$]
+  \label{lem:identifies-local-ring-spec-spaces-over-X}
+  Let \((X, \mathcal O_X)\) be a locally ringed space and let
+  \(p \colon (Y, \mathcal O_Y) \to (X, \mathcal O_X)\) and
+  \(q \colon (Z, \mathcal O_Z) \to (X, \mathcal O_X)\) be morphisms of
+  locally ringed spaces. If \(\mathcal O_Y = p^{-1}\mathcal O_X\), then
+  the forgetful map
+  \[
+    \Mor_{\mathrm{LRS}/(X, \mathcal O_X)}\!\left((Z, \mathcal O_Z), (Y, \mathcal O_Y)\right)
+      \;\longrightarrow\;
+      \Mor_{\mathrm{Top}/X}(Z, Y), \quad (f, f^\sharp) \longmapsto f
+  \]
+  is a bijection.
+  \textit{Source: Stacks Project, Tag 096K.}
+\end{lemma}
+
+% SOURCE QUOTE PROOF: "This is immediate from the definitions." (Stacks
+% Project Tag 096K, proof, read from references/stacks-096J.tex L125-127).
+\begin{proof}
+  \textit{Source: Stacks Project, Tag 096K, proof.}
+  Given a continuous \(f \colon Z \to Y\) with \(p \circ f = q\),
+  inverse-image functoriality and the hypothesis \(\mathcal O_Y =
+  p^{-1}\mathcal O_X\) give a canonical chain
+  \[
+    f^{-1}\mathcal O_Y \;=\; f^{-1} p^{-1} \mathcal O_X
+      \;=\; (p \circ f)^{-1} \mathcal O_X
+      \;=\; q^{-1} \mathcal O_X \;=\; \mathcal O_Z;
+  \]
+  one checks the composed map is an LRS-morphism (the stalk components
+  are isomorphisms because \(\mathcal O_Y = p^{-1}\mathcal O_X\)
+  identifies each stalk \((\mathcal O_Y)_{f(z)}\) with \((\mathcal O_X)_{p(f(z))} = (\mathcal O_X)_{q(z)} = (\mathcal O_Z)_z\)).
+  Conversely, an LRS-morphism over \((X, \mathcal O_X)\) determines
+  its underlying continuous map and is determined by it because the
+  sheaf component is forced by the same inverse-image chain.
+\end{proof}
+
+\begin{lemma}\leanok
+[Injectivity of $\Spec$ on $\Hom_{A\text{-alg}}$ in the \texttt{BijectiveOnStalks} setting --- Archon split]
+  \label{lem:identifies-local-ring-spec-injective}
+  \lean{Algebra.BijectiveOnStalks.continuousMap_of_algHom_injective}
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover}
+  Let \(A\) be a ring and let \(A \to B\), \(A \to C\) be two
+  \(A\)-algebra structures both identifying local rings. The forward
+  map
+  \[
+    \Phi \colon \Hom_{A\text{-alg}}(B, C) \;\longrightarrow\;
+      \mathrm{HomOver}(A, B, C),
+      \qquad f \longmapsto (\Spec(f), \text{compatibility witness}),
+  \]
+  introduced in \Cref{def:identifies-local-ring-hom-set-bijection}, is
+  injective.
 \end{lemma}
 
 \begin{proof}
-The functor \(F\) is a composition of two functors:
-1. The fully faithful functor from the category of \(A\)-algebras \(B\) for which \(A \to B\) identifies local rings to the category of ringed spaces \((Y, \O_Y)\) over \(X = \Spec(A)\) satisfying \(\O_Y = p^{-1}\O_X\), where \(p: Y \to X\) is the structure map.
-2. The functor sending a ringed space to its underlying topological space, and a morphism \((f, f^\#)\) to \(f\).
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover}
+  \leanok
+  Suppose \(f_1, f_2 : B \to C\) are two \(A\)-algebra homomorphisms with
+  \(\Spec(f_1) = \Spec(f_2)\). For each prime \(\mathfrak p \subset C\),
+  write \(\mathfrak q_i = f_i^{-1}(\mathfrak p)\); the equality of
+  Spec-maps gives \(\mathfrak q_1 = \mathfrak q_2\), call this common
+  prime \(\mathfrak q\). Localising at \(\mathfrak p\) yields two
+  ring maps
+  \(M_i \colon B_\mathfrak q \to C_\mathfrak p\)
+  induced by \(f_i\), and these agree after pre-composition with the
+  canonical \(A_{\mathfrak q \cap A} \to B_\mathfrak q\): both equal the
+  local ring map \(A_{\mathfrak q \cap A} \to C_\mathfrak p\)
+  attached to \(A \to C\) at \(\mathfrak p\) (this uses that each
+  \(f_i\) is an \(A\)-algebra map, so it commutes with the structure
+  maps from \(A\)). Because \(A \to B\) identifies local rings, the
+  canonical map \(A_{\mathfrak q \cap A} \to B_\mathfrak q\) is
+  surjective (in fact an isomorphism), so \(M_1 = M_2\). Finally, the
+  product of localisation maps
+  \(C \to \prod_{\mathfrak p}\, C_\mathfrak p\) is injective, so
+  \(f_1 = f_2\).
 
-The second functor is fully faithful because \(f^\#\) is always an isomorphism, being given by the canonical identification \(f^{-1}\O_Y \cong f^{-1}p^{-1}\O_X = q^{-1}\O_X \cong \O_Z\), where \(p: Y \to X\) and \(q: Z \to X\) are the structure maps.
+  \smallskip
+
+  \noindent\emph{Lean delivery.} The injectivity half lives in
+  \texttt{Proetale/Algebra/IdentifiesLocalRings.lean} as
+  \texttt{continuousMap\_of\_algHom\_injective}. The chain of
+  reductions above uses, in order, \texttt{AlgHom.coe\_ringHom\_injective}
+  / \texttt{RingHom.ext} to reduce to pointwise equality, then
+  \texttt{PrimeSpectrum.toPiLocalization\_injective C} for the final
+  localisation-injectivity step, and \texttt{Localization.localRingHom}
+  for the per-prime maps \(M_i\). The proof was closed sorry-free in
+  iter-134.
+
+  \smallskip
+
+  \noindent\emph{Source.} Per Stacks 096L the parent functor
+  \(\operatorname{ILR}_A \to \operatorname{Top}_X\) is fully faithful;
+  this lemma is its injectivity (faithfulness) half rendered as a
+  hom-set statement at the level of \(A\)-algebra maps.
 \end{proof}
+
+\begin{lemma}\leanok
+[Existence of an $A$-algebra map from a $\mathrm{HomOver}$ datum in the \texttt{BijectiveOnStalks} setting --- Archon split]
+  \label{lem:identifies-local-ring-spec-existence}
+  \lean{Algebra.BijectiveOnStalks.exists_algHom_of_continuousMap}
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover,
+        lem:identifies-local-ring-spec-spaces-over-X}
+  Let \(A\) be a ring and let \(A \to B\), \(A \to C\) be two
+  \(A\)-algebra structures both identifying local rings. For every
+  \((\varphi, h) \in \mathrm{HomOver}(A, B, C)\) there exists an
+  \(A\)-algebra homomorphism \(f \colon B \to C\) with
+  \(\Spec(f) = \varphi\) (equivalently:
+  \(\Phi(f) = (\varphi, h)\)). This is the substantive content of
+  Stacks 096L --- the surjectivity half of the bijection
+  \(\Phi\).
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover,
+        lem:identifies-local-ring-spec-spaces-over-X,
+        lem:identifies-local-ring-invImage-structureSheaf-iso}
+  \textit{Source: Stacks Project, Tag 096L (the surjectivity half of
+  the cited bijection); the structure-sheaf identification used here
+  appears in Tag 096L's proof and uses Tag 096K as its main reduction
+  step.}
+
+  Write \(X = \Spec A\), \(Y = \Spec B\), \(Z = \Spec C\), with
+  structure maps \(p \colon Y \to X\) and \(q \colon Z \to X\). The
+  hypothesis that \(A \to B\) (resp.\ \(A \to C\)) identifies local
+  rings is equivalent --- as recorded inside the proof of Stacks 096L
+  --- to the structure-sheaf identification
+  \(\mathcal O_Y = p^{-1}\mathcal O_X\) (resp.\
+  \(\mathcal O_Z = q^{-1}\mathcal O_X\)). The compatibility witness
+  \(h\) of \((\varphi, h)\) says exactly \(p \circ \varphi = q\) on the
+  topological level.
+
+  Apply \Cref{lem:identifies-local-ring-spec-spaces-over-X} to the
+  pair \((p \colon Y \to X, q \colon Z \to X)\). Under
+  \(\mathcal O_Y = p^{-1}\mathcal O_X\), the LRS-over-\(X\) forgetful
+  map is bijective, so the continuous map \(\varphi \colon Z \to Y\)
+  promotes uniquely to a morphism of locally ringed spaces
+  \(\tilde\varphi \colon (Z, \mathcal O_Z) \to (Y, \mathcal O_Y)\) over
+  \((X, \mathcal O_X)\). Taking global sections of the induced sheaf
+  map \(\tilde\varphi^\sharp \colon \mathcal O_Y \to \varphi_* \mathcal O_Z\)
+  yields a ring map
+  \[
+    \mathcal O_Y(Y) \;\longrightarrow\; \mathcal O_Z(Z),
+      \qquad \text{i.e.}\qquad B \to C.
+  \]
+  Call this \(f \colon B \to C\). Tracing the global sections of the
+  diagram \(\mathcal O_X(X) \to \mathcal O_Y(Y) \to \mathcal O_Z(Z)\)
+  shows \(f \circ \alpha_B = \alpha_C\), so \(f\) is an \(A\)-algebra
+  homomorphism. The Spec-map of \(f\) agrees with \(\varphi\) on
+  points because the LRS-promotion \(\tilde\varphi\) of \Cref{lem:identifies-local-ring-spec-spaces-over-X} pinpoints the unique LRS-morphism over \(X\) with underlying map \(\varphi\), and \(\Spec(f)\) is another such morphism (with underlying map \(\Spec(f)\) and sheaf part the canonical comap of \(f\)); both must coincide. Hence \(\Spec(f) = \varphi\), as required.
+
+  \smallskip
+
+  \noindent\emph{Warning: the naive per-prime route does not close
+  existence.}
+  % iter-134 LM-vs-BP-checker `identifies-iter134` noted this trap;
+  % the iter-134 mathlib-analogist `lane-d-lrs-bridge` recipe walked
+  % into it.
+  A tempting strategy --- and the one followed by the iter-134
+  prover round --- is to mimic the injectivity argument by building
+  \(f(b)\) per-prime: for each \(\mathfrak p \subset C\) compute the
+  candidate image of \(b \in B\) in \(C_\mathfrak p\) via the chain
+  \(B \to B_{\varphi(\mathfrak p)} \cong A_{\varphi(\mathfrak p) \cap A}
+  = A_{\mathfrak p \cap A} \cong C_\mathfrak p\), then assemble these
+  into an element of \(\prod_{\mathfrak p} C_\mathfrak p\), and finally
+  recover an element of \(C\) via the injection
+  \(C \hookrightarrow \prod_{\mathfrak p} C_\mathfrak p\). The first
+  three steps go through unchanged from the injectivity proof, but the
+  final step is \emph{not} a formality: the injection \(C \hookrightarrow \prod_{\mathfrak p} C_\mathfrak p\)
+  is generally not surjective, and showing that the candidate family
+  lies in its image is precisely the structure-sheaf identification
+  \(\mathcal O_Z = q^{-1}\mathcal O_X\) repackaged as a "local data
+  globalises" sheaf condition. Per the iter-134 prover's task report
+  (\texttt{.archon/task\_results/Algebra\_IdentifiesLocalRings.lean.md})
+  this is the trap: the algebraic-only per-prime route eliminates the
+  \texttt{LocallyRingedSpace.Hom} scaffolding but does not, on its
+  own, close the existence half. Some form of the structure-sheaf
+  identification --- either the LRS route above or one of the
+  Mathlib-side alternatives listed next --- must appear in the proof.
+
+  \smallskip
+
+  \noindent\emph{Committed Mathlib route: sheaf-theoretic short circuit (iter-136).}
+  The iter-135 \texttt{mathlib-analogist} subagent
+  (\texttt{lane-d-sub-existence}) returned an
+  \texttt{ALIGN\_WITH\_MATHLIB} verdict on the \emph{sheaf-theoretic
+  short circuit} route; the plan agent has committed to this route
+  for iter-136. The full recipe lives in
+  \texttt{analogies/identifies-local-rings-lrs-bridge.md} (iter-135
+  revision). The three Mathlib idioms that close the route are:
+  \begin{itemize}
+    \item \texttt{AlgebraicGeometry.Spec.locallyRingedSpaceMap} ---
+      promotes a ring map to a morphism of locally ringed spaces
+      \(\Spec(\text{target}) \to \Spec(\text{source})\), packaging the
+      structure-sheaf comap automatically. We use it implicitly via the
+      structure-sheaf identification supplied by the helper below: once
+      we know \(q^{-1}\mathcal O_Y \cong \mathcal O_Z\) on \(\Spec C\),
+      the underlying continuous map \(\varphi \colon Z \to Y\) promotes
+      uniquely to an LRS-morphism \(\tilde\varphi \colon (Z,\mathcal O_Z)
+      \to (Y,\mathcal O_Y)\) over \((X,\mathcal O_X)\) by
+      \Cref{lem:identifies-local-ring-spec-spaces-over-X}.
+    \item \texttt{AlgebraicGeometry.Spec.preimage} (or, if the
+      one-shot form is unavailable in the current Mathlib snapshot,
+      its source \texttt{AlgebraicGeometry.ΓSpec.adjunction.homEquiv})
+      --- extracts the underlying ring map \(B \to C\) from an
+      LRS-morphism \(\tilde\varphi\) via global sections / \(\Spec\)-\(\Gamma\)
+      adjunction.
+    \item the new project helper
+      \Cref{lem:identifies-local-ring-invImage-structureSheaf-iso}
+      (stated below) --- supplies the structure-sheaf identification
+      \(q^{-1}\mathcal O_Y \cong \mathcal O_Z\) on \(\Spec C\) that, in
+      combination with \Cref{lem:identifies-local-ring-spec-spaces-over-X},
+      upgrades the continuous \(\varphi\) to an LRS-morphism over
+      \(X\). The helper is proved stalk-locally using
+      \texttt{Algebra.BijectiveOnStalks.localRingHom\_comp\_stalkIso}
+      (already in \texttt{Proetale/Algebra/StalkIso.lean}) and
+      \texttt{Algebra.BijectiveOnStalks.bijective\_localRingHom}.
+  \end{itemize}
+  Concretely, the existence proof first applies
+  \Cref{lem:identifies-local-ring-invImage-structureSheaf-iso} (with
+  the data \(A \to C\)) to obtain the structure-sheaf identification
+  \(q^{-1}\mathcal O_X \cong \mathcal O_Z\) on \(\Spec C\). Together
+  with \Cref{lem:identifies-local-ring-spec-spaces-over-X} applied to
+  \((p \colon Y \to X, q \colon Z \to X)\) --- whose hypothesis
+  \(\mathcal O_Y = p^{-1}\mathcal O_X\) is supplied by the same helper
+  applied to \(A \to B\) --- this upgrades the underlying continuous
+  map \(\varphi \colon Z \to Y\) to an LRS-morphism \(\tilde\varphi\)
+  over \((X,\mathcal O_X)\). The ring map \(f \colon B \to C\) is then
+  extracted via \(\Spec/\Gamma\) (i.e.\ \texttt{Spec.preimage}). The
+  compatibility witness \(h\) of \((\varphi, h)\) supplies the
+  over-\(X\) structure.
+
+  \smallskip
+
+  \noindent\emph{Deferred routes (iter-136 will not pursue).}
+  The two algebraic-only alternatives explored in earlier iters are
+  recorded here for completeness but are deliberately \emph{not}
+  followed in iter-136:
+  \begin{itemize}
+    \item \emph{Flat-epimorphism / Olivier characterisation.} An
+      algebra map identifying local rings is the same as a flat
+      epimorphism (Olivier's theorem); the iter-135 analogist
+      estimated this requires a Mathlib gap fill of \(\geq 500\)
+      LOC before it could plug in here, so it is deferred.
+    \item \emph{Direct sheafification.} An inline sheafification
+      argument on basic opens \(D(c) \subset \Spec C\) closes the
+      statement but produces no reusable artefact for downstream
+      \texttt{BijectiveOnStalks} consumers; deferred for that
+      reason.
+  \end{itemize}
+
+  \smallskip
+
+  \noindent\emph{Common helpers (all routes).}
+  \begin{itemize}
+    \item \texttt{PrimeSpectrum.comap\_comp} --- the composition
+      functoriality of \(\Spec\) on ring maps. Used in the proof that
+      \(\Spec(f) = \varphi\).
+    \item \texttt{Localization.localRingHom} and
+      \texttt{Algebra.BijectiveOnStalks.localRingHom} (already in
+      \texttt{Proetale/Algebra/StalkIso.lean}) --- give the per-prime
+      ring isomorphisms \(A_{\mathfrak q \cap A} \cong B_\mathfrak q\)
+      and \(A_{\mathfrak p \cap A} \cong C_\mathfrak p\) used in
+      every route.
+    \item \texttt{PrimeSpectrum.toPiLocalization\_injective} --- the
+      injection \(C \hookrightarrow \prod_{\mathfrak p} C_\mathfrak p\).
+      Used in the injectivity sub-lemma; in the existence sub-lemma it
+      appears as the target object whose image-of-\(C\) characterisation
+      is the trap discussed above.
+  \end{itemize}
+\end{proof}
+
+% NOTE (review iter-142): Lane D-sub prover (iter-142, second consecutive
+% iter against this signature) reports the named helper
+% `Algebra.BijectiveOnStalks.isIso_specMap_c` is mathematically wrong as
+% stated. The c-component of `Spec.locallyRingedSpaceMap` lives on
+% `Spec A` (a sheaf morphism `O_{Spec A} -> q_* O_{Spec B}`) and is iso
+% iff the ring map is a surjection on both stalks AND global sections,
+% strictly stronger than `Algebra.BijectiveOnStalks A B` (counterexample:
+% `Z -> Q`; see `Proetale/Algebra/IdentifiesLocalRings.lean` L210-230
+% docstring). The corrected helper lives on `Spec B`:
+%   `Algebra.BijectiveOnStalks.isIso_invImage_structureSheaf` --- the
+%   inverse-image map `q.base^{-1} O_{Spec A} -> O_{Spec B}` is iso.
+% This is the Stacks 096J <=> 04D2 sheaf-iso at the inverse-image level.
+% Plan agent: please dispatch a blueprint-writer to (a) rename
+% `lem:identifies-local-ring-spec-iso-c` to
+% `lem:identifies-local-ring-invImage-structureSheaf-iso`, (b) restate
+% the lemma at the inverse-image level, (c) update the `\lean{...}` to
+% `Algebra.BijectiveOnStalks.isIso_invImage_structureSheaf`. See
+% `task_results/Algebra_IdentifiesLocalRings.lean.md` (iter-142) for the
+% full closure recipe + Option B (algebraic re-packaging via
+% `PrimeSpectrum.toPiLocalization`).
+\begin{lemma}\leanok
+[Inverse-image of $\mathcal O_{\Spec A}$ is $\mathcal O_{\Spec B}$ when $A \to B$ identifies local rings --- Archon helper]
+  \label{lem:identifies-local-ring-invImage-structureSheaf-iso}
+  \lean{Algebra.BijectiveOnStalks.isIso_invImage_structureSheaf}
+  \uses{def:identify-local-rings, lem:identifies-local-ring-spec-spaces-over-X}
+  Let $A \to B$ be a ring homomorphism such that $A \to B$ identifies
+  local rings (i.e.\ \texttt{Algebra.BijectiveOnStalks A B}), and let
+  $q : \Spec B \to \Spec A$ denote the induced morphism of locally
+  ringed spaces. Then the canonical inverse-image map on structure
+  sheaves
+  \[
+    q^{-1}\mathcal O_{\Spec A} \;\longrightarrow\; \mathcal O_{\Spec B}
+  \]
+  (the morphism of sheaves of rings on $\Spec B$ given by the
+  $q^{-1} \dashv q_*$ adjunction counit applied to the structure-sheaf
+  comap) is an isomorphism.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:identify-local-rings}
+  \leanok
+  The statement is local on $\Spec B$: a morphism of sheaves of rings
+  on $\Spec B$ is an isomorphism iff its stalk map at every prime is
+  an isomorphism. For each $\mathfrak p \subset B$, the stalk of
+  $q^{-1}\mathcal O_{\Spec A}$ at $\mathfrak p$ is canonically
+  identified with the stalk of $\mathcal O_{\Spec A}$ at
+  $q(\mathfrak p) = \mathfrak p \cap A$ (Mathlib:
+  \texttt{TopCat.Presheaf.stalkPullback}), and standard Mathlib
+  identifies these structure-sheaf stalks of $\Spec$ with localizations,
+  giving
+  \[
+    (q^{-1}\mathcal O_{\Spec A})_{\mathfrak p}
+    \;\cong\; (\mathcal O_{\Spec A})_{\mathfrak p \cap A}
+    \;\cong\; A_{\mathfrak p \cap A},
+    \qquad
+    (\mathcal O_{\Spec B})_{\mathfrak p}
+    \;\cong\; B_{\mathfrak p}.
+  \]
+  Under these identifications the induced stalk map agrees with the
+  local ring map
+  \texttt{Localization.localRingHom} attached to the data $A \to B$
+  (i.e.\ the underlying ring hom witnessed by
+  \texttt{RingHom.BijectiveOnStalks.localRingHom} from
+  \texttt{Proetale/Algebra/StalkIso.lean}). By
+  \texttt{Algebra.BijectiveOnStalks.bijective\_localRingHom} this map
+  is bijective, hence an iso of (local) rings.
+
+  \medskip
+  \noindent \emph{Sheaf-vs-presheaf stalk identification.} The identification
+  $(q^{-1}\mathcal O_{\Spec A})_{\mathfrak p} \cong (\mathcal O_{\Spec A})_{q(\mathfrak p)}$
+  above is at the \emph{presheaf} level: Mathlib's
+  \texttt{TopCat.Presheaf.stalkPullbackIso} identifies the stalk of the
+  \emph{presheaf} pullback with the source-stalk at the image point. The
+  inverse-image $q^{-1}\mathcal O_{\Spec A}$ that actually appears in the
+  lemma statement is the \emph{sheaf}-level pullback, defined via the
+  sheafification adjunction
+  $\texttt{TopCat.Sheaf.pullbackPushforwardAdjunction}$ as the sheafification
+  of the presheaf pullback:
+  \[
+    q^{-1}\mathcal O_{\Spec A}
+    \;=\; \texttt{sheafify}\bigl(
+      \texttt{Presheaf.pullback}_q\,\mathcal O_{\Spec A}^{\mathrm{pre}}
+    \bigr).
+  \]
+  The bridge from sheaf stalk to presheaf stalk is the
+  \emph{sheafification-preserves-stalks} principle: for any presheaf
+  $F$ of $\mathrm{CommRingCat}$-valued objects on a topological space
+  $X$ and any point $x \in X$, the sheafification unit
+  $\eta : F \to \texttt{sheafify}\,F$ induces an isomorphism on stalks
+  \[
+    \eta_x : F_x \;\xrightarrow{\sim}\; (\texttt{sheafify}\,F)_x.
+  \]
+  For $\mathrm{Type}$-valued presheaves this is Mathlib's
+  \texttt{TopCat.Presheaf.sheafifyStalkIso}
+  (\texttt{Mathlib/Topology/Sheaves/Sheafify.lean}). For $\mathrm{CommRingCat}$-valued
+  presheaves the analogous lemma is \emph{not present in Mathlib}; the file
+  \texttt{Sheafify.lean} explicitly carries an
+  \texttt{assert\_not\_exists CommRingCat} declaration. This is the
+  substantive Mathlib gap blocking the close of the helper.
+
+  The Lean delivery
+  combines this with the structure-sheaf-stalk identifications shipped
+  by Mathlib's
+  \texttt{AlgebraicGeometry.StructureSheaf.stalkIso} and concludes
+  via Mathlib's `iso of stalk-iso' principle.
+  % NOTE: iter-144 refactor verified that no declaration named
+  % `localRingHom_comp_stalkIso` exists in `Proetale/Algebra/StalkIso.lean`;
+  % Mathlib's `AlgebraicGeometry.localRingHom_comp_stalkIso` (in
+  % `Mathlib/AlgebraicGeometry/Spec.lean`) is the correct carrier and is
+  % used directly in the closure. The iter-146 prover round identified the
+  % sheafification-preserves-stalks gap for CommRingCat as the substantive
+  % remaining obstacle (see Lemma
+  % `lem:topcat-presheaf-sheafify-stalk-iso-concrete` below). The iter-147
+  % prover task is to formalize that helper lemma in a Mathlib-shaped
+  % supplementary file (or inline in StructureSheafPullback.lean) before
+  % closing the headline `isIso_invImage_structureSheaf`.
+\end{proof}
+
+\begin{lemma}[Sheafification preserves stalks for sheaves valued in a concrete category whose forgetful functor preserves filtered colimits --- Archon Mathlib gap]
+  \label{lem:topcat-presheaf-sheafify-stalk-iso-concrete}
+  \lean{TopCat.Presheaf.sheafifyStalkIso_concrete}
+  Let $\mathcal C$ be a category with all small colimits and limits,
+  equipped with a faithful forgetful functor
+  $\mathrm{forget}_{\mathcal C} : \mathcal C \to \mathrm{Type}$ that
+  preserves filtered colimits, preserves limits, and reflects
+  isomorphisms (these are the standard conditions on the forgetful
+  functor of a concrete category that occur for $\mathrm{AddCommGrp}$,
+  $\mathrm{Ring}$, $\mathrm{CommRingCat}$, $\mathrm{Module}_R$, etc.).
+  Let $X : \mathrm{TopCat}$ be a topological space and let
+  $F : \mathrm{TopCat.Presheaf}\,\mathcal C\,X$ be a presheaf of
+  $\mathcal C$-valued sections on $X$. Let $x \in X$ be a point. Then
+  the sheafification unit
+  $\eta : F \to \texttt{presheafToSheaf}\,F$ induces an isomorphism on
+  stalks: the map
+  \[
+    \eta_x \;:=\; (\texttt{stalkFunctor}\,\mathcal C\,x).\mathrm{map}(\eta.\mathrm{app}\,F)
+    \;:\; F_x \;\longrightarrow\; (\texttt{presheafToSheaf}\,F).\mathrm{val.stalk}\,x
+  \]
+  is an isomorphism in $\mathcal C$.
+  \uses{}
+\end{lemma}
+\begin{proof}
+  Mathlib's \texttt{TopCat.Presheaf.sheafifyStalkIso} establishes the
+  same fact for the case $\mathcal C = \mathrm{Type}$. The forgetful
+  functor $\mathrm{forget}_{\mathcal C} : \mathcal C \to \mathrm{Type}$
+  commutes with the stalk functor (the stalk is a filtered colimit and
+  $\mathrm{forget}_{\mathcal C}$ preserves filtered colimits). It also
+  commutes with the sheafification functor (sheafification can be
+  computed pointwise as a filtered colimit over covers, and
+  $\mathrm{forget}_{\mathcal C}$ preserves filtered colimits).
+  Therefore the map
+  $\mathrm{forget}_{\mathcal C}(\eta_x)$ identifies with the
+  $\mathrm{Type}$-level sheafification-stalk iso applied to
+  $\mathrm{forget}_{\mathcal C}\,F$, and is hence an iso in
+  $\mathrm{Type}$. Since $\mathrm{forget}_{\mathcal C}$ reflects
+  isomorphisms, $\eta_x$ is an iso in $\mathcal C$.
+\end{proof}
+
+\noindent The \texttt{CommRingCat}-valued instance of
+\cref{lem:topcat-presheaf-sheafify-stalk-iso-concrete} is the missing
+ingredient in the close of
+\cref{lem:identifies-local-ring-invImage-structureSheaf-iso}. Once it
+is in scope, the full stalk identification chain becomes
+\begin{align*}
+  \bigl((\texttt{Sheaf.pullback}\,q.\mathrm{base}).\mathrm{obj}\,\mathcal O_{\Spec A}\bigr).\mathrm{val.stalk}\,\mathfrak p
+  & \;\xrightarrow{\texttt{pullbackIso}}
+    \bigl(\texttt{sheafify}\,(\texttt{Presheaf.pullback}\,q.\mathrm{base}\,\mathcal O_{\Spec A}^{\mathrm{pre}})\bigr).\mathrm{val.stalk}\,\mathfrak p \\
+  & \;\xrightarrow{\texttt{sheafifyStalkIso\_concrete}}
+    (\texttt{Presheaf.pullback}\,q.\mathrm{base}\,\mathcal O_{\Spec A}^{\mathrm{pre}}).\mathrm{stalk}\,\mathfrak p \\
+  & \;\xrightarrow{\texttt{stalkPullbackIso}}
+    \mathcal O_{\Spec A}^{\mathrm{pre}}.\mathrm{stalk}\,(q.\mathrm{base}\,\mathfrak p) \\
+  & \;\xrightarrow{\texttt{StructureSheaf.stalkIso}}
+    A_{\mathfrak p \cap A} \\
+  & \;\xrightarrow{\texttt{localRingHom}}
+    B_{\mathfrak p}\quad \text{(bijection from Algebra.BijectiveOnStalks)} \\
+  & \;\xrightarrow{\texttt{StructureSheaf.stalkIso.symm}}
+    \mathcal O_{\Spec B}.\mathrm{stalk}\,\mathfrak p.
+\end{align*}
+Compatibility of the actual stalk map of
+$q^{-1}\mathcal O_{\Spec A} \to \mathcal O_{\Spec B}$ with this
+composite follows from
+\texttt{AlgebraicGeometry.localRingHom\_comp\_stalkIso} after unwinding
+the adjunction transpose $\texttt{homEquiv.symm}$ of the direct-image
+$c$-component $q.\mathrm{toHom.c}$.
+% ------------------------------------------------------------------
+% End iter-135 split sub-lemmas.
+% ------------------------------------------------------------------
 
 \begin{definition}
   \label{def:identifies-local-ring-hom-set-bijection}
-  \uses{def:identify-local-rings,thm:identifies-local-ring-to-top-fully-faithful}
-  Let \(A\) be a ring and \(X = \Spec(A)\). Let \(A \to B\) and \(A \to C\) be two \(A\)-algebras that identifies local rings. As a consequence of \Cref{thm:identifies-local-ring-to-top-fully-faithful}, we have a bijective map 
-  \[F : \Hom_{A\textnormal{-alg}}(B, C) \to \Hom_{\textnormal{-Top}_X}(\Spec(C), \Spec(B)).\]
-  sending \(f : B \to C\) to the continuous map \(\Spec(f) : \Spec(C) \to \Spec(B)\) induced by \(f\).
+  \lean{Algebra.BijectiveOnStalks.algHomEquivContinuousMap,
+        Algebra.BijectiveOnStalks.algHom_of_continuousMap,
+        Algebra.BijectiveOnStalks.continuousMap_of_algHom}
+  \uses{def:identify-local-rings,def:identifies-local-ring-homover,thm:identifies-local-ring-to-top-fully-faithful}
+  Let \(A\) be a ring and \(X = \Spec(A)\). Let \(A \to B\) and \(A \to C\) be two \(A\)-algebras that identifies local rings. As a consequence of \Cref{thm:identifies-local-ring-to-top-fully-faithful}, we have a bijective map
+  \[F : \Hom_{A\textnormal{-alg}}(B, C) \to \mathrm{HomOver}(A, B, C),\]
+  with \(\mathrm{HomOver}(A, B, C)\) as introduced in
+  \Cref{def:identifies-local-ring-homover}, sending
+  \(f : B \to C\) to the continuous map
+  \(\Spec(f) : \Spec(C) \to \Spec(B)\) induced by \(f\) (paired with
+  its automatic compatibility witness over \(\Spec(A)\)).
 \end{definition}
 
 \begin{lemma}
@@ -528,7 +1082,6 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   \label{thm:ind-Zariski-identifies-local-rings}
   \uses{def:ind-Zariski,def:identify-local-rings}
   \lean{Algebra.IndZariski.bijectiveOnStalks_algebraMap,RingHom.IndZariski.bijectiveOnStalks}
-  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -540,11 +1093,9 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   \label{thm:ind-Zariski-is-flat}
   \uses{def:ind-Zariski}
   \lean{Module.Flat.of_indZariski,RingHom.IndZariski.flat}
-  \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
     An ind-Zariski ring map is a filtered colimit of local isomorphisms. A local isomorphism is flat.
 \end{proof}
 
@@ -554,7 +1105,6 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   \uses{def:ind-Zariski}
   \lean{Algebra.IndZariski.of_colimitPresentation,RingHom.IndZariski.of_isColimit,
     Algebra.IndZariski.iff_ind_indZariksi,RingHom.IndZariski.iff_ind_indZariski}
-  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -569,11 +1119,9 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
         RingHom.IndZariski.prod,
         Algebra.IndZariski.pi,
         RingHom.IndZariski.pi}
-  \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
   This is the consequence of the more general fact that if a property $p$ of ring maps is stable
   under finite products, then Ind-$p$ is also stable under finite products since finite product
   of filtered index category is again filtered.
@@ -591,7 +1139,6 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
   Let \(A \to B\) and \(B \to C\) be ind-Zariski ring maps. Then the composition \(A \to C\) is also ind-Zariski.
   \uses{def:ind-Zariski}
   \lean{Algebra.IndZariski.trans,RingHom.IndZariski.comp}
-  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -606,6 +1153,7 @@ The second functor is fully faithful because \(f^\#\) is always an isomorphism, 
 \end{lemma}
 
 \begin{proof}
+    \leanok
     $S^{-1} A = \colim_{f \in S} A_f$ and $A \to A_f$ is a local isomorphism.
 \end{proof}
 
@@ -666,15 +1214,23 @@ The following example shows that our definition agrees with the one in
     \label{lem:sh-iff-henselian-and-sep-closed}
     A local ring $(R, \mathfrak{m}, \kappa)$ is strictly Henselian if and only if it is Henselian and $\kappa$ is separably closed.
     \uses{def:strictly-henselian-local-ring}
+    \lean{isStrictlyHenselianLocalRing_iff_henselianLocalRing_and_isSepClosed}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     TBA.
 \end{proof}
 
+\begin{lemma}
+    \label{lem:etale-locally-standard-etale-at-max}
+    \lean{Algebra.Etale.isStandardEtale_localizationAway_of_etale_at_maxIdeal}
+    Let \(A\) be a Henselian local ring and \(A \to B\) an étale ring map. Let \(\n \subset B\) be a maximal ideal lying over the maximal ideal \(\m\) of \(A\). Then there exists \(b \in B \setminus \n\) such that the localization \(B_b = B[1/b]\) is a standard étale \(A\)-algebra.
+\end{lemma}
+
 \begin{proposition}
     \label{thm:strictly-henselian-good-retraction}
-    \uses{def:strictly-henselian-local-ring}
+    \uses{def:strictly-henselian-local-ring, lem:etale-locally-standard-etale-at-max}
     Let \(A, \m\) be a strictly henselian local ring. Let \(f : A \to B\) a \'etale ring map with \(\n\) a maximal ideal of \(B\) lying over \(\m\). Then there exists a retraction \(s : B \to A\) of \(A \to B\) such that \(\n = s^{-1}(\m)\).
 \end{proposition}
 
@@ -718,15 +1274,13 @@ The following example shows that our definition agrees with the one in
     We say a ring homomorphism $R \to S$ is \emph{ind-étale} if $S$ is ind-étale as an $R$-algebra via $f$.
     \label{def:ind-etale}
     \lean{Algebra.IndEtale, RingHom.IndEtale}
-    \leanok
 \end{definition}
 
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0BSI}{Tag 0BSI}]{stacks-project}}]
   \label{thm:ind-etale-comp}
   \lean{Algebra.IndEtale.trans, RingHom.IndEtale.comp}
-  \leanok
   \uses{def:ind-etale}
-  Let $A \to B$ and $B \to C$ be ring maps. If $A \to B$ and $B \to C$ are ind-étale, 
+  Let $A \to B$ and $B \to C$ be ring maps. If $A \to B$ and $B \to C$ are ind-étale,
   then $A \to C$ is ind-étale.
 \end{lemma}
 
@@ -738,7 +1292,6 @@ The following example shows that our definition agrees with the one in
   \label{thm:ind-etale-base-change}
   \uses{def:ind-etale}
   \lean{RingHom.IndEtale.isStableUnderBaseChange}
-  \leanok
   Let $A \to B$ be an ind-étale ring map. For any ring map $A \to C$, the base change 
   $C \to B \otimes_A C$ is ind-étale.
 \end{lemma}
@@ -754,7 +1307,6 @@ The following example shows that our definition agrees with the one in
     \label{lemma:ind-ind-etale}
     \lean{Algebra.IndEtale.of_colimitPresentation,RingHom.IndEtale.iff_ind_indEtale,
       RingHom.IndEtale.of_isColimit,Algebra.IndEtale.iff_ind_indEtale}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -766,7 +1318,6 @@ The following example shows that our definition agrees with the one in
   \label{thm:ind-Zariski-is-ind-etale}
   \uses{def:ind-Zariski,def:ind-etale}
   \lean{Algebra.IndEtale.of_indZariski,RingHom.IndZariski.indEtale}
-  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -826,6 +1377,7 @@ Obviously, every w-purely-local morphism is w-local.
 \end{lemma}
 
 \begin{proof}
+    \leanok
     Let $x \rightsquigarrow y$ in $X$ with $x \in Z^g$. Then $x$ specializes to some $z \in Z$, which
     in turn specializes to a unique closed point $c$ in $X$ because $X$ is w-local.
     Because $Z$ is stable under specialization, $c \in Z$. Also $y$ specializes to a unique closed
@@ -842,6 +1394,7 @@ Obviously, every w-purely-local morphism is w-local.
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:embedding-specializations}
     Since $Z$ is closed under specializations, we have $Z^c = X^c \cap Z$. In particular
     $Z^c$ is closed in $Z$ and $Z \to X$ preserves closed points.
@@ -861,6 +1414,7 @@ Obviously, every w-purely-local morphism is w-local.
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:w-local-specialization-closed}
     This follows from \ref{lemma:w-local-specialization-closed}, because
     closed subsets are stable under specialization. The inclusion $Y \to X$ is
@@ -887,11 +1441,12 @@ Obviously, every w-purely-local morphism is w-local.
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/0905}{Tag 0905}, (6) $\implies$ (1)]{stacks-project}}]
   Let $X$ be a spectral space such that every point is closed. Then $X$ is profinite.
   \label{lemma:spectral-closed-points-profinite}
-  \lean{SpectralSpace.t2Space_of_isClosed_singleton,SpectralSpace.totallyDisconnectedSpace_of_isClosed_singleton}
+  \lean{SpectralSpace.totallySeparatedSpace}
   \leanok
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{lemma:spectral-constructible-closed-closed}
   Since every point is closed, there are no nontrivial specializations between points. By \Cref{item:specialization-closed-spectral-constructible-closed-closed} in \Cref{lemma:spectral-constructible-closed-closed}, all constructible subsets of $X$ are closed. In particular, every compact open subset is also closed. Since $X$ is spectral, thus T0, for any two points there is a quasi-compact open (also closed) containing exactly one of them. Thus $X$ is profinite by \verb`isTotallyDisconnected_of_isClopen_set`.
 \end{proof}
@@ -900,7 +1455,7 @@ Obviously, every w-purely-local morphism is w-local.
     Let $X$ be a w-local space. Then the set of closed points $X^c$ of $X$ is profinite.
     \uses{def:w-local-space}
     \label{lemma:w-local-closed-points-profinite}
-    \lean{WLocalSpace.t2Space_closedPoints,WLocalSpace.CompactSpace_closedPoints,WLocalSpace.totallyDisconnected_closedPoints}
+    \lean{WLocalSpace.CompactSpace_closedPoints}
     \leanok
 \end{lemma}
 
@@ -920,6 +1475,7 @@ Obviously, every w-purely-local morphism is w-local.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Let $X$ be a spectral space and let $W$ denote $E^g$. Since every point of $W$ specializes to a point of $E$ we see that an open of $W$ which contains $E$ is equal to $W$. Hence since $E$ is quasi-compact, so is $W$. If $x \in X$, $x \notin W$, then $Z = \overline{\{x\}}$ is disjoint from $W$. Since $W$ is quasi-compact we can find a quasi-compact open $U$ (since there is a open basis of quasi-compact opens of $X$ and finitely many of them would suffice to cover $W$) with $W \subset U$ and $U \cap Z = \emptyset$. We conclude that $W$ is an intersection of quasi-compact open subsets.
 \end{proof}
 
@@ -929,7 +1485,6 @@ Obviously, every w-purely-local morphism is w-local.
     all quasi-compact opens $U$ of $X$.
     \label{def:constructible-topology}
     \lean{constructibleTopology}
-    \leanok
 \end{definition}
 
 In other words, a subset of $X$ is open in the constructible topology if and only if
@@ -941,7 +1496,6 @@ a quasi-compact open $U$.
     \uses{def:constructible-topology}
     \label{lemma:spectral-constructible-quasi-compact}
     \lean{compactSpace_withConstructibleTopology}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -982,7 +1536,6 @@ a quasi-compact open $U$.
     $Z$ is irreducible. But for every $i \in I - I'$, the set $B_i$ is open and hence
     the non-empty open $Z \cap B_i$ of $Z$ contains the unique generic point of $Z$. Hence
     $\bigcap_{i \in  I} B_i = Z \cap \bigcap_{i \in  I - I'} B_i$ is non-empty, which is again a contradiction.
-    \leanok
 \end{proof}
 
 \begin{lemma}[\stacksproject{0903}]
@@ -994,7 +1547,6 @@ a quasi-compact open $U$.
         \item If $E$ is stable under specialization, then $E$ is closed. \label{item:specialization-closed-spectral-constructible-closed-closed}
     \end{enumerate}
     \lean{exists_specializes_of_isClosed_constructibleTopology_of_mem_closure, IsClosed.of_isClosed_constructibleTopology}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1020,6 +1572,7 @@ a quasi-compact open $U$.
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:spectral-generalization-intersection-open, lemma:generalization-specialization-closed, lemma:spectral-constructible-closed-closed}
     Since $Z$ is closed, it is quasi-compact. Hence by \Cref{lemma:spectral-generalization-intersection-open},
     we see that $Z^g$ is closed in the constructible topology as an intersection of quasi-compact opens.
@@ -1038,6 +1591,7 @@ a quasi-compact open $U$.
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{thm:pi0-profinite, lemma:w-local-closed-points-profinite, lemma:profinite-disj-clopen-separation, def:generalization, lemma:w-local-generalization-closed-closed}
     Since $X^c$ is quasi-compact and $\pi_0(X)$ is Hausdorff by \Cref{thm:pi0-profinite}, it suffices
     to show the map is bijective.
@@ -1058,7 +1612,6 @@ a quasi-compact open $U$.
 \label{thm:cartesian-profinite-w-local}
 \uses{def:w-local-space,def:w-local-space-map}
 \lean{ConnectedComponents.wlocalSpace_of_isPullback,ConnectedComponents.isWLocalMap_of_isPullback,ConnectedComponents.preimage_closedPoints_eq_closedPoints_of_isPullback}
-\leanok
 Let $X$ be a spectral space. Let
 \[
 \begin{tikzcd}
@@ -1106,6 +1659,7 @@ be a cartesian diagram in the category of topological spaces with $T$ profinite.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:closed-subspace-w-local}
   This is \Cref{thm:closed-subspace-w-local}.
 \end{proof}
@@ -1135,6 +1689,7 @@ be a cartesian diagram in the category of topological spaces with $T$ profinite.
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{thm:localization-isom-of-going-down}
     Since $A \to B$ is flat (can be checked on stalks of \(B\)), it has going down. % Algebra.HasGoingDown.of_flat
     Thus \Cref{thm:localization-isom-of-going-down} shows for any prime $\q \subset B$ lying over $\p \subset A$ we have $B_{\q} = B_{\p B}$. Since $B_{\q} = A_{\p}$ by assumption, we see that $A_{\p} = B_{\p B}$ for all primes $\p$ of $A$. Thus $A = B$ since isomorphism can be checked locally on $A$.
@@ -1154,6 +1709,7 @@ be a cartesian diagram in the category of topological spaces with $T$ profinite.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:closed-points-isom-pi0,thm:w-local-set-decomposition,
     thm:isom-of-identifies-local-rings-bijective}
   By \Cref{thm:isom-of-identifies-local-rings-bijective}, it suffices to show
@@ -1173,7 +1729,6 @@ $A$-algebra $A_{w}$ with $A_w$ w-local. Let $A$ be a ring.
     the induced map $\tildering{A}{I}{f} \to (A / I)_{f}$.
     \label{def:tilde-locclosed}
     \lean{WLocalization.Generalization.submonoid, WLocalization.Generalization, WLocalization.Generalization.ideal}
-    \leanok
 \end{definition}
 
 If $Z \subseteq \spec{A}$ is a locally closed subscheme of the form $D(f) \cap V(I)$, we
@@ -1205,10 +1760,10 @@ on the choice of $f$ and $I$ \stacksproject{096V}.
       WLocalization.Generalization.bijOn_algebraMap_generalization_specComap_zeroLocus_ideal,
       WLocalization.Generalization.submonoid_le,WLocalization.Generalization.map,
       WLocalization.Generalization.exists_specializes_zeroLocus_ideal}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     Let $S = S_{f, I}$, $Z = D(f) \cap V(I)$ and $J = \tildeideal{I}{f}$.
 
     Note that $Z$ is homeomorphic to $\spec{(A/I)_f}$.
@@ -1243,13 +1798,11 @@ $V( \tildeideal{I}{f})$.
     \uses{def:tilde-locclosed}
     \label{lemma:tilde-locclosed-ind-zariski}
     \lean{WLocalization.Generalization.indZariski}
-    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lemma:ind-Zariski-localization}
     $\tildering{A}{I}{f} = S^{-1} A$ for some multiplicative subset $A$.
-    \leanok
 \end{proof}
 
 \begin{definition}[Stratification by subsets]
@@ -1259,7 +1812,6 @@ $V( \tildeideal{I}{f})$.
     .\]
     \label{def:subset-stratum}
     \lean{WLocalization.stratum}
-    \leanok
 \end{definition}
 
 \begin{lemma}
@@ -1270,7 +1822,6 @@ $V( \tildeideal{I}{f})$.
     \uses{def:subset-stratum}
     \label{lemma:subset-stratum-equals-inter}
     \lean{WLocalization.stratum_eq_basicOpen_inter_zeroLocus}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1282,7 +1833,6 @@ $V( \tildeideal{I}{f})$.
     $F_1 \subseteq F_2$. Then $Z(E_2, F_2) \subseteq Z(E_1, F_1)$.
     \label{lemma:subset-stratum-mono}
     \lean{WLocalization.stratum_anti}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1297,10 +1847,10 @@ $V( \tildeideal{I}{f})$.
     \uses{def:subset-stratum}
     \label{lemma:subset-stratification}
     \lean{WLocalization.Stratification.Index.iUnion_stratum}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     Let $x \in \spec{A}$ and $E = E' \coprod E''$ a disjoint union decomposition. Then
     $x \in Z(E', E'')$ if and only if $f(x) \neq 0$ for all $f \in E'$ and $f(x) = 0$
     for all $f \in E''$. Hence $x$ is contained in
@@ -1319,7 +1869,6 @@ $V( \tildeideal{I}{f})$.
     \uses{def:subset-stratum, def:tilde-locclosed, lemma:subset-stratum-equals-inter}
     \label{def:finite-stratification-ring}
     \lean{WLocalization.ProdStrata, WLocalization.ProdStrata.ideal}
-    \leanok
 \end{definition}
 
 Note that \ref{def:finite-stratification-ring} is well-defined, because for finite
@@ -1333,10 +1882,10 @@ of the right form by \ref{lemma:subset-stratum-equals-inter}.
     \label{lemma:finite-stratification-ideal-bijection}
     \uses{def:finite-stratification-ring}
     \lean{WLocalization.ProdStrata.bijOn_algebraMap_specComap_zeroLocus_ideal}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:subset-stratification}
     By definition $I_E$ is the product of the ideals defining $Z(E', E'')$ in
     $\spec{A_{\widetilde{Z(E', E'')}}}$. Hence the first claim. The second
@@ -1351,10 +1900,10 @@ of the right form by \ref{lemma:subset-stratum-equals-inter}.
     \label{lemma:finite-stratification-closed-points}
     \lean{WLocalization.ProdStrata.exists_specializes_zeroLocus_ideal,
       WLocalization.ProdStrata.mem_zeroLocus_ideal_of_isClosed}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:locally-closed-specializations}
     Let $x \in \spec{A_E}$. Then $x$ is in $\spec{A_{\widetilde{Z(E', E'')}}}$ for some
     $E = E' \coprod E''$. By
@@ -1378,10 +1927,10 @@ $A_{\widetilde{Z(E_1', E_1'')}} \to A_{\widetilde{Z(E_2', E_2'')}}$.
     \uses{def:finite-stratification-ring, lemma:subset-stratum-mono}
     \label{lemma:finite-stratification-map-closed}
     \lean{WLocalization.ProdStrata.mapsTo_map_specComap}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     This holds because for every decomposition $E_2 = E_2' \coprod E_2''$
     and $E_1' = E_1 \cap E_2'$ and $E_1'' = E_1 \cap E_2''$, the induced map
     $\spec{A_{\widetilde{Z(E_2', E_2'')}}} \to \spec{A_{\widetilde{Z(E_1', E_1'')}}}$
@@ -1399,7 +1948,6 @@ $A_{\widetilde{Z(E_1', E_1'')}} \to A_{\widetilde{Z(E_2', E_2'')}}$.
     \uses{def:finite-stratification-ring, lemma:subset-stratum-mono, lemma:finite-stratification-map-closed}
     \label{def:w-localization}
     \lean{WLocalization.commAlgCat,WLocalization,WLocalization.ideal}
-    \leanok
 \end{definition}
 
 By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subsets $V(I_E)$.
@@ -1412,7 +1960,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     V(I) = \lim_{i \in I} V(I_i) = \bigcap_{i \in I} \text{preimage of } V(I_i) \text{ in } \spec{A}
     .\]
   \lean{zeroLocus_eq_iInter_specComap_preimage,specComap_preimage_zeroLocus_subset}
-  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1424,7 +1971,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \uses{def:w-localization}
     \label{lemma:w-localization-ind-Zariski}
     \lean{WLocalization.indZariski}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1440,7 +1986,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \label{lemma:w-localization-closed-points}
     \lean{WLocalization.bijOn_algebraMap_specComap_zeroLocus_ideal,
       WLocalization.exists_mem_zeroLocus_ideal_specializes,WLocalization.zeroLocus_ideal_eq}
-    \leanok
     Let $A$ be a ring.
     \begin{enumerate}
         \item The composition $V(I_w) \to \spec{A_w} \to \spec{A}$ is a bijection.
@@ -1488,7 +2033,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \uses{def:w-localization,def:w-local-ring}
     \label{cor:w-localization-w-local}
     \lean{WLocalization.isWLocalRing}
-    \leanok
 \end{corollary}
 
 \begin{proof}
@@ -1501,10 +2045,10 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \uses{def:w-localization}
     \label{lemma:w-localization-faithfully-flat}
     \lean{WLocalization.faithfullyFlat}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:w-localization-closed-points, lemma:w-localization-ind-Zariski}
     By \ref{lemma:w-localization-ind-Zariski}, $A \to A_w$ is flat. Because
     $V(I_w)$ surjects onto $\spec{A}$ by \ref{lemma:w-localization-closed-points},
@@ -1535,7 +2079,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     the set of closed points is $V(IA_{\widetilde{V(I)}})$.
     \label{lemma:w-local-tilde-w-local}
     \lean{isWLocalRing_generalization_one,IsWLocalRing.zeroLocus_map_algebraMap_generalization_one_eq}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1624,7 +2167,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
   \uses{def:w-localization-ideal,def:w-local-ring}
   \label{lemma:w-localization-ideal-w-local}
   \lean{isWLocalRing_generalization_one,Ideal.WLocalization.isWLocalRing}
-  \leanok
 \end{lemma}
 
 \begin{proof}
@@ -1641,6 +2183,7 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{lemma:w-localization-ind-Zariski, lemma:tilde-locclosed-ind-zariski,thm:ind-Zariski-composition}
   The map $A \to A_w$ is ind-Zariski by \Cref{lemma:w-localization-ind-Zariski} and
   the map $A_w \to A_{w, I}$ is ind-Zariski by \Cref{lemma:tilde-locclosed-ind-zariski}.
@@ -1653,7 +2196,6 @@ By the following lemma, we see $V(I_w)$ is the inverse limit of the closed subse
     \lean{Ideal.WLocalization.zeroLocus_map_algebraMap_eq_closedPoints,
       Ideal.WLocalization.quotientMap_algebraMap_bijective,
       Ideal.WLocalization.bijOn_zeroLocus_map}
-    \leanok
     Let $I \subseteq A$ be an ideal such that $V(I) \subseteq A$ only contains closed points. Then
     \begin{enumerate}
         \item the set of closed points of $A_{w, I}$ is $V(IA_{w, I})$, and
@@ -1696,6 +2238,7 @@ Let $A \to B$ be a ring map inducing algebraic extensions on residue fields at p
 \end{lemma}
 
 \begin{proof}
+    \leanok
     \uses{lemma:w-localization-closed-points,lemma:closed-closed-points-tilde-w-local,
       lemma:tilde-locclosed-ind-zariski,def:w-localization-ideal,lemma:w-localization-ideal-w-local}
     Every point of $V(IB)$ is a closed point of $\spec{B}$ by 
@@ -1803,7 +2346,6 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     $A$.
     \label{def:etale-precontraction}
     \lean{CategoryTheory.MorphismProperty.precontraction}
-    \leanok
 \end{definition}
 
 \begin{lemma}
@@ -1811,12 +2353,10 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \label{lemma:etale-precontraction-semi-retraction}
     For every faithfully flat étale ring map $A \to B$, there exists an $A$-algebra map $B \to T(A)$.
     \lean{CategoryTheory.MorphismProperty.Precontraction.π}
-    \leanok
 \end{lemma}
 
 \begin{proof}
     $\{B\}$ is an element of $S(A)$, hence $B$ itself is part of the diagram defining $T(A)$.
-    \leanok
 \end{proof}
 
 \begin{lemma}
@@ -1834,7 +2374,6 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
         CommAlgCat.preservesFilteredColimitsOfSize_forget_commRingCat,
         CommAlgCat.preservesFilteredColimitsOfSize_forget_algCat,
         AlgCat.preservesFilteredColimitsOfSize_forget_moduleCat}
-    \leanok
 \end{lemma}
 
 \begin{lemma}
@@ -1845,14 +2384,12 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
       Module.Flat.iff_ind_flat,Module.FaithfullyFlat.iff_ind_faithfullyFlat,
       RingHom.Flat.iff_ind_flat,RingHom.FaithfullyFlat.iff_ind_faithfullyFlat,
       RingHom.Flat.of_isColimit,RingHom.FaithfullyFlat.of_isColimit}
-    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lemma:commalgcat-colimits}
     Because colimits commute with tensor products, ind-flat is flat. One also checks
     that pro-surjective is surjective, hence the claim.
-    \leanok
 \end{proof}
 
 \begin{lemma}
@@ -1860,12 +2397,10 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \label{lemma:etale-precontraction-ind-etale}
     \uses{def:etale-precontraction, def:ind-etale}
     \lean{CategoryTheory.MorphismProperty.pro_precontraction_hom}
-    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lemma:ind-faithfully-flat}
-    \leanok
     For every $E \in S(A)$, the $A$-algebra $\bigotimes_{B \in E} B$ is étale and faithfully flat. Hence
     the result follows from the definition of ind-étale and \Cref{lemma:ind-faithfully-flat}.
 \end{proof}
@@ -1885,11 +2420,9 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \uses{def:etale-contraction,def:ind-etale}
     \label{lemma:etale-contraction-ind-etale}
     \lean{faithfullyFlat_indEtaleContraction, indEtale_indEtaleContraction}
-    \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
     \uses{lemma:etale-precontraction-ind-etale, lemma:ind-faithfully-flat, lemma:ind-ind-etale}
     This follows from \Cref{lemma:etale-precontraction-ind-etale}, \Cref{lemma:ind-faithfully-flat}
     and \Cref{lemma:ind-ind-etale}.
@@ -1935,10 +2468,10 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \uses{def:ind-etale}
     \label{lemma:field-local-ind-etale}
     \lean{Algebra.IndEtale.isSeparable}
-    \leanok
 \end{lemma}
 
 \begin{proof}
+    \leanok
     Let $A = \colim_i A_i$ such that $A_i$ is an étale $k$-algebra for all $i$.
     Let $\mathfrak{m}$ be the maximal ideal of $A$. Since localization commutes with colimits,
     we obtain $A = A_{\mathfrak{m}} = \colim_i (A_i)_{\mathfrak{m}_i}$ where
@@ -1954,14 +2487,22 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     \uses{def:ind-etale}
     \label{prop:ind-etale-residue-fields}
     \lean{Algebra.IndEtale.isSeparable_residueField}
-    \leanok
 \end{proposition}
 
 \begin{proof}
     \uses{lemma:field-local-ind-etale}
-    Let $\mathfrak{p}$ be a prime ideal of $B$. After base change along $A \to \kappa(\mathfrak{p}^c)$,
-    we may assume $A = k$ is a field. After postcomposing with the ind-étale map $B \to B_{\mathfrak{p}}$,
-    we may assume $B$ is local. Hence the result follows from \ref{lemma:field-local-ind-etale}.
+    \leanok
+    Let $\mathfrak{q}$ be a prime ideal of $B$ lying over $\mathfrak{p} \subseteq A$.
+    Write $B = \colim_i B_i$ as a filtered colimit of étale $A$-algebras. Every element
+    $s \in B$ lifts to some $s_i \in B_i$, and the composition
+    \[
+        \kappa(\mathfrak{p}) \otimes_A B_i \to \kappa(\mathfrak{q})
+    \]
+    is an algebra homomorphism from the étale $\kappa(\mathfrak{p})$-algebra
+    $\kappa(\mathfrak{p}) \otimes_A B_i$ to the local ring $\kappa(\mathfrak{q})$, so by
+    \ref{lemma:field-local-ind-etale} the image of $s$ in $\kappa(\mathfrak{q})$ is separable
+    over $\kappa(\mathfrak{p})$. A general element of $\kappa(\mathfrak{q})$ is a ratio of two
+    such images, and separability passes to ratios via the separable closure.
 \end{proof}
 
 \begin{proposition}[{\cite[\href{https://stacks.math.columbia.edu/tag/097X}{Tag 097X}]{stacks-project}}]
@@ -2013,7 +2554,6 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
   \label{def:colim-open-closed-localizations}
   \lean{WContractification.RestrictClopen.map,WContractification.Restriction.diag,
     WContractification.Restriction}
-  \leanok
   Let $A$ be a ring, $X = \Spec(A)$, and $T \subset \pi_0(X)$. Define the ring $A_T$ by
   \[ 
     A_T := \colim_{W} A_W,
@@ -2029,7 +2569,6 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
     WContractification.Restriction.algebraMap_surjective,
     WContractification.Restriction.range_algebraMap_specComap,
     WContractification.Restriction.isClosedEmbedding_algebraMap_specComap}
-  \leanok
   Let $A$ be a ring, $X = \Spec(A)$, and $T \subset \pi_0(X)$ a closed subset. 
   Then the map $A \to A_T$ from \Cref{def:colim-open-closed-localizations} is a surjective 
   ind-Zariski ring map, and the induced morphism $\Spec(A_T) \to \Spec(A)$ restricts to a 
@@ -2037,6 +2576,7 @@ The goal of this section is to show that every ring $A$ admits a faithfully flat
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{thm:intersection-closed-open-iff}
   Each $A \to A_W$ is a localization at an idempotent. Passing to filtered colimits, $A \to A_T$ is surjective and ind-Zariski.
 
@@ -2068,7 +2608,6 @@ In the following series of constructions, we will modify the connected component
   \uses{def:modify-pi0-finite,def:ind-Zariski,def:identify-local-rings}
   \lean{WContractification.Pullback.indZariski,
         WContractification.Pullback.bijectiveOnStalks_algebraMap}
-  \leanok
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be profinite space and let $f : T \to \pi_0(X)$ be a continuous map. Let \(S\) be a finite discrete quotient of \(T\) with quotient map \(q : T \to S\). Then the $A^S$-algebra defined in \Cref{def:modify-pi0-finite} viewed as $A$-algebra through $A \to A^S \to A^f_{q}$ is ind-Zariski. In particular, it identifies local rings. The map $A^S \to A^f_{q}$ induces a homeomorphism of $\Spec (A^f_{q})$ onto \((X \times S) \times_{\pi_0(X) \times S} Z = X \times_{\pi_0(X)} Z\).
 \end{lemma}
 
@@ -2079,7 +2618,9 @@ In the following series of constructions, we will modify the connected component
 
 \begin{definition}
   \label{def:modify-pi0-transition-map}
+  \lean{WContractification.PullbackProfinite.diag}
   \uses{def:modify-pi0-finite,def:identify-local-rings,def:identifies-local-ring-hom-set-bijection}
+  \leanok
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be profinite space and let $f : T \to \pi_0(X)$ be a continuous map. Let \(S\) and \(S'\) be finite discrete spaces and let \(q : T \to S\) and \(q' : T \to S'\) be quotient maps. Let \(g : S' \to S\) be a map such that \(q = g \circ q'\). Let \(Z \subseteq \pi_0(\Spec (A^{S})) \times S\) and \(Z' \subseteq \pi_0(\Spec (A^{S'})) \times S'\) be the images of \(T\) under the maps induced by \(f\) and \(f'\) respectively. Then \(g\) induces a map \(Z \to Z'\) and a map \(\tilde{g} : \Spec (A^f_{q}) \cong X \times_{\pi_0(X)} Z \to X \times_{\pi_0(X)} Z' \cong \Spec (A^{f'}_{q'})\).
 
   Since both maps \(A \to A^f_{q}\) and \(A \to A^{f'}_{q'}\) identify local rings, by the bijection in \Cref{def:identifies-local-ring-hom-set-bijection} we can find a transition ring map
@@ -2089,28 +2630,36 @@ In the following series of constructions, we will modify the connected component
 
 \begin{lemma}
   \label{thm:modify-pi0-transition-map-compatible}
+  \lean{WContractification.PullbackProfinite.diag}
   \uses{def:modify-pi0-transition-map}
+  \leanok
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be profinite space and let $f : T \to \pi_0(X)$ be a continuous map. Let \(S\), \(S'\) and \(S''\) be finite discrete spaces and let \(q : T \to S\), \(q' : T \to S'\) and \(q'' : T \to S''\) be quotient maps. Let \(g : S' \to S\) and \(g' : S'' \to S'\) be maps such that \(q = g \circ q'\) and \(q' = g' \circ q''\). Then the transition maps defined in \Cref{def:modify-pi0-transition-map} satisfy
   \[t_{g'} \circ t_{g} = t_{g \circ g'}.\]
 \end{lemma}
 
 \begin{proof}
   \uses{thm:modify-pi0-finite-properties,def:identifies-local-ring-hom-set-bijection}
+  \leanok
   Both maps \(t_{g'}\) and \(t_{g} \circ t_{g' \circ g}\) induce the same topological map between the spectra by construction. Since all maps involved identify local rings by \Cref{thm:modify-pi0-finite-properties}, by fully faithfulness in \Cref{def:identifies-local-ring-hom-set-bijection} we conclude that they are equal.
 \end{proof}
 
-\begin{definition}[{\cite[\href{https://stacks.math.columbia.edu/tag/097D}{Tag 097D}]{stacks-project}}]
+\begin{definition}\leanok
+[{\cite[\href{https://stacks.math.columbia.edu/tag/097D}{Tag 097D}]{stacks-project}}]
   \label{def:modify-pi0-profinite}
+  \lean{WContractification.PullbackProfinite}
   \uses{def:modify-pi0-finite,def:modify-pi0-transition-map,thm:modify-pi0-transition-map-compatible}
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be a profinite space and let $T \to \pi_0(X)$ be a continuous map. Write $T = \lim T_i$ as the limit of an inverse system of finite discrete spaces over a directed set. Define the ring \(A^f_{\pi_0}\) as follows:
   \[
     A^f_{\pi_0} := \colim_{(T \to T_i)} A^f_{q_i},
   \]
   where \(q_i : T \to T_i\) are the quotient maps and \(A^f_{q_i}\) are the rings defined in \Cref{def:modify-pi0-finite} and the transition maps are those defined in \Cref{def:modify-pi0-transition-map}. By \Cref{thm:modify-pi0-transition-map-compatible} the transition maps are compatible thus the colimit is well-defined.
+
+  On the Lean side the indexing category is \texttt{(DiscreteQuotient T)\^{}op}: Mathlib's order \(S_1 \leq S_2\) on \texttt{DiscreteQuotient T} encodes refinement (\(S_1\) finer than \(S_2\), with \(\top\) the coarsest one-class quotient), so a Mathlib morphism \(S_1 \to S_2\) is the finer-to-coarser direction at the type level. The blueprint's transition \(t_g : A^f_q \to A^{f'}_{q'}\) going from a coarser \(q\) to a finer \(q'\) at the algebra level therefore corresponds to a covariant functor on \texttt{(DiscreteQuotient T)\^{}op}, and the colimit \(A^f_{\pi_0}\) is the colimit of that functor in \texttt{CommAlgCat A}.
 \end{definition}
 
 \begin{lemma}[{\cite[\href{https://stacks.math.columbia.edu/tag/097D}{Tag 097D}]{stacks-project}}]
   \label{thm:modify-pi0-profinite-properties}
+  \lean{WContractification.PullbackProfinite.indZariski, WContractification.PullbackProfinite.faithfullyFlat, WContractification.PullbackProfinite.isWLocalRing, WContractification.PullbackProfinite.pi0Equiv}
   \uses{def:modify-pi0-profinite,def:ind-Zariski}
   Let $A$ be a ring and let $X = \Spec (A)$. Let $T$ be a profinite space and let $T \to \pi_0(X)$ be a continuous map. Then the $A$-algebra $A^f_{\pi_0}$ defined in \Cref{def:modify-pi0-profinite} is ind-Zariski. Let $Y = \Spec (A^f_{\pi_0})$. Then $\pi_0(Y) \cong T$ and the diagram
   \[
@@ -2189,6 +2738,7 @@ this we will perform a series of reductions.
 
 \begin{proof}
   \uses{thm:ind-etale-base-change,thm:ind-etale-strictly-henselian-localization-isom,thm:ff-identifies-local-rings-plus-c-has-retraction-if}
+  \leanok
   Let \(A \to B\) be a faithfully flat ind-étale map with \(B\) w-local and such that the closed points of \(\Spec(B)\) are exactly \(V(IB)\). In this case, \(A \to B\) identifies local rings. To justify this, it suffices to check the condition at the maximal ideals of \(B\), which lie over maximal ideals of \(A\) since they map to \(V(I) = (\Spec(A))^c\). Since \(A\) is w-strictly local, the local rings of \(A\) at its maximal ideals are strictly Henselian.
 
   Now fix a maximal ideal \(\mathfrak{n}\) of \(B\) and let \(\mathfrak{m} = \mathfrak{n} \cap A\) be its preimage in \(A\), which is a maximal ideal. By base change to \(A_{\mathfrak{m}}\) and applying \Cref{thm:ind-etale-base-change}, we reduce to the case where \(B\) is ind-étale over a strictly Henselian local ring \(A\), with a maximal ideal \(\mathfrak{n}\) lying over the maximal ideal \(\mathfrak{m}\) of \(A\). We then want to show \(B_{\mathfrak{n}} \cong A\). This follows from \Cref{thm:ind-etale-strictly-henselian-localization-isom}.
@@ -2235,6 +2785,8 @@ this we will perform a series of reductions.
 \end{lemma}
 
 \begin{proof}
+
+\leanok
   % The proof goes as in https://stacks.math.columbia.edu/tag/0983, starting from the second sentence.
   \uses{thm:extremally-disconnected-cover,def:modify-pi0-profinite,thm:modify-pi0-profinite-properties,thm:cartesian-profinite-w-local,thm:ind-Zariski-identifies-local-rings}
   Choose an extremally disconnected space $T$ and a surjective continuous map $T \to \pi_0(\operatorname{Spec}(C))$ by \Cref{thm:extremally-disconnected-cover}. (\(T\) can be chosen as \(\beta((\pi_0(\operatorname{Spec}(C)))^{\textnormal{disc}})\).) Note that $T$ is profinite.

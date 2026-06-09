@@ -96,7 +96,6 @@ Recall the following definition:
     it is surjective.
     \label{lemma:et-effective-epi}
     \lean{AlgebraicGeometry.Scheme.Etale.effectiveEpi_of_surjective, AlgebraicGeometry.Scheme.Etale.surjective_of_epi}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -127,11 +126,9 @@ Recall the following definition:
     The category $\et{X}$ is precoherent.
     \label{lemma:et-precoherent}
     \lean{AlgebraicGeometry.Scheme.Etale.precoherent}
-    \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok
     \uses{lemma:et-effective-epi, lemma:scheme-finitaryextensive}
     The category of schemes is finitary extensive, so the same holds
     for $\et{X}$. By \ref{lemma:et-effective-epi} the effective epimorphisms
@@ -224,7 +221,6 @@ To remedy the situation, we make the following definitions:
     as the componentwise cofiltered limit of one-hypercovers in $\mathcal{C}$.
     \label{def:one-cover-relatively-pro-prepresentable}
     \lean{CategoryTheory.GrothendieckTopology.oneHypercoverRelativelyRepresentable}
-    \leanok
 \end{definition}
 
 \noindent Concretely, a one-hypercover $\mathcal{U} = (U_{\alpha}, U_{\alpha \beta \gamma})$ is
@@ -261,11 +257,9 @@ The analogue of \ref{prop:sheaf-pro} is:
     \uses{def:one-cover-relatively-pro-prepresentable}
     \label{prop:sheaf-relatively-representable-generated}
     \lean{CategoryTheory.Presheaf.IsSheaf.of_preservesFilteredColimitsOfSize}
-    \leanok
 \end{proposition}
 
 \begin{proof}
-    \leanok
     By the assumption, it suffices to check the sheaf condition for every
     relatively pro-representable one-hypercover $\mathcal{U} = \lim F(\mathcal{V}_i)$.
     Because $P$ preserves filtered colimits, one computes that

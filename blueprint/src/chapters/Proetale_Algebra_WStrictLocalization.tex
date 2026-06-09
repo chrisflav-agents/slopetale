@@ -1,0 +1,51 @@
+\chapter{The w-strict localization (Stacks 0EWQ / 0992)}
+\label{chap:Algebra_WStrictLocalization}
+
+% NOTE: Minimal stub created during iter-099 prover phase. The file
+% \texttt{Proetale/Algebra/WStrictLocalization.lean} is essentially
+% closed (Phase 2 landed iter-027); only three residual sorries
+% remain, all documented in the Lean source as either sanctioned
+% (per iter-020 Decision 1) or PARKED (genuinely unsound at the
+% current signature). The plan agent should flesh out the informal
+% prose for the surviving constructions and reference them here.
+%
+% The three residual sorries are:
+%
+%   1. \lean{Algebra.Etale.exists_section_of_retraction_at_prime}
+%      (L461, sorry at L633): "E-branch" of the local-ring
+%      case-split inside \texttt{AlgHom.exists\_section\_of\_isLocalRing}.
+%      The C-branch is closed; the E-branch corresponds to an
+%      idempotent decomposition that should be ruled out geometrically
+%      (the chosen prime $q$ lies over $m \in \mathrm{im}(\mathrm{Spec}\,C \to
+%      \mathrm{Spec}\,A)$, not in the complement covered by $E$). Ruling it
+%      out requires strengthening
+%      \lean{Algebra.Etale.exists_explicit_ff_etale_product_cover_of_prime_over}
+%      to additionally produce $a_i \notin m$ for each $i$, letting the
+%      caller derive $\sigma_m(0,1) \neq 1$ and contradict the E-branch
+%      hypothesis. This was deferred iter-020 as Decision 1.
+%
+%   2. \lean{Algebra.Etale.exists_residue_compatible_section_of_retraction}
+%      (L671, sorry at L1333): same E-branch obstruction as (1),
+%      sanctioned in parallel.
+%
+%   3. \lean{Algebra.Etale.isStrictlyHenselianLocalRing_WStrictLocalization}
+%      (L1792, sorry at L1841): \texttt{(m.comap f).IsMaximal} for
+%      $f := A \to \mathrm{WLocalization}(\mathrm{IndEtaleContraction}\,A)$.
+%      PARKED-unsound: comap of a maximal under a bijective-on-stalks
+%      ring map is not in general maximal. The current definition of
+%      \lean{WStrictLocalization} is missing the final
+%      "localize-at-$\widetilde{V}(IB)$" step from the blueprint
+%      argument (Stacks 0992, see \texttt{local-structure.tex} lines
+%      $\approx$1995–2008), which would force closed points of the
+%      outer w-localization to lie over maximals of the ind-étale
+%      contraction. Resolving (3) requires a definition amendment
+%      and so is off-limits to the autonomous loop.
+%
+% Plan agent next-step ideas:
+%   - For (1) and (2): write up the strengthened cover lemma
+%     (\texttt{exists\_explicit\_ff\_etale\_product\_cover\_avoiding\_maximal})
+%     as an informal blueprint lemma, then schedule a refactor to
+%     thread $a_i \notin m$ through both call sites. The E-branch
+%     would then close by a one-line contradiction.
+%   - For (3): out of scope for the autonomous loop; user input is
+%     needed to amend the definition of \lean{WStrictLocalization}.

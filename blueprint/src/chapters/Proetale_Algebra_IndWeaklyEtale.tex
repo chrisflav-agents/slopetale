@@ -1,0 +1,35 @@
+\chapter{Ind-weakly-\'etale algebras (Stacks 097Y / Olivier)}
+\label{chap:ind-weakly-etale}
+% archon:covers Proetale/Algebra/IndWeaklyEtale.lean
+
+This chapter is a placeholder. The substantive informal proofs for the
+declarations in \texttt{Proetale/Algebra/IndWeaklyEtale.lean} already live in
+\texttt{more-on-local-structure.tex}, specifically:
+
+\begin{itemize}
+  \item Stacks 092Q (weakly \'etale over a field is ind-\'etale),
+    label \texttt{thm:weakly-etale-imples-ind-etale-over-fields}.
+  \item Stacks 097Z (Olivier; weakly \'etale, locally, out of a strictly
+    henselian local ring is bijective), label
+    \texttt{thm:weakly-etale-over-sh} via
+    \texttt{thm:weakly-etale-over-henselian-sep-closed}.
+  \item Stacks 097Y (the main theorem; for every weakly \'etale $R \to S$
+    there is an ind-\'etale faithfully flat $S \to T$ with $R \to T$
+    ind-\'etale), label \texttt{thm:weakly-etale-ind-etale}.
+\end{itemize}
+
+The Lean declarations
+\texttt{Algebra.WeaklyEtale.indEtale\_of\_isField},
+\texttt{Algebra.WeaklyEtale.bijective\_of\_isStrictlyHenselianLocalRing} and
+\texttt{Algebra.IndEtale.of\_weaklyEtale\_isWContractibleRing}
+are scaffolds; the first two delegate, respectively, to
+\texttt{Algebra.WeaklyEtale.indEtale\_field} (in
+\texttt{Proetale/Algebra/WeaklyEtaleField.lean}) and
+\texttt{Algebra.WeaklyEtale.bijective\_of\_henselianLocalRing} (in
+\texttt{Proetale/Algebra/HenselianLocalRing.lean}). The reduction step
+\texttt{of\_weaklyEtale\_isWContractibleRing} remains as a scoped \texttt{sorry}
+pending the constructible-cover globalisation argument.
+
+The plan agent should flesh out a dedicated section here if the
+\texttt{IndWeaklyEtale.lean} file accumulates declarations of its own that
+are not already covered by \texttt{more-on-local-structure.tex}.

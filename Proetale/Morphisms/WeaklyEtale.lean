@@ -23,96 +23,29 @@ variable {X Y : Scheme.{u}} (f : X ⟶ Y)
 
 namespace WeaklyEtale
 
-lemma eq_inf :
-    @WeaklyEtale = ((@Flat ⊓ MorphismProperty.diagonal @Flat) : MorphismProperty Scheme.{u}) := by
-  ext X Y f
-  rw [weaklyEtale_iff]
-  rfl
-
-instance : RespectsIso @WeaklyEtale := by
-  rw [eq_inf]
-  infer_instance
-
-instance isStableUnderComposition : IsStableUnderComposition @WeaklyEtale := by
-  rw [eq_inf]
-  infer_instance
-
-instance isStableUnderBaseChange : IsStableUnderBaseChange @WeaklyEtale := by
-  rw [eq_inf]
-  infer_instance
-
-instance : IsZariskiLocalAtTarget @WeaklyEtale := by
-  rw [eq_inf]
-  infer_instance
-
-instance : ContainsIdentities @WeaklyEtale := by
-  rw [eq_inf]
-  infer_instance
-
-instance : IsMultiplicative @WeaklyEtale where
-
-instance (priority := 900) of_etale [Etale f] : WeaklyEtale f where
-  flat_diagonal := inferInstance
+instance : HasRingHomProperty @WeaklyEtale.{u} RingHom.WeaklyEtale := by
+  have := HasRingHomProperty.of_isZariskiLocalAtSource_of_isZariskiLocalAtTarget @WeaklyEtale.{u}
+  refine HasRingHomProperty.copy (P := @WeaklyEtale.{u}) rfl ?_
+  intro R S _ _ f
+  algebraize [f]
+  have hf : f = algebraMap R S := rfl
+  rw [hf, weaklyEtale_iff, diagonal_SpecMap R S,
+    MorphismProperty.cancel_right_of_respectsIso (P := @Flat),
+    HasRingHomProperty.Spec_iff (P := @Flat), HasRingHomProperty.Spec_iff (P := @Flat)]
+  simp only [CommRingCat.hom_ofHom, autoParam, RingHom.flat_algebraMap_iff,
+    RingHom.weaklyEtale_algebraMap_iff, Algebra.weaklyEtale_iff]
 
 instance (priority := 900) etale [WeaklyEtale f] [LocallyOfFinitePresentation f] : Etale f := by
-  -- Reduce to the affine case using wlog
-  wlog hY : ∃ R, Y = Spec R
-  · rw [IsZariskiLocalAtTarget.iff_of_openCover (P := @Etale) Y.affineCover]
-    intro i
-    haveI hw : WeaklyEtale (pullback.snd f (Y.affineCover.f i)) := by
-      rw [eq_inf]
-      exact ⟨inferInstance,
-        MorphismProperty.pullback_snd (P := .diagonal @Flat) _ _ WeaklyEtale.flat_diagonal⟩
-    haveI hfp : LocallyOfFinitePresentation (pullback.snd f (Y.affineCover.f i)) :=
-      MorphismProperty.pullback_snd _ _ inferInstance
-    exact this (pullback.snd _ _) ⟨_, rfl⟩
-  obtain ⟨R, rfl⟩ := hY
-  wlog hX : ∃ S, X = Spec S generalizing X
-  · rw [IsZariskiLocalAtSource.iff_of_openCover (P := @Etale) X.affineCover]
-    intro i
-    haveI hw : WeaklyEtale (X.affineCover.f i ≫ f) := by
-      rw [eq_inf]
-      exact ⟨inferInstance,
-        MorphismProperty.comp_mem (.diagonal @Flat) _ _
-          (inferInstanceAs (Flat (pullback.diagonal (X.affineCover.f i))))
-          WeaklyEtale.flat_diagonal⟩
-    haveI hfp : LocallyOfFinitePresentation (X.affineCover.f i ≫ f) :=
-      MorphismProperty.comp_mem _ _ _ inferInstance inferInstance
-    exact this (X.affineCover.f i ≫ f) ⟨_, rfl⟩
-  obtain ⟨S, rfl⟩ := hX
-  obtain ⟨φ, rfl : Spec.map φ = f⟩ := Spec.homEquiv.symm.surjective f
-  rw [HasRingHomProperty.Spec_iff (P := @Etale)]
-  rw [HasRingHomProperty.Spec_iff (P := @LocallyOfFinitePresentation)] at *
-  algebraize [φ.hom]
-  -- Extract diagonal flatness and convert to lmul' flatness
-  have hdiag_flat : Flat (pullback.diagonal (Spec.map φ)) :=
-    WeaklyEtale.flat_diagonal
-  have hlmul_flat : (Algebra.TensorProduct.lmul' (↑R) (S := ↑S)).toRingHom.Flat := by
-    have : Flat (Spec.map (CommRingCat.ofHom
-        (Algebra.TensorProduct.lmul' (↑R) (S := ↑S)).toRingHom)) := by
-      rw [← MorphismProperty.cancel_right_of_respectsIso @Flat _
-        (pullbackSpecIso (↑R) (↑S) (↑S)).inv, ← diagonal_SpecMap (↑R) (↑S)]
-      exact hdiag_flat
-    exact (HasRingHomProperty.Spec_iff (P := @Flat)).mp this
-  -- Combine into Algebra.WeaklyEtale, which with FinitePresentation gives Etale
-  haveI : Algebra.WeaklyEtale (↑R) (↑S) := {
-    flat := by
-      have : RingHom.Flat φ.hom :=
-        (HasRingHomProperty.Spec_iff (P := @Flat)).mp inferInstance
-      exact this
-    flat_lmul' := hlmul_flat
-  }
-  -- RingHom.Etale follows from Algebra.Etale
-  exact (inferInstance : Algebra.Etale (↑R) (↑S))
+  have : FormallyUnramified f := by
+    rw [HasRingHomProperty.iff_appLE (P := @FormallyUnramified)]
+    intro U V e
+    exact (HasRingHomProperty.appLE @WeaklyEtale.{u} f ‹_› U V e).formallyUnramified
+  exact Etale.of_formallyUnramified_of_flat f
 
 @[simp]
 lemma Spec_iff {R S : CommRingCat.{u}} (f : R ⟶ S) :
-    WeaklyEtale (Spec.map f) ↔ f.hom.WeaklyEtale := by
-  sorry
-
-instance : HasRingHomProperty @WeaklyEtale.{u} RingHom.WeaklyEtale := by
-  convert HasRingHomProperty.of_isZariskiLocalAtSource_of_isZariskiLocalAtTarget @WeaklyEtale.{u}
-  simp
+    WeaklyEtale (Spec.map f) ↔ f.hom.WeaklyEtale :=
+  HasRingHomProperty.Spec_iff (P := @WeaklyEtale.{u})
 
 end WeaklyEtale
 

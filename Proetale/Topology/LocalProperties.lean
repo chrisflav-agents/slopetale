@@ -82,14 +82,55 @@ lemma foo (F : Sheaf K A) [HasColimitsOfShape J A] [(forget A).ReflectsIsomorphi
   constructor
   intro c hc
   constructor
+  -- Strategy: reduce IsIso of the desc map to checking it locally on the cover X.
+  -- Each local desc (under F.over (X i)) is an iso by hF i, and (forget A) reflects isos.
+  -- We use sheaf property on the cover hX.cover c.pt.unop to globalize injectivity and
+  -- surjectivity from the restrictions.
+  --
+  -- KEY OBSTRUCTION (round 2, 2026-05-18): the bijection approach via
+  -- `ConcreteCategory.isIso_iff_bijective` reduces to bijectivity of `desc` viewed
+  -- as a FunLike on underlying types. But the *underlying type* of
+  -- `colim_A (D ⋙ F.obj)` is opaque without the additional hypothesis
+  -- `[PreservesColimitsOfShape J (forget A)]` (compare
+  -- `Mathlib/CategoryTheory/Sites/ConcreteSheafification.lean:202`, where this
+  -- hypothesis is essential).  The current statement of `foo` is therefore
+  -- under-hypothesised and the proof cannot be closed without amending it.
+  -- See `task_results/Topology_LocalProperties.lean.md` for analysis.
   have : IsIso ((colimit.isColimit (D ⋙ F.obj)).desc (F.obj.mapCocone c)) := by
     rw [ConcreteCategory.isIso_iff_bijective]
     simp only [colimit.cocone_x, Functor.mapCocone_pt, colimit.isColimit_desc]
+    -- Each `(F.over (X i)).obj` preserves colimits of shape J, so the analogous desc
+    -- restricted to `op (Over.mk g)` for `g : Y ⟶ X i` is bijective.  We piece these
+    -- together via `hX.cover c.pt.unop` and the sheaf property of `F`.
     refine ⟨?_, ?_⟩
     · -- Injectivity: use sheaf property on covering
+      -- Plan: lift x₁ - x₂ to a morphism in A, then use F.2.hom_ext on the sieve
+      -- `hX.cover c.pt.unop`. For each S.Arrow with `g : Y ⟶ X i` factoring through X i,
+      -- the restriction to the over-sheaf `(F.over (X i)).obj` evaluated at `op (Over.mk g)`
+      -- gives the desc map for the i-th over-sheaf, which is injective by `hF i` plus
+      -- `(forget A).ReflectsIsomorphisms` and `ConcreteCategory.isIso_iff_bijective`.
+      -- Conclude `x₁ = x₂` after restriction; gather via sheaf separatedness.
+      --
+      -- BLOCKED: needs an injectivity statement at element level, which requires
+      -- describing elements of `colim_A (D ⋙ F.obj)` as `(j, x_j)` modulo
+      -- equivalence — only possible if `(forget A).PreservesColimitsOfShape J`.
+      -- Add this typeclass to the statement of `foo` (mirroring the API in
+      -- `Sites/ConcreteSheafification.lean`) and the natural sheaf-separatedness
+      -- argument closes injectivity.
       intro x₁ x₂ h
       sorry
     · -- Surjectivity: use sheaf amalgamation to construct preimage
+      -- Plan: given y ∈ F.obj.obj c.pt, restrict to each X i via `F.obj.map I.f.op`.
+      -- For each i, the desc map for `(F.over (X i)).obj` is surjective (by `hF i`),
+      -- so we obtain `xᵢ` in the i-th colimit mapping to the i-th restriction of y.
+      -- These xᵢ are compatible across overlaps; amalgamate via `F.2.amalgamate` on
+      -- `hX.cover c.pt.unop` to obtain the preimage in `colim (D ⋙ F.obj)`.
+      --
+      -- BLOCKED: same root cause — building an *element* in `colim_A (...)` from
+      -- local data requires `forget A` to preserve J-colims (so that elements
+      -- have the form `colimit.ι _ j x_j`).  Without that, the surjectivity check
+      -- has no foothold.  Same fix as injectivity: amend the statement of `foo`
+      -- to include `[PreservesColimitsOfShape J (forget A)]`.
       intro y
       sorry
   exact .ofPointIso (colimit.isColimit _)

@@ -3,12 +3,11 @@ Copyright (c) 2025 Jiedong Jiang, Christian Merten, Andrew Yang. All rights rese
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jiedong Jiang, Christian Merten, Andrew Yang
 -/
+import Mathlib.CategoryTheory.Comma.StructuredArrow.Small
 import Mathlib.CategoryTheory.Functor.KanExtension.Adjunction
 import Mathlib.CategoryTheory.Limits.Preserves.Over
-import Mathlib.CategoryTheory.Limits.Preserves.Shapes.Equalizers
 import Mathlib.CategoryTheory.MorphismProperty.Comma
 import Mathlib.CategoryTheory.MorphismProperty.Limits
-import Mathlib.CategoryTheory.Comma.StructuredArrow.Small
 import Mathlib.CategoryTheory.ObjectProperty.Ind
 import Proetale.Mathlib.CategoryTheory.MorphismProperty.IndSpreads
 
@@ -16,7 +15,7 @@ import Proetale.Mathlib.CategoryTheory.MorphismProperty.IndSpreads
 # Ind contraction
 -/
 
-universe w v u
+universe v u
 
 namespace CategoryTheory.MorphismProperty
 
@@ -111,7 +110,7 @@ lemma isFiltered_costructuredArrow_forget [HasPushouts C] [P.IsMultiplicative]
       · exact Under.homMk (pushout.inl _ _)
     · apply CategoryTheory.CostructuredArrow.homMk
       · apply hS.hom_ext
-      · exact Under.homMk (pushout.inr _ _) (pushout.condition ..).symm
+      · exact Under.homMk (pushout.inr _ _) (by simp [pushout.condition])
     · refine ⟨?_, ?_, ?_⟩
       · apply CategoryTheory.CostructuredArrow.mk
         · exact hS.from _
@@ -165,25 +164,19 @@ lemma ι_fromIndContraction (S : Under X)
   (isColimitIndContractionCocone P S).fac _ _
 
 /-- The `P`-ind contraction of `X ⟶ S` is ind-`P` over `X`. -/
-lemma property_indContraction_hom [HasPushouts C] [P.IsMultiplicative] [P.IsStableUnderCobaseChange]
-    [HasCoequalizers (P.Under ⊤ X)] [PreservesColimitsOfShape WalkingParallelPair (Under.forget P ⊤ X)]
+lemma property_indContraction_hom [HasPushouts C] [P.IsMultiplicative]
+    [P.IsStableUnderCobaseChange] [HasCoequalizers (P.Under ⊤ X)]
+    [PreservesColimitsOfShape WalkingParallelPair (Under.forget P ⊤ X)]
     [EssentiallySmall.{max u v} (P.Under ⊤ X)] [LocallySmall.{max u v} (Under X)]
     (S : Under X) :
-    MorphismProperty.ind.{max u v} P ((indContraction P X).obj S).hom := by
-  rw [MorphismProperty.ind_iff_ind_underMk]
-  haveI : IsFiltered (CostructuredArrow (Under.forget P ⊤ X) S) :=
+    ind.{max u v} P ((indContraction P X).obj S).hom := by
+  rw [ind_iff_ind_underMk]
+  have : IsFiltered (CostructuredArrow (Under.forget P ⊤ X) S) :=
     isFiltered_costructuredArrow_forget' P X
-  set J := CostructuredArrow (Under.forget P ⊤ X) S
-  haveI : EssentiallySmall.{max u v} J := inferInstance
-  -- Use of_essentiallySmall_index to handle universe levels
-  refine ObjectProperty.of_essentiallySmall_index (J := J) ?_ ?_
-  · -- Construct the ColimitPresentation
-    exact { diag := CostructuredArrow.proj (Under.forget P ⊤ X) S ⋙ Under.forget P ⊤ X
-            ι := (indContractionCocone P S).ι
-            isColimit := isColimitIndContractionCocone P S }
-  · -- Prove each object satisfies P.underObj
-    intro j
-    exact j.left.2
+  refine ObjectProperty.of_essentiallySmall_index (J := CostructuredArrow (Under.forget P ⊤ X) S)
+    { diag := CostructuredArrow.proj (Under.forget P ⊤ X) S ⋙ Under.forget P ⊤ X
+      ι := (indContractionCocone P S).ι
+      isColimit := isColimitIndContractionCocone P S } fun j ↦ j.left.2
 
 lemma exists_costructuredArrow_aux [HasPushouts C] [IndSpreads P]
     {S : Under X} (hS : ∀ {T : Under X} (g : S ⟶ T), P g.right → Q g.right →
@@ -201,77 +194,20 @@ lemma exists_costructuredArrow_aux [HasPushouts C] [IndSpreads P]
     (h : IsPushout ((indContractionCocone P S).ι.app j).right f' f.right g)
     (hf' : P f') :
     ∃ (T'' : CostructuredArrow (Under.forget P ⊤ X) S), T''.left.right = T' := by
-  -- Step 1: Set up notation
-  set ι_j := ((indContractionCocone P S).ι.app j).right
-  -- ι_j is the right component of the cocone leg at j
-  -- Step 2: Key fact about ι_j composed with fromIndContraction
-  have hι_from : ι_j ≫ (fromIndContraction P S).right = j.hom.right :=
-    congrArg CommaMorphism.right (ι_fromIndContraction P X S j)
-  -- Step 3: The "small" pushout of j.hom.right and f'
-  have hSmall : IsPushout j.hom.right f'
-      (pushout.inl j.hom.right f') (pushout.inr j.hom.right f') :=
-    IsPushout.of_hasPushout j.hom.right f'
-  -- Step 4: Compatibility for the desc map
-  have hcompat_desc : ι_j ≫ ((fromIndContraction P S).right ≫ pushout.inl j.hom.right f')
-      = f' ≫ pushout.inr j.hom.right f' := by
-    rw [← Category.assoc, hι_from]; exact pushout.condition ..
-  -- Step 5: Construct comparison map T.right → pushout(j.hom.right, f')
-  let comparison := h.desc ((fromIndContraction P S).right ≫ pushout.inl j.hom.right f')
-      (pushout.inr j.hom.right f') hcompat_desc
-  have hcomp_inl : f.right ≫ comparison =
-      (fromIndContraction P S).right ≫ pushout.inl j.hom.right f' := h.inl_desc _ _ _
-  have hcomp_inr : g ≫ comparison = pushout.inr j.hom.right f' := h.inr_desc _ _ _
-  -- Step 6: The outer rectangle is a pushout
-  have hOuter : IsPushout (ι_j ≫ (fromIndContraction P S).right) f'
-      (pushout.inl j.hom.right f') (g ≫ comparison) := by
-    rw [hι_from, hcomp_inr]; exact hSmall
-  -- Step 7: By pasting law, the right square is a pushout
-  have hRightPushout : IsPushout (fromIndContraction P S).right f.right
-      (pushout.inl j.hom.right f') comparison :=
-    IsPushout.of_left hOuter hcomp_inl.symm h
-  -- Step 8: Cobase change gives P and Q on pushout.inl
-  have hQ_inl : Q (pushout.inl j.hom.right f') := Q.of_isPushout hRightPushout hQf
-  have hP_inl : P (pushout.inl j.hom.right f') := P.of_isPushout hRightPushout hPf
-  -- Step 9: Apply hS to get a retraction
-  obtain ⟨s, hs⟩ := hS (CategoryTheory.Under.homMk (pushout.inl j.hom.right f') :
-    S ⟶ CategoryTheory.Under.mk (S.hom ≫ pushout.inl j.hom.right f')) hP_inl hQ_inl
-  have hretract : (pushout.inl j.hom.right f') ≫ s.right = 𝟙 S.right := by
-    have := congrArg CommaMorphism.right hs; simpa using this
-  -- Step 10: Construct φ and prove hφ
-  let φ := pushout.inr j.hom.right f' ≫ s.right
-  have hcond : j.hom.right ≫ pushout.inl j.hom.right f' = f' ≫ pushout.inr j.hom.right f' :=
-    pushout.condition ..
-  have hw : j.left.hom ≫ j.hom.right = S.hom := by
-    have := CategoryTheory.Under.w j.hom
-    exact this
-  have hφ : (j.left.hom ≫ f') ≫ φ = S.hom := by
-    -- Under.w s : (S.hom ≫ pushout.inl) ≫ s.right = S.hom
-    have hs_w : (S.hom ≫ pushout.inl j.hom.right f') ≫ s.right = S.hom :=
-      CategoryTheory.Under.w s
-    -- hcond reassociated with s.right
-    have hcond_reassoc : j.hom.right ≫ pushout.inl j.hom.right f' ≫ s.right =
-        f' ≫ pushout.inr j.hom.right f' ≫ s.right := by
-      rw [← Category.assoc, ← Category.assoc]; exact congrArg (· ≫ s.right) hcond
-    have hcond_reassoc2 : j.left.hom ≫ j.hom.right ≫ pushout.inl j.hom.right f' ≫ s.right =
-        j.left.hom ≫ f' ≫ pushout.inr j.hom.right f' ≫ s.right := by
-      exact congrArg (j.left.hom ≫ ·) hcond_reassoc
-    -- Goal: (j.left.hom ≫ f') ≫ φ = S.hom
-    -- Unfold φ and reassociate
-    change (j.left.hom ≫ f') ≫ (pushout.inr j.hom.right f' ≫ s.right) = S.hom
-    rw [Category.assoc]
-    -- Goal: j.left.hom ≫ f' ≫ pushout.inr ≫ s.right = S.hom
-    rw [← hcond_reassoc2]
-    -- Goal: j.left.hom ≫ (j.hom.right ≫ (pushout.inl ≫ s.right)) = S.hom
-    -- Transform to (j.left.hom ≫ j.hom.right) ≫ (pushout.inl ≫ s.right)
-    -- then to S.hom ≫ (pushout.inl ≫ s.right) = (S.hom ≫ pushout.inl) ≫ s.right = S.hom
-    exact (Category.assoc j.left.hom j.hom.right _).symm.trans
-      ((congrArg (· ≫ (pushout.inl j.hom.right f' ≫ s.right)) hw).trans
-        ((Category.assoc S.hom _ s.right).symm.trans hs_w))
-  -- Step 11: Construct the CostructuredArrow object
-  exact ⟨CategoryTheory.CostructuredArrow.mk
-    (show (Under.forget P ⊤ X).obj (Under.mk ⊤ (j.left.hom ≫ f')
-      (P.comp_mem _ _ j.left.2 hf')) ⟶ S from
-      CategoryTheory.Under.homMk φ hφ), rfl⟩
+  let c := ((CategoryTheory.Under.forget X).mapCocone (indContractionCocone P S))
+  let Pt : Under X :=
+    CategoryTheory.Under.mk (T.hom ≫ pushout.inl f.right (fromIndContraction P S).right)
+  let gu : S ⟶ Pt := CategoryTheory.Under.homMk (pushout.inr _ _)
+    (by
+      rw [← CategoryTheory.Under.w (fromIndContraction P S), Category.assoc]
+      simp [← pushout.condition, Pt])
+  obtain ⟨su, hsu⟩ := hS gu (P.pushout_inr _ _ hPf) (Q.pushout_inr _ _ hQf)
+  let T'' : CostructuredArrow (Under.forget P ⊤ X) S :=
+      ⟨MorphismProperty.Under.mk ⊤ (j.1.hom ≫ f') (P.comp_mem _ _ j.1.2 hf'), ⟨⟨⟩⟩,
+      CategoryTheory.Under.homMk g (by simp [← h.w]) ≫
+        CategoryTheory.Under.homMk (pushout.inl _ _) rfl ≫ su⟩
+  use T''
+  rfl
 
 end IndContraction
 

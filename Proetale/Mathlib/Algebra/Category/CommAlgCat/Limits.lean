@@ -16,17 +16,6 @@ namespace CommAlgCat
 
 variable {R : Type u} [CommRing R]
 
--- Helper lemmas for whiskerLeft interactions with binaryCofan
-private lemma binaryCofan_inl_whiskerLeft {M A B : CommAlgCat R} (f : A ⟶ B) :
-    (binaryCofan M A).inl ≫ (M ◁ f) = (binaryCofan M B).inl := by
-  ext1; dsimp
-  exact Algebra.TensorProduct.map_comp_includeLeft _ _  |>.trans (AlgHom.comp_id _)
-
-private lemma binaryCofan_inr_whiskerLeft {M A B : CommAlgCat R} (f : A ⟶ B) :
-    (binaryCofan M A).inr ≫ (M ◁ f) = f ≫ (binaryCofan M B).inr := by
-  ext1; dsimp
-  exact Algebra.TensorProduct.map_comp_includeRight _ _
-
 -- `AI generated`
 instance preservesColimitsOfShape_tensorLeft
     {J : Type*} [Category J] [IsFiltered J] (M : CommAlgCat R) :
@@ -50,8 +39,10 @@ instance preservesColimitsOfShape_tensorLeft
             intro j j' u
             have hu := s.w u
             have hinl :
-                (binaryCofan M (K.obj j)).inl ≫ (M ◁ K.map u) = (binaryCofan M (K.obj j')).inl :=
-              binaryCofan_inl_whiskerLeft _
+                (binaryCofan M (K.obj j)).inl ≫ (M ◁ K.map u) = (binaryCofan M (K.obj j')).inl := by
+              apply CommAlgCat.hom_ext
+              ext x
+              simp [binaryCofan, whiskerLeft_hom]
             have hu' := congrArg (fun f => (binaryCofan M (K.obj j)).inl ≫ f) hu
             -- Rewrite the left-hand side using `hinl`.
             -- `hu' : inl_j ≫ (M ◁ K.map u) ≫ s.ι.app j' = inl_j ≫ s.ι.app j`.
@@ -74,8 +65,10 @@ instance preservesColimitsOfShape_tensorLeft
             have hu := s.w u
             have hinr :
                 (binaryCofan M (K.obj j)).inr ≫ (M ◁ K.map u) =
-                  K.map u ≫ (binaryCofan M (K.obj j')).inr :=
-              binaryCofan_inr_whiskerLeft _
+                  K.map u ≫ (binaryCofan M (K.obj j')).inr := by
+              apply CommAlgCat.hom_ext
+              ext x
+              simp [binaryCofan, whiskerLeft_hom]
             simpa [Category.assoc, hinr] using
               congrArg (fun f => (binaryCofan M (K.obj j)).inr ≫ f) hu } }
   let rightMap (s : Cocone (K ⋙ MonoidalCategory.tensorLeft M)) : c.pt ⟶ s.pt :=
@@ -103,8 +96,10 @@ instance preservesColimitsOfShape_tensorLeft
   · intro s j
     apply (BinaryCofan.IsColimit.hom_ext (binaryCofanIsColimit M (K.obj j)))
     · have hinl :
-          (binaryCofan M (K.obj j)).inl ≫ (M ◁ c.ι.app j) = (binaryCofan M c.pt).inl :=
-        binaryCofan_inl_whiskerLeft _
+          (binaryCofan M (K.obj j)).inl ≫ (M ◁ c.ι.app j) = (binaryCofan M c.pt).inl := by
+        apply CommAlgCat.hom_ext
+        ext x
+        simp [binaryCofan, whiskerLeft_hom]
       -- left part
       have step1 : (binaryCofan M (K.obj j)).inl ≫ t.ι.app j ≫ descFun s =
             (binaryCofan M (K.obj j)).inl ≫ (M ◁ c.ι.app j) ≫ descFun s := by simp [t]
@@ -114,8 +109,10 @@ instance preservesColimitsOfShape_tensorLeft
       exact step1.trans (step2.trans ((descFun_inl s).trans (leftMap_eq s j)))
     · have hinr :
           (binaryCofan M (K.obj j)).inr ≫ (M ◁ c.ι.app j) =
-            c.ι.app j ≫ (binaryCofan M c.pt).inr :=
-        binaryCofan_inr_whiskerLeft _
+            c.ι.app j ≫ (binaryCofan M c.pt).inr := by
+        apply CommAlgCat.hom_ext
+        ext x
+        simp [binaryCofan, whiskerLeft_hom]
       -- right part
       have rstep1 : (binaryCofan M (K.obj j)).inr ≫ t.ι.app j ≫ descFun s =
             (binaryCofan M (K.obj j)).inr ≫ (M ◁ c.ι.app j) ≫ descFun s := by simp [t]
@@ -136,8 +133,10 @@ instance preservesColimitsOfShape_tensorLeft
         refine (isColimitConstCocone J M).uniq (leftCocone s) ((binaryCofan M c.pt).inl ≫ m) ?_
         intro j
         have hinl :
-            (binaryCofan M (K.obj j)).inl ≫ (M ◁ c.ι.app j) = (binaryCofan M c.pt).inl :=
-          binaryCofan_inl_whiskerLeft _
+            (binaryCofan M (K.obj j)).inl ≫ (M ◁ c.ι.app j) = (binaryCofan M c.pt).inl := by
+          apply CommAlgCat.hom_ext
+          ext x
+          simp [binaryCofan, whiskerLeft_hom]
         have h := congrArg (fun f => (binaryCofan M (K.obj j)).inl ≫ f) (hm j)
         have h' :
             (binaryCofan M (K.obj j)).inl ≫ (M ◁ c.ι.app j) ≫ m =
@@ -164,8 +163,10 @@ instance preservesColimitsOfShape_tensorLeft
         intro j
         have hinr :
             (binaryCofan M (K.obj j)).inr ≫ (M ◁ c.ι.app j) =
-              c.ι.app j ≫ (binaryCofan M c.pt).inr :=
-          binaryCofan_inr_whiskerLeft _
+              c.ι.app j ≫ (binaryCofan M c.pt).inr := by
+          apply CommAlgCat.hom_ext
+          ext x
+          simp [binaryCofan, whiskerLeft_hom]
         have h := congrArg (fun f => (binaryCofan M (K.obj j)).inr ≫ f) (hm j)
         have h' :
             (binaryCofan M (K.obj j)).inr ≫ (M ◁ c.ι.app j) ≫ m =
@@ -192,33 +193,6 @@ instance preservesFilteredColimitsOfSize_forget_commRingCat :
         ((commAlgCatEquivUnder (CommRingCat.of R)).functor ⋙
           Under.forget (CommRingCat.of R)))
 
-/-- Natural isomorphism between `forget (CommAlgCat R)` and the composition through
-the equivalence `CommAlgCat R ≌ Under (CommRingCat.of R)`. -/
-private noncomputable def forgetNatIso (R : Type u) [CommRing R] :
-    forget (CommAlgCat.{u} R) ≅
-      (commAlgCatEquivUnder (CommRingCat.of R)).functor ⋙
-        Under.forget (CommRingCat.of R) ⋙ forget CommRingCat :=
-  NatIso.ofComponents (fun A => Iso.refl _) (by intros; dsimp; rfl)
-
--- forget₂ to CommRingCat preserves filtered colimits: factors through equivalence + Under.forget
-instance preservesFilteredColimits_forget₂_commRingCat (R : Type u) [CommRing R] :
-    PreservesFilteredColimits (forget₂ (CommAlgCat.{u} R) CommRingCat.{u}) := by
-  show PreservesFilteredColimits <|
-    (commAlgCatEquivUnder (.of R)).functor ⋙ Under.forget (CommRingCat.of R)
-  sorry
-
--- forget preserves filtered colimits at {u, u}: forget = forget₂ ⋙ forget CommRingCat
-instance preservesFilteredColimits_forget (R : Type u) [CommRing R] :
-    PreservesFilteredColimits (forget (CommAlgCat.{u} R)) := by
-  rw [show forget (CommAlgCat.{u} R) = forget₂ (CommAlgCat.{u} R) CommRingCat ⋙ forget CommRingCat
-    from HasForget₂.forget_comp.symm]
-  exact comp_preservesFilteredColimits _ _
-
--- Note: The output universe parameters of PreservesFilteredColimitsOfSize cannot be
--- resolved to {u, u} automatically; a direct colimit construction (like Under.forget's
--- instance in Preserves/Over.lean) would be needed for full generality. For now we use sorry.
--- The downstream uses (IsIPC, ReflectsFilteredColimitsOfSize) only need {u, u},
--- which is provided by the preservesFilteredColimits_forget instance above.
 instance preservesFilteredColimitsOfSize_forget (R : Type u) [CommRing R] :
     PreservesFilteredColimitsOfSize.{u, u} (forget (CommAlgCat.{u} R)) :=
   HasForget₂.forget_comp (C := CommAlgCat.{u} R) (D := CommRingCat.{u}) ▸

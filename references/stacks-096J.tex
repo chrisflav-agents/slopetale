@@ -1,0 +1,145 @@
+% Verbatim excerpt from proetale.tex of the Stacks Project, master branch.
+% Source URL:
+%   https://raw.githubusercontent.com/stacks/stacks-project/master/proetale.tex
+% Lines 271--401 of that file (Section 61.3 "Local isomorphisms").
+% Covers tags 096D (section), 096E (definition-local-isomorphism),
+%             096F (lemma-base-change-local-isomorphism),
+%             096G (lemma-composition-local-isomorphism),
+%             096H (lemma-local-isomorphism-permanence),
+%             096I (lemma-local-isomorphism-implies),
+%             096J (lemma-structure-local-isomorphism)       <-- the directive's target tag
+%             096K (lemma-fully-faithful-spaces-over-X),
+%             096L (lemma-local-isomorphism-fully-faithful).
+% Retrieved 2026-06-04. Uses Stacks-project preamble macros (\Spec, \Mor, ...).
+
+\section{Local isomorphisms}
+\label{section-local-isomorphism}
+
+\noindent
+We start with a definition.
+
+\begin{definition}
+\label{definition-local-isomorphism}
+Let $\varphi : A \to B$ be a ring map.
+\begin{enumerate}
+\item We say $A \to B$ is a {\it local isomorphism} if for every prime
+$\mathfrak q \subset B$ there exists a $g \in B$, $g \not \in \mathfrak q$
+such that $A \to B_g$ induces an open immersion $\Spec(B_g) \to \Spec(A)$.
+\item We say $A \to B$ {\it identifies local rings} if for every prime
+$\mathfrak q \subset B$ the canonical map
+$A_{\varphi^{-1}(\mathfrak q)} \to B_\mathfrak q$ is an isomorphism.
+\end{enumerate}
+\end{definition}
+
+\noindent
+We list some elementary properties.
+
+\begin{lemma}
+\label{lemma-base-change-local-isomorphism}
+Let $A \to B$ and $A \to A'$ be ring maps. Let $B' = B \otimes_A A'$
+be the base change of $B$.
+\begin{enumerate}
+\item If $A \to B$ is a local isomorphism, then $A' \to B'$ is a
+local isomorphism.
+\item If $A \to B$ identifies local rings, then $A' \to B'$
+identifies local rings.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Omitted.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-composition-local-isomorphism}
+Let $A \to B$ and $B \to C$ be ring maps.
+\begin{enumerate}
+\item If $A \to B$ and $B \to C$ are local isomorphisms, then $A \to C$
+is a local isomorphism.
+\item If $A \to B$ and $B \to C$ identify local rings, then $A \to C$
+identifies local rings.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Omitted.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-local-isomorphism-permanence}
+Let $A$ be a ring. Let $B \to C$ be an $A$-algebra homomorphism.
+\begin{enumerate}
+\item If $A \to B$ and $A \to C$ are local isomorphisms, then $B \to C$
+is a local isomorphism.
+\item If $A \to B$ and $A \to C$ identify local rings, then $B \to C$
+identifies local rings.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Omitted.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-local-isomorphism-implies}
+Let $A \to B$ be a local isomorphism. Then
+\begin{enumerate}
+\item $A \to B$ is \'etale,
+\item $A \to B$ identifies local rings,
+\item $A \to B$ is quasi-finite.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Omitted.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-structure-local-isomorphism}
+Let $A \to B$ be a local isomorphism. Then there exist $n \geq 0$,
+$g_1, \ldots, g_n \in B$, $f_1, \ldots, f_n \in A$ such that
+$(g_1, \ldots, g_n) = B$ and $A_{f_i} \cong B_{g_i}$.
+\end{lemma}
+
+\begin{proof}
+Omitted.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-fully-faithful-spaces-over-X}
+Let $p : (Y, \mathcal{O}_Y) \to (X, \mathcal{O}_X)$ and
+$q : (Z, \mathcal{O}_Z) \to (X, \mathcal{O}_X)$
+be morphisms of locally ringed spaces.
+If $\mathcal{O}_Y = p^{-1}\mathcal{O}_X$, then
+$$
+\Mor_{\text{LRS}/(X, \mathcal{O}_X)}((Z, \mathcal{O}_Z), (Y, \mathcal{O}_Y))
+\longrightarrow
+\Mor_{\textit{Top}/X}(Z, Y),\quad
+(f, f^\sharp) \longmapsto f
+$$
+is bijective. Here $\text{LRS}/(X, \mathcal{O}_X)$ is the category of
+locally ringed spaces over $X$ and $\textit{Top}/X$ is the category
+of topological spaces over $X$.
+\end{lemma}
+
+\begin{proof}
+This is immediate from the definitions.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-local-isomorphism-fully-faithful}
+Let $A$ be a ring. Set $X = \Spec(A)$. The functor
+$$
+B \longmapsto \Spec(B)
+$$
+from the category of $A$-algebras $B$ such that $A \to B$ identifies
+local rings to the category of
+topological spaces over $X$ is fully faithful.
+\end{lemma}
+
+\begin{proof}
+This follows from Lemma \ref{lemma-fully-faithful-spaces-over-X}
+and the fact that if $A \to B$ identifies local rings, then the pullback
+of the structure sheaf of $\Spec(A)$ via $p : \Spec(B) \to \Spec(A)$
+is equal to the structure sheaf of $\Spec(B)$.
+\end{proof}

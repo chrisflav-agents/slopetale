@@ -5,6 +5,7 @@ Authors: Jiedong Jiang, Christian Merten
 -/
 import Proetale.Topology.SpectralSpace.ConnectedComponent
 import Proetale.Topology.SpectralSpace.WLocal.ClosedPoints
+import Proetale.Topology.SpectralSpace.WLocal.ConnectedComponents
 import Proetale.Mathlib.Topology.Connected.TotallyDisconnected
 
 /-!

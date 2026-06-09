@@ -1,0 +1,587 @@
+% Vendored verbatim excerpts from The Stacks Project, master branch,
+% retrieved 2026-06-05. Source URLs noted below.
+% Do NOT edit content — only headers/comments added by the retriever.
+%
+% =====================================================================
+% Section "Pure ideals" — Algebra (algebra.tex), §10.108 (tag 04PQ).
+% Source URL: https://raw.githubusercontent.com/stacks/stacks-project/master/algebra.tex
+%   * tag 04PR = \label{definition-pure-ideal}
+%   * tag 04PS = \label{lemma-pure} (11-way equivalence for purity)
+%   * tag 04PT = \label{lemma-pure-ideal-determined-by-zero-set}
+%   * tag 04PU = \label{lemma-pure-open-closed-specializations}
+%   * tag 04PV = \label{lemma-finitely-generated-pure-ideal}
+%   * tag 053I = \label{lemma-finite-flat-module-finitely-presented} (bonus)
+% (Verify tag IDs against https://stacks.math.columbia.edu/tag/<TAG>.
+%  The actual lemma numbers are 10.108.1..10.108.6 in Algebra Section 10.108.)
+% Lines copied verbatim from stacks-algebra-full.tex lines 26196-26473.
+% =====================================================================
+
+\section{Pure ideals}
+\label{section-pure-ideals}
+
+\noindent
+The material in this section is discussed in many papers, see for example
+\cite{Lazard}, \cite{Bkouche}, and \cite{DeMarco}.
+
+\begin{definition}
+\label{definition-pure-ideal}
+Let $R$ be a ring. We say that $I \subset R$ is {\it pure}
+if the quotient ring $R/I$ is flat over $R$.
+\end{definition}
+
+\begin{lemma}
+\label{lemma-pure}
+Let $R$ be a ring.
+Let $I \subset R$ be an ideal.
+The following are equivalent:
+\begin{enumerate}
+\item $I$ is pure,
+\item for every ideal $J \subset R$ we have $J \cap I = IJ$,
+\item for every finitely generated ideal $J \subset R$ we have
+$J \cap I = JI$,
+\item for every $x \in R$ we have $(x) \cap I = xI$,
+\item for every $x \in I$ we have $x = yx$ for some $y \in I$,
+\item for every $x_1, \ldots, x_n \in I$ there exists a
+$y \in I$ such that $x_i = yx_i$ for all $i = 1, \ldots, n$,
+\item for every prime $\mathfrak p$ of $R$ we have
+$IR_{\mathfrak p} = 0$ or $IR_{\mathfrak p} = R_{\mathfrak p}$,
+\item $\text{Supp}(I) = \Spec(R) \setminus V(I)$,
+\item $I$ is the kernel of the map $R \to (1 + I)^{-1}R$,
+\item $R/I \cong S^{-1}R$ as $R$-algebras for some multiplicative
+subset $S$ of $R$, and
+\item $R/I \cong (1 + I)^{-1}R$ as $R$-algebras.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+For any ideal $J$ of $R$ we have the short exact sequence
+$0 \to J \to R \to R/J \to 0$. Tensoring with $R/I$ we get
+an exact sequence $J \otimes_R R/I \to R/I \to R/I + J \to 0$
+and $J \otimes_R R/I = J/JI$. Thus the
+equivalence of (1), (2), and (3) follows from
+Lemma \ref{lemma-flat}. Moreover, these imply (4).
+
+\medskip\noindent
+The implication (4) $\Rightarrow$ (5) is trivial.
+Assume (5) and let $x_1, \ldots, x_n \in I$.
+Choose $y_i \in I$ such that $x_i = y_ix_i$.
+Let $y \in I$ be the element such that
+$1 - y = \prod_{i = 1, \ldots, n} (1 - y_i)$.
+Then $x_i = yx_i$ for all $i = 1, \ldots, n$.
+Hence (6) holds, and it follows that (5) $\Leftrightarrow$ (6).
+
+\medskip\noindent
+Assume (5). Let $x \in I$. Then $x = yx$ for some $y \in I$.
+Hence $x(1 - y) = 0$, which shows that $x$ maps to zero in
+$(1 + I)^{-1}R$. Of course the kernel of the map
+$R \to (1 + I)^{-1}R$ is always contained in $I$. Hence we
+see that (5) implies (9). Assume (9). Then for any $x \in I$
+we see that $x(1 - y) = 0$ for some $y \in I$.
+In other words, $x = yx$. We conclude that (5) is equivalent to (9).
+
+\medskip\noindent
+Assume (5). Let $\mathfrak p$ be a prime of $R$.
+If $\mathfrak p \not \in V(I)$, then $IR_{\mathfrak p} = R_{\mathfrak p}$.
+If $\mathfrak p \in V(I)$, in other words, if $I \subset \mathfrak p$,
+then $x \in I$ implies $x(1 - y) = 0$ for some $y \in I$, implies
+$x$ maps to zero in $R_{\mathfrak p}$, i.e., $IR_{\mathfrak p} = 0$.
+Thus we see that (7) holds.
+
+\medskip\noindent
+Assume (7). Then $(R/I)_{\mathfrak p}$ is either $0$ or $R_{\mathfrak p}$
+for any prime $\mathfrak p$ of $R$. Hence by
+Lemma \ref{lemma-flat-localization}
+we see that (1) holds. At this point we see that all of
+(1) -- (7) and (9) are equivalent.
+
+\medskip\noindent
+As $IR_{\mathfrak p} = I_{\mathfrak p}$ we see that (7) implies (8).
+Finally, if (8) holds, then this means exactly that $I_{\mathfrak p}$
+is the zero module if and only if $\mathfrak p \in V(I)$, which
+is clearly saying that (7) holds. Now (1) -- (9) are equivalent.
+
+\medskip\noindent
+Assume (1) -- (9) hold. Then $R/I \subset (1 + I)^{-1}R$ by (9) and
+the map $R/I \to (1 + I)^{-1}R$ is also surjective by the description
+of localizations at primes afforded by (7). Hence (11) holds.
+
+\medskip\noindent
+The implication (11) $\Rightarrow$ (10) is trivial.
+And (10) implies that (1) holds because a localization of
+$R$ is flat over $R$, see
+Lemma \ref{lemma-flat-localization}.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-pure-ideal-determined-by-zero-set}
+\begin{slogan}
+Pure ideals are determined by their vanishing locus.
+\end{slogan}
+Let $R$ be a ring.
+If $I, J \subset R$ are pure ideals, then $V(I) = V(J)$
+implies $I = J$.
+\end{lemma}
+
+\begin{proof}
+For example, by property (7) of
+Lemma \ref{lemma-pure}
+we see that
+$I = \Ker(R \to \prod_{\mathfrak p \in V(I)} R_{\mathfrak p})$
+can be recovered from the closed subset associated to it.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-pure-open-closed-specializations}
+Let $R$ be a ring. The rule
+$I \mapsto V(I)$
+determines a bijection
+$$
+\{I \subset R \text{ pure}\}
+\leftrightarrow
+\{Z \subset \Spec(R)\text{ closed and closed under generalizations}\}
+$$
+\end{lemma}
+
+\begin{proof}
+Let $I$ be a pure ideal. Then since $R \to R/I$ is flat, by going down
+generalizations lift along the map $\Spec(R/I) \to \Spec(R)$.
+Hence $V(I)$ is closed under generalizations. This shows that the map
+is well defined. By
+Lemma \ref{lemma-pure-ideal-determined-by-zero-set}
+the map is injective. Suppose that
+$Z \subset \Spec(R)$ is closed and closed under generalizations.
+Let $J \subset R$ be the radical ideal such that $Z = V(J)$.
+Let $I = \{x \in R : x \in xJ\}$. Note that $I$ is an ideal:
+if $x, y \in I$ then there exist $f, g \in J$ such that
+$x = xf$ and $y = yg$. Then
+$$
+x + y = (x + y)(f + g - fg)
+$$
+Verification left to the reader.
+We claim that $I$ is pure and that $V(I) = V(J)$.
+If the claim is true then the map of the lemma is surjective and
+the lemma holds.
+
+\medskip\noindent
+Note that $I \subset J$, so that $V(J) \subset V(I)$.
+Let $I \subset \mathfrak p$ be a prime. Consider the multiplicative
+subset $S = (R \setminus \mathfrak p)(1 + J)$. By definition of
+$I$ and $I \subset \mathfrak p$ we see that $0 \not \in S$.
+Hence we can find a prime $\mathfrak q$ of $R$ which is disjoint
+from $S$, see
+Lemmas \ref{lemma-localization-zero} and
+\ref{lemma-spec-localization}.
+Hence $\mathfrak q \subset \mathfrak p$ and
+$\mathfrak q \cap (1 + J) = \emptyset$.
+This implies that $\mathfrak q + J$ is a proper ideal of $R$.
+Let $\mathfrak m$ be a maximal ideal containing $\mathfrak q + J$.
+Then we get
+$\mathfrak m \in V(J)$ and hence $\mathfrak q \in V(J) = Z$
+as $Z$ was assumed to be closed under generalization.
+This in turn implies $\mathfrak p \in V(J)$ as
+$\mathfrak q \subset \mathfrak p$. Thus we see that $V(I) = V(J)$.
+
+\medskip\noindent
+Finally, since $V(I) = V(J)$ (and $J$ radical) we see that $J = \sqrt{I}$.
+Pick $x \in I$, so that $x = xy$ for some $y \in J$ by definition.
+Then $x = xy = xy^2 = \ldots = xy^n$. Since $y^n \in I$ for some $n > 0$
+we conclude that property (5) of
+Lemma \ref{lemma-pure}
+holds and we see that $I$ is indeed pure.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-finitely-generated-pure-ideal}
+Let $R$ be a ring. Let $I \subset R$ be an ideal.
+The following are equivalent
+\begin{enumerate}
+\item $I$ is pure and finitely generated,
+\item $I$ is generated by an idempotent,
+\item $I$ is pure and $V(I)$ is open, and
+\item $R/I$ is a projective $R$-module.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+If (1) holds, then $I = I \cap I = I^2$ by
+Lemma \ref{lemma-pure}.
+Hence $I$ is generated by an idempotent by
+Lemma \ref{lemma-ideal-is-squared-union-connected}.
+Thus (1) $\Rightarrow$ (2).
+If (2) holds, then $I = (e)$ and $R = (1 - e) \oplus (e)$ as
+an $R$-module hence $R/I$ is flat and $I$ is pure and $V(I) = D(1 - e)$
+is open. Thus (2) $\Rightarrow$ (1) $+$ (3).
+Finally, assume (3). Then $V(I)$ is open and closed, hence
+$V(I) = D(1 - e)$ for some idempotent $e$ of $R$, see
+Lemma \ref{lemma-disjoint-decomposition}.
+The ideal $J = (e)$ is a pure ideal such that $V(J) = V(I)$ hence
+$I = J$ by
+Lemma \ref{lemma-pure-ideal-determined-by-zero-set}.
+In this way we see that (3) $\Rightarrow$ (2). By
+Lemma \ref{lemma-finite-projective}
+we see that (4) is equivalent to the assertion that $I$ is pure
+and $R/I$ finitely presented. Moreover, $R/I$ is finitely presented
+if and only if $I$ is finitely generated, see Lemma \ref{lemma-extension}.
+Hence (4) is equivalent to (1).
+\end{proof}
+
+\noindent
+We can use the above to characterize those rings for which every finite
+flat module is finitely presented.
+
+\begin{lemma}
+\label{lemma-finite-flat-module-finitely-presented}
+Let $R$ be a ring. The following are equivalent:
+\begin{enumerate}
+\item every $Z \subset \Spec(R)$ which is closed and closed under
+generalizations is also open, and
+\item any finite flat $R$-module is finite locally free.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+If any finite flat $R$-module is finite locally free then the support
+of $R/I$ where $I$ is a pure ideal is open. Hence the implication
+(2) $\Rightarrow$ (1) follows from
+Lemma \ref{lemma-pure-ideal-determined-by-zero-set}.
+
+\medskip\noindent
+For the converse assume that $R$ satisfies (1).
+Let $M$ be a finite flat $R$-module.
+The support $Z = \text{Supp}(M)$ of $M$ is closed, see
+Lemma \ref{lemma-support-closed}.
+On the other hand, if $\mathfrak p \subset \mathfrak p'$, then by
+Lemma \ref{lemma-finite-flat-local}
+the module $M_{\mathfrak p'}$ is free, and
+$M_{\mathfrak p} = M_{\mathfrak p'} \otimes_{R_{\mathfrak p'}} R_{\mathfrak p}$
+Hence
+$\mathfrak p' \in \text{Supp}(M) \Rightarrow \mathfrak p \in \text{Supp}(M)$,
+in other words, the support is closed under generalization.
+As $R$ satisfies (1) we see that the support of $M$ is open and closed.
+Suppose that $M$ is generated by $r$ elements $m_1, \ldots, m_r$.
+The modules $\wedge^i(M)$, $i = 1, \ldots, r$ are finite flat $R$-modules
+also, because $\wedge^i(M)_{\mathfrak p} = \wedge^i(M_{\mathfrak p})$
+is free over $R_{\mathfrak p}$. Note that
+$\text{Supp}(\wedge^{i + 1}(M)) \subset \text{Supp}(\wedge^i(M))$.
+Thus we see that there exists a decomposition
+$$
+\Spec(R) = U_0 \amalg U_1 \amalg \ldots \amalg U_r
+$$
+by open and closed subsets such that the support of
+$\wedge^i(M)$ is $U_r \cup \ldots \cup U_i$ for all $i = 0, \ldots, r$.
+Let $\mathfrak p$ be a prime of $R$, and say $\mathfrak p \in U_i$.
+Note that
+$\wedge^i(M) \otimes_R \kappa(\mathfrak p) =
+\wedge^i(M \otimes_R \kappa(\mathfrak p))$.
+Hence, after possibly renumbering $m_1, \ldots, m_r$ we may assume that
+$m_1, \ldots, m_i$ generate $M \otimes_R \kappa(\mathfrak p)$. By
+Nakayama's Lemma \ref{lemma-NAK}
+we get a surjection
+$$
+R_f^{\oplus i} \longrightarrow M_f, \quad
+(a_1, \ldots, a_i) \longmapsto \sum a_im_i
+$$
+for some $f \in R$, $f \not \in \mathfrak p$. We may also assume that
+$D(f) \subset U_i$. This means that $\wedge^i(M_f) = \wedge^i(M)_f$
+is a flat $R_f$ module whose support is all of $\Spec(R_f)$.
+By the above it is generated by a single element, namely
+$m_1 \wedge \ldots \wedge m_i$. Hence $\wedge^i(M)_f \cong R_f/J$
+for some pure ideal $J \subset R_f$ with $V(J) = \Spec(R_f)$.
+Clearly this means that $J = (0)$, see
+Lemma \ref{lemma-pure-ideal-determined-by-zero-set}.
+Thus $m_1 \wedge \ldots \wedge m_i$ is a basis for
+$\wedge^i(M_f)$ and it follows that the displayed map is injective
+as well as surjective. This proves that $M$ is finite locally free
+as desired.
+\end{proof}
+
+
+% =====================================================================
+% Section "Weakly étale algebras over fields" — More on Algebra
+% (more-algebra.tex), §15.107 (tag 0CKQ).
+% Source URL: https://raw.githubusercontent.com/stacks/stacks-project/master/more-algebra.tex
+%   * tag 0CKQ = section tag (section-weakly-etale-over-field, §15.107)
+%   * tag 0CKR = \label{lemma-class-weakly-etale-over-field}  Lemma 15.107.1
+%   * tag 0CKS = \label{lemma-max-weakly-etale-subalgebra}    Lemma 15.107.2
+%   * tag 0CKT = \label{lemma-properties-of-max-weakly-etale-subalgebra} Lemma 15.107.3
+%   * tag 0CKU = \label{lemma-change-fields-max-weakly-etale-subalgebra} Lemma 15.107.4
+% Lines copied verbatim from stacks-09xi-more-algebra-full.tex lines 30836-31112.
+% =====================================================================
+
+\section{Weakly \'etale algebras over fields}
+\label{section-weakly-etale-over-field}
+
+\noindent
+If $K$ is a field, then an algebra $B$ is weakly \'etale over $K$
+if and only if it is a filtered colimit of \'etale $K$-algebras.
+This is Lemma \ref{lemma-absolutely-flat-over-field}.
+
+\begin{lemma}
+\label{lemma-class-weakly-etale-over-field}
+Let $K$ be a field. If $B$ is weakly \'etale over $K$, then
+\begin{enumerate}
+\item $B$ is reduced,
+\item $B$ is integral over $K$,
+\item any finitely generated $K$-subalgebra of $B$ is a finite product
+of finite separable extensions of $K$,
+\item $B$ is a field if and only if $B$ does not have nontrivial idempotents
+and in this case it is a separable algebraic extension of $K$,
+\item any sub or quotient $K$-algebra of $B$ is weakly \'etale over $K$,
+\item if $B'$ is weakly \'etale over $K$, then $B \otimes_K B'$ is
+weakly \'etale over $K$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Part (1) follows from Lemma \ref{lemma-absolutely-flat-over-absolutely-flat}
+but of course it follows from part (3) as well.
+Part (3) follows from Lemma \ref{lemma-absolutely-flat-over-field}
+and the fact that \'etale $K$-algebras are finite products of
+finite separable extensions of $K$, see
+Algebra, Lemma \ref{algebra-lemma-etale-over-field}.
+Part (3) implies (2).
+Part (4) follows from (3) as a product of fields is
+a field if and only if it has no nontrivial idempotents.
+
+\medskip\noindent
+If $S \subset B$ is a subalgebra, then it is the filtered
+colimit of its finitely generated subalgebras which are
+all \'etale over $K$ by the above and hence
+$S$ is weakly \'etale over $K$ by
+Lemma \ref{lemma-absolutely-flat-over-field}.
+If $B \to Q$ is a quotient algebra, then
+$Q$ is the filtered colimit of $K$-algebra quotients of
+finite products $\prod_{i \in I} L_i$ of finite separable extensions
+$L_i/K$. Such a quotient is of the form $\prod_{i \in J} L_i$
+for some subset $J \subset I$ and hence the result
+holds for quotients by the same reasoning.
+
+\medskip\noindent
+The statement on tensor products follows in a similar manner
+or by combining Lemmas \ref{lemma-base-change-weakly-etale} and
+\ref{lemma-composition-weakly-etale}.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-max-weakly-etale-subalgebra}
+Let $K$ be a field. Let $A$ be a $K$-algebra. There exists
+a maximal weakly \'etale $K$-subalgebra $B_{max} \subset A$.
+\end{lemma}
+
+\begin{proof}
+Let $B_1, B_2 \subset A$ be weakly \'etale $K$-subalgebras.
+Then $B_1 \otimes_K B_2$ is weakly \'etale over $K$
+and so is the image of $B_1 \otimes_K B_2 \to A$
+(Lemma \ref{lemma-class-weakly-etale-over-field}).
+Thus the collection $\mathcal{B}$ of weakly \'etale $K$-subalgebras
+$B \subset A$ is directed and the colimit
+$B_{max} = \colim_{B \in \mathcal{B}} B$ is
+a weakly \'etale $K$-algebra by Lemma \ref{lemma-when-weakly-etale}.
+Hence the image of $B_{max} \to A$ is weakly \'etale over $K$
+(previous lemma cited). It follows that this image is in $\mathcal{B}$
+and hence $\mathcal{B}$ has a maximal element
+(and the image is the same as $B_{max}$).
+\end{proof}
+
+\begin{lemma}
+\label{lemma-properties-of-max-weakly-etale-subalgebra}
+Let $K$ be a field. For a $K$-algebra $A$ denote $B_{max}(A)$
+the maximal weakly \'etale $K$-subalgebra of $A$ as in
+Lemma \ref{lemma-max-weakly-etale-subalgebra}. Then
+\begin{enumerate}
+\item any $K$-algebra map $A' \to A$ induces a $K$-algebra map
+$B_{max}(A') \to B_{max}(A)$,
+\item if $A' \subset A$, then $B_{max}(A') = B_{max}(A) \cap A'$,
+\item if $A = \colim A_i$ is a filtered colimit, then
+$B_{max}(A) = \colim B_{max}(A_i)$,
+\item the map $B_{max}(A) \to B_{max}(A_{red})$ is an isomorphism,
+\item $B_{max}(A_1 \times \ldots \times A_n) =
+B_{max}(A_1) \times \ldots \times B_{max}(A_n)$,
+\item if $A$ has no nontrivial idempotents, then $B_{max}(A)$ is a
+field and a separable algebraic extension of $K$,
+\item add more here.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Proof of (1). This is true because the image of $B_{max}(A') \to A$
+is weakly \'etale over $K$ by Lemma \ref{lemma-class-weakly-etale-over-field}.
+
+\medskip\noindent
+Proof of (2). By (1) we have $B_{max}(A') \subset B_{max}(A)$.
+Conversely, $B_{max}(A) \cap A'$ is a weakly \'etale $K$-algebra
+by Lemma \ref{lemma-class-weakly-etale-over-field} and hence
+contained in $B_{max}(A')$.
+
+\medskip\noindent
+Proof of (3). By (1) there is a map $\colim B_{max}(A_i) \to A$
+which is injective because the system is filtered and
+$B_{max}(A_i) \subset A_i$. The colimit $\colim B_{max}(A_i)$
+is weakly \'etale over $K$ by
+Lemma \ref{lemma-when-weakly-etale}.
+Hence we get an injective map $\colim B_{max}(A_i) \to B_{max}(A)$.
+Suppose that $a \in B_{max}(A)$. Then $a$ generates a finitely presented
+$K$-subalgebra $B \subset B_{max}(A)$.
+By Algebra, Lemma \ref{algebra-lemma-characterize-finite-presentation}
+there is an $i$ and a $K$-algebra map $f : B \to A_i$
+lifting the given map $B \to A$.
+Since $B$ is weakly \'etale by
+Lemma \ref{lemma-class-weakly-etale-over-field},
+we see that $f(B) \subset B_{max}(A_i)$ and we conclude that $a$
+is in the image of $\colim B_{max}(A_i) \to B_{max}(A)$.
+
+\medskip\noindent
+Proof of (4). Write $B_{max}(A_{red}) = \colim B_i$
+as a filtered colimit of \'etale $K$-algebras
+(Lemma \ref{lemma-absolutely-flat-over-field}).
+By Algebra, Lemma \ref{algebra-lemma-smooth-strong-lift}
+for each $i$ there is a $K$-algebra map $f_i : B_i \to A$
+lifting the given map $B_i \to A_{red}$. It follows that the
+canonical map $B_{max}(A_{red}) \to B_{max}(A)$ is surjective.
+The kernel consists of nilpotent elements and hence is zero
+as $B_{max}(A_{red})$ is reduced
+(Lemma \ref{lemma-class-weakly-etale-over-field}).
+
+\medskip\noindent
+Proof of (5). Omitted.
+
+\medskip\noindent
+Proof of (6). Follows from Lemma \ref{lemma-class-weakly-etale-over-field}
+part (4).
+\end{proof}
+
+\begin{lemma}
+\label{lemma-change-fields-max-weakly-etale-subalgebra}
+Let $L/K$ be an extension of fields. Let $A$ be a $K$-algebra.
+Let $B \subset A$ be the maximal weakly \'etale $K$-subalgebra of
+$A$ as in Lemma \ref{lemma-max-weakly-etale-subalgebra}.
+Then $B \otimes_K L$ is the maximal weakly \'etale $L$-subalgebra
+of $A \otimes_K L$.
+\end{lemma}
+
+\begin{proof}
+For an algebra $A$ over $K$ we write $B_{max}(A/K)$
+for the maximal weakly \'etale $K$-subalgebra of $A$.
+Similarly we write $B_{max}(A'/L)$ for the maximal weakly \'etale
+$L$-subalgebra of $A'$ if $A'$ is an $L$-algebra.
+Since $B_{max}(A/K) \otimes_K L$ is weakly \'etale over $L$
+(Lemma \ref{lemma-base-change-weakly-etale})
+and since $B_{max}(A/K) \otimes_K L \subset A \otimes_K L$
+we obtain a canonical injective map
+$$
+B_{max}(A/K) \otimes_K L \to B_{max}((A \otimes_K L)/L)
+$$
+The lemma states that this map is an isomorphism.
+
+\medskip\noindent
+To prove the lemma for $L$ and our $K$-algebra $A$, it suffices to
+prove the lemma for any field extension $L'$ of $L$. Namely, we have
+the factorization
+$$
+B_{max}(A/K) \otimes_K L' \to
+B_{max}((A \otimes_K L)/L) \otimes_L L' \to
+B_{max}((A \otimes_K L')/L')
+$$
+hence the composition cannot be surjective without
+$B_{max}(A/K) \otimes_K L \to B_{max}((A \otimes_K L)/L)$
+being surjective. Thus we may assume $L$ is algebraically closed.
+
+\medskip\noindent
+Reduction to finite type $K$-algebra. We may write $A$
+is the filtered colimit of its finite type $K$-subalgebras.
+Using Lemma \ref{lemma-properties-of-max-weakly-etale-subalgebra}
+we see that it suffices to prove the lemma for finite type
+$K$-algebras.
+
+\medskip\noindent
+Assume $A$ is a finite type $K$-algebra. Since the kernel
+of $A \to A_{red}$ is nilpotent, the same is true for
+$A \otimes_K L \to A_{red} \otimes_K L$. Then
+$$
+B_{max}((A \otimes_K L)/L) \to B_{max}((A_{red} \otimes_K L)/L)
+$$
+is injective because the kernel is nilpotent and the
+weakly \'etale $L$-algebra $B_{max}((A \otimes_K L)/L)$ is reduced
+(Lemma \ref{lemma-class-weakly-etale-over-field}).
+Since $B_{max}(A/K) = B_{max}(A_{red}/K)$
+by Lemma \ref{lemma-properties-of-max-weakly-etale-subalgebra}
+we conclude
+that it suffices to prove the lemma for $A_{red}$.
+
+\medskip\noindent
+Assume $A$ is a reduced finite type $K$-algebra.
+Let $Q = Q(A)$ be the total quotient ring of $A$.
+Then $A \subset Q$ and $A \otimes_K L \subset Q \otimes_A L$
+and hence
+$$
+B_{max}(A/K) = A \cap B_{max}(Q/K)
+$$
+and
+$$
+B_{max}((A \otimes_K L)/L) =
+(A \otimes_K L) \cap B_{max}((Q \otimes_K L)/L)
+$$
+by Lemma \ref{lemma-properties-of-max-weakly-etale-subalgebra}.
+Since $-\otimes_K L$ is an exact functor, it follows that
+if we prove the result for $Q$, then the result follows for $A$.
+Since $Q$ is a finite product of fields (Algebra, Lemmas
+\ref{algebra-lemma-total-ring-fractions-no-embedded-points},
+\ref{algebra-lemma-minimal-prime-reduced-ring},
+\ref{algebra-lemma-Noetherian-irreducible-components}, and
+\ref{algebra-lemma-Noetherian-permanence})
+and since $B_{max}$ commutes with products
+(Lemma \ref{lemma-properties-of-max-weakly-etale-subalgebra})
+it suffices to prove the lemma when $A$ is a field.
+
+\medskip\noindent
+Assume $A$ is a field. We reduce to $A$ being finitely generated
+over $K$ by the argument in the third paragraph of the proof.
+(In fact the way we reduced to the case of a field produces
+a finitely generated field extension of $K$.)
+
+\medskip\noindent
+Assume $A$ is a finitely generated field extension of $K$.
+Then $K' = B_{max}(A/K)$ is a field separable algebraic over $K$ by
+Lemma \ref{lemma-properties-of-max-weakly-etale-subalgebra} part (6).
+Hence $K'$ is a finite separable field extension
+of $K$ and $A$ is geometrically irreducible over $K'$ by
+Algebra, Lemma \ref{algebra-lemma-make-geometrically-irreducible}.
+Since $L$ is algebraically closed and $K'/K$ finite separable
+we see that
+$$
+K' \otimes_K L \to \prod\nolimits_{\sigma \in \Hom_K(K', L)} L,\quad
+\alpha \otimes \beta \mapsto (\sigma(\alpha)\beta)_\sigma
+$$
+is an isomorphism
+(Fields, Lemma \ref{fields-lemma-finite-separable-tensor-alg-closed}).
+We conclude
+$$
+A \otimes_K L = A \otimes_{K'} (K' \otimes_K L) =
+\prod\nolimits_{\sigma \in \Hom_K(K', L)} A \otimes_{K', \sigma} L
+$$
+Since $A$ is geometrically irreducible over $K'$ we see that
+$A \otimes_{K', \sigma} L$ has a unique minimal prime.
+Since $L$ is algebraically closed it follows that
+$B_{max}((A \otimes_{K', \sigma} L)/L) = L$
+because this $L$-algebra is a field algebraic over $L$ by
+Lemma \ref{lemma-properties-of-max-weakly-etale-subalgebra} part (6).
+It follows that the maximal weakly \'etale $K' \otimes_K L$-subalgebra
+of $A \otimes_K L$ is $K' \otimes_K L$ because we can decompose
+these subalgebras into products as above. Hence the inclusion
+$K' \otimes_K L \subset B_{max}((A \otimes_K L)/L)$ is an
+equality: the ring map $K' \otimes_K L \to B_{max}((A \otimes_K L)/L)$
+is weakly \'etale by
+Lemma \ref{lemma-weakly-etale-permanence}.
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+

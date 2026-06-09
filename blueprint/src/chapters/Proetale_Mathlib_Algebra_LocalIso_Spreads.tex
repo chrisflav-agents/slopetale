@@ -1,0 +1,112 @@
+\chapter{Spreads (\texorpdfstring{\texttt{Mathlib.Algebra.LocalIso.Spreads}}{Spreads})}
+\label{chap:mathlib-algebra-localiso-spreads}
+
+This chapter records the informal content of
+\texttt{Proetale/Mathlib/Algebra/LocalIso/Spreads.lean}. The file develops the
+\emph{spreading-out} part of the local-iso / standard-open-immersion machinery:
+given an \'etale algebra $S$ over $R$ which is built by base-change from an
+\'etale spread $R_{0,\mathrm{et}} \to S_{0,\mathrm{et}}$ along a subring
+$R_0 \subseteq R$, a standard-open immersion at the $R$-level can be spread out
+to a standard-open immersion at the $R_0$-level.
+
+\section{Statement of the genuine outstanding obligation}
+\label{sec:spreads-genuine-obligation}
+
+The current file contains a single scoped \texttt{sorry}, inside the helper
+
+\begin{lemma}[Stacks \texttt{04D1} / \texttt{02JL}: section descent]
+  \label{lem:section-descends-to-R0}
+  \lean{Algebra.IsLocalIso.section_descends_to_R0}
+  Let $R_{0,\mathrm{et}} \to R_0 \hookrightarrow R$ be a chain of rings,
+  $S_{0,\mathrm{et}}$ \'etale over $R_{0,\mathrm{et}}$, and let
+  $e : S \simeq R \otimes_{R_{0,\mathrm{et}}} S_{0,\mathrm{et}}$ be an
+  $R$-algebra isomorphism. Given the divisibility data
+  $g^n = (\mathrm{algMap}_R\, r)\cdot c_g$ in $S$ (with $r = \mathrm{algMap}\, r_0$),
+  the bridge data $\mathrm{cancelBaseChange}(1 \otimes g_0) \mapsto g$,
+  $\mathrm{cancelBaseChange}(1 \otimes c_0) \mapsto c_g$ via $e^{-1}$, the
+  unit-witness hypothesis that powers of $r_0$ become units in
+  $\mathrm{Loc}_{g_0}$, and an $R_{0,\mathrm{et}}$-algebra section
+  $\mathrm{sec}_R : S_{0,\mathrm{et}} \to \mathrm{Loc}_{r}$ at the $R$-level,
+  there exists a descended section
+  $\mathrm{sec}_0 : S_{0,\mathrm{et}} \to \mathrm{Loc}_{r_0}$ satisfying:
+  \begin{enumerate}
+  \item (bridge compatibility) the bridge
+    $\mathrm{algMap\_loc}_{R_0 \to R}\, r_0$ post-composed with $\mathrm{sec}_0$
+    equals $\mathrm{sec}_R$;
+  \item (unit witness) the tensor-product lift
+    $\varphi := \mathrm{Algebra.TensorProduct.lift}(\mathrm{ofId}_{R_0}, \mathrm{sec}_0)
+    : R_0 \otimes_{R_{0,\mathrm{et}}} S_{0,\mathrm{et}} \to \mathrm{Loc}_{r_0}$
+    sends $g_0$ to a unit;
+  \item (canonical identity) the forward map
+    $\mathrm{fwd}_{AH} : \mathrm{Loc}_{r_0} \to \mathrm{Loc}_{g_0}$
+    (lift of $\mathrm{ofId}$ at $\mathrm{Submonoid.powers}\, r_0$ using
+    $\mathrm{hunit\_pow}$) satisfies
+    $\mathrm{fwd}_{AH}(\mathrm{sec}_0\, s) = \mathrm{algMap}(1 \otimes s)$ in
+    $\mathrm{Loc}_{g_0}$ for every $s \in S_{0,\mathrm{et}}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  This is the formal statement of Stacks tags \texttt{04D1} and \texttt{02JL}
+  (limit descent of \'etale algebras). The proof requires a presentation
+  $S_{0,\mathrm{et}} = R_{0,\mathrm{et}}[x_1,\dots,x_n]/(f_1,\dots,f_m)$
+  of the finitely-presented \'etale algebra and a careful descent of both the
+  numerators of $\mathrm{sec}_R(x_i)$ from $R$ back to $R_0$ (modulo a power
+  of $r_0$) and the algebraic relations $f_j$ from
+  $\mathrm{Loc}_{\mathrm{algMap}\, r_0}$ back to $\mathrm{Loc}_{r_0}$. The
+  bridge $\mathrm{algMap\_loc}_{R_0 \to R}\, r_0$ is injective under the
+  injectivity hypothesis $\mathrm{algebraMap}\,R_0 \to R$ — this is captured
+  by the helper lemma \texttt{algebraMap\_localization\_R\_0\_to\_R\_injective}
+  in the Lean file. The numerator half of the descent is supplied by the
+  per-generator decomposition, numerator-descent, and per-generator
+  solved-form helper lemmas in the Lean file; the unit-witness half of
+  step~(2) is supplied by the $\psi_{R_0}\,g_0$-unit, bridge-composition,
+  and bridge-$\varphi\,g_0$-unit helper chain; the relation half (descending
+  the $f_j$ from $\mathrm{Loc}_{r}$ back to $\mathrm{Loc}_{r_0}$) is the
+  genuine outstanding work and is currently unformalized.
+
+  Estimated 80--150~LOC when fully expanded; requires the
+  \texttt{Algebra.FinitePresentation} / \texttt{Algebra.Presentation.exists\_lift}
+  API and a careful manipulation of \texttt{IsLocalization.mk'\_eq\_iff\_eq}
+  to prove that the per-generator descended elements satisfy the descended
+  relations.
+\end{proof}
+
+\section{Consumers of the section descent}
+
+\begin{lemma}[Descent of an \'etale section after localization]
+  \label{lem:descent-etale-section-after-localization}
+  \lean{Algebra.IsLocalIso.descent_etale_section_after_localization}
+  \uses{lem:section-descends-to-R0}
+  Under the standing hypotheses of the spreading-out setup, there exists an
+  $R_0$-algebra equivalence
+  $\mathrm{Loc}_{r_0} \simeq_{R_0} \mathrm{Loc}_{g_0}$.
+\end{lemma}
+
+\begin{lemma}[\'Etale spread of a single standard-open immersion]
+  \label{lem:descent-one-isLocalIso-template}
+  \lean{Algebra.IsLocalIso.descent_one_isLocalIso_template}
+  \uses{lem:descent-etale-section-after-localization}
+  Under the standing hypotheses of the spreading-out setup, the localization
+  $\mathrm{Loc}_{g_0}$ is a local isomorphism over $R_0$.
+\end{lemma}
+
+\section{Catalog of supporting helper lemmas}
+
+The file contains $\sim 30$ supporting helper lemmas that have been extracted
+to keep heartbeat budgets manageable and to expose the descent pipeline as a
+sequence of small, independently verifiable steps. The reader is referred to
+the Lean source for the full catalog; the most load-bearing ones are:
+\texttt{algebraMap\_localization\_R\_0\_to\_R}, \texttt{algebraMap\_c\_unit},
+\texttt{descent\_section\_at\_R\_inv\_r\_explicit}, \texttt{descent\_psi\_R\_0},
+\texttt{descent\_bridge\_comp\_phi\_eq\_psi},
+\texttt{descent\_baseChange\_R\_0\_to\_R\_injective},
+\texttt{descent\_g\_0\_pow\_eq\_at\_R\_0},
+\texttt{descent\_c\_0\_isUnit\_at\_LocAway\_g\_0},
+\texttt{fwdAH\_phi\_eq\_algebraMap},
+\texttt{alg\_equiv\_from\_section\_descent}.
+
+Each of these is a small Lean lemma (typically under~50~LOC). Together they
+discharge the L2 (unit-witness) and L3 (canonical identity) substeps of the
+descent. The L1 (existence of $\mathrm{sec}_0$ via descent of a presentation)
+remains as the single outstanding scoped \texttt{sorry} in this file.

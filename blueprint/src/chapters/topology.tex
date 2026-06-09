@@ -25,7 +25,6 @@ $\affet{X}$ the affine étale site. $\affet{X}$ consists of affine schemes étal
     $\Delta_f\colon Y \to Y \times_{X} Y$ is flat.
 
     \lean{AlgebraicGeometry.WeaklyEtale}
-    \leanok
     \label{def:weakly-etale-morphism}
 \end{definition}
 
@@ -156,13 +155,13 @@ We can now define the main object of this chapter:
 
 \subsection{Affine covers}
 
-\begin{definition}[{\cite[Definition 4.2.1]{proetale}}]
+\begin{definition}\leanok
+[{\cite[Definition 4.2.1]{proetale}}]
     An object $U$ of $\proet{X}$ is called a \emph{pro-étale affine} if it can be written
     as $U = \lim U_i$ over a small cofiltered diagram $i \mapsto U_i$ of affine schemes étale over $X$.
     The subcategory of pro-étale affines in $\proet{X}$ is denoted by $\affproet{X}$.
     \label{def:affproet}
     \lean{AlgebraicGeometry.Scheme.AffineProEt}
-    \leanok
 \end{definition}
 
 \begin{lemma}[{\cite[Remark 4.2.3]{proetale}}]
@@ -174,12 +173,13 @@ We can now define the main object of this chapter:
 \end{lemma}
 
 \begin{definition}
+
+\leanok
     Let $X$ be affine. The \emph{affine pro-étale site} of $X$ is the category $\affproet{X}$.
     The covering families are the quasi-compact covers.
     \uses{lemma:affproet-limits, def:affproet}
     \label{def:affproet-site}
     \lean{AlgebraicGeometry.Scheme.AffineProEt}
-    \leanok
 \end{definition}
 
 In other words, $\affproet{X}$ carries the topology induced by the inclusion functor
@@ -187,17 +187,16 @@ $\affproet{X} \to \proet{X}$. Although the objects of $\proet{X}$ are weakly ét
 by \Cref{thm:weakly-etale-ind-etale} the topology of $\proet{X}$ is still generated
 by objects in $\affproet{X}$:
 
-\begin{proposition}[{\cite[Lemma 4.2.4]{proetale}}]
+\begin{proposition}\leanok
+[{\cite[Lemma 4.2.4]{proetale}}]
     The inclusion $\affproet{X} \to \proet{X}$ is cover dense, i.e. for every object $Y$ of $\proet{X}$,
     there exists a cover $\{U_i \to Y\}_{i \in I}$ with $U_i$ in $\affproet{X}$.
     \uses{def:affproet-site}
     \label{lemma:affproet-gen-proet}
     \lean{AlgebraicGeometry.Scheme.AffineProEt.isCoverDense_toProEt}
-    \leanok
 \end{proposition}
 
 \begin{proof}
-    \leanok
     \uses{thm:weakly-etale-ind-etale}
     Let $f\colon Y \to X$ be a weakly étale morphism and let $\{U_i \to X\}$ be an affine open cover of $X$.
     If we prove the lemma for each $U_i$ and the weakly étale morphism $f^{-1}(U_i) \to U_i$,
@@ -214,17 +213,17 @@ by objects in $\affproet{X}$:
 \end{proof}
 
 \begin{corollary}
+
+\leanok
     Restriction along the inclusion $\affproet{X} \to \proet{X}$ induces an equivalence of categories
     $\shv{\proet{X}} \to \shv{\affproet{X}}$.
     \label{cor:affproet-equivalence}
     \uses{def:affproet-site}
     \lean{AlgebraicGeometry.Scheme.AffineProEt.isEquivalence_sheafPushforwardContinuous_toProEt}
-    \leanok
 \end{corollary}
 
 \begin{proof}
     \uses{lemma:affproet-gen-proet}
-    \leanok
     The functor $\affproet{X} \to \proet{X}$ is fully faithful and makes $\affproet{X}$ a dense
     subsite of $\proet{X}$ by \Cref{lemma:affproet-gen-proet}. Thus the claim follows
     from the comparison lemma for sites.

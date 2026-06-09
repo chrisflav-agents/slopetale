@@ -1,0 +1,223 @@
+\chapter{Finiteness descent from the residue field (Stacks 04GG fragment)}
+\label{ch:Proetale_Mathlib_RingTheory_Module_FiniteResidue}
+
+This chapter extracts a Mathlib-PR-quality helper for the
+``finiteness descends from the residue field'' fragment of
+Stacks Tag 04GG. The setting is a Noetherian local ring \(A\) with
+maximal ideal \(\mathfrak{m}\) and residue field \(k = A/\mathfrak{m}\),
+together with a finitely-presented flat \(A\)-module \(M\) whose
+residue \(M \otimes_A k\) is finite-dimensional as a \(k\)-vector
+space. The headline theorem is that \(M\) itself is module-finite
+over \(A\).
+
+The étale-specific corollary is the shape directly consumed by
+\texttt{localisation\_finite\_at\_maximal} (see
+\cref{ch:Proetale_Mathlib_RingTheory_Etale_LocalisationFiniteAtMaximal}).
+
+% archon:covers Proetale/Mathlib/RingTheory/Module/FiniteResidue.lean
+
+\section{Nakayama in residue form}
+
+\begin{lemma}
+  \label{lem:nakayama-residue-spanning}
+  \lean{Module.eq_top_of_residue_eq_top_of_finite}
+  [Nakayama from a residue spanning set]
+  Let \(A\) be a local ring with maximal ideal \(\mathfrak{m}\), and
+  let \(M\) be a finitely-generated \(A\)-module. If
+  \(M = \mathfrak{m} \cdot M + N\) for some submodule
+  \(N \subseteq M\), then \(N = M\).
+\end{lemma}
+
+\begin{proof}
+  Apply Nakayama's lemma to the quotient \(M/N\). The hypothesis
+  \(M = \mathfrak{m} \cdot M + N\) implies
+  \(\mathfrak{m} \cdot (M/N) = M/N\): given any \(\bar x \in M/N\)
+  with lift \(x \in M\), write \(x = m + n\) with \(m \in
+  \mathfrak{m} \cdot M\) and \(n \in N\); then
+  \(\bar x = \overline{m} \in \mathfrak{m} \cdot (M/N)\). Since
+  \(M\) is finitely generated, so is the quotient \(M/N\). The
+  maximal ideal \(\mathfrak{m}\) of a local ring is contained in
+  its Jacobson radical, so Nakayama's lemma yields \(M/N = 0\),
+  i.e.\ \(N = M\).
+
+  \emph{Implementation note.} Mathlib may already provide this
+  exact carrier under a name such as
+  \texttt{Submodule.eq\_top\_of\_le\_smul\_of\_le\_jacobson\_of\_finite}
+  or a Nakayama-as-iff variant; in that case the present lemma is a
+  thin wrapper specialising the Jacobson hypothesis to the maximal
+  ideal of a local ring. The wrapper is convenient because the
+  downstream caller (\cref{thm:finite-of-finite-residue-flat-local})
+  reasons about \(\mathfrak{m}\) directly.
+\end{proof}
+
+\section{Lifting a residue basis to a partial spanning set}
+
+\begin{lemma}
+  \label{lem:lift-residue-basis-to-spanning}
+  \lean{Module.span_residue_basis_add_maximal_smul_eq_top}
+  [Lift of residue basis to spanning modulo \(\mathfrak{m} M\)]
+  Let \(A\) be a local ring with maximal ideal \(\mathfrak{m}\)
+  and residue field \(k = A/\mathfrak{m}\), and let \(M\) be an
+  \(A\)-module whose residue \(M \otimes_A k\) is finite-dimensional
+  as a \(k\)-vector space, with basis
+  \(\{\bar b_i\}_{i \in I}\). Choose any lift
+  \(\{b_i\}_{i \in I} \subseteq M\) of the residue basis, in the
+  sense that the image of \(b_i\) under the projection
+  \(M \twoheadrightarrow M \otimes_A k\) (equivalently, under
+  \(M \twoheadrightarrow M / \mathfrak{m} \cdot M\)) is \(\bar b_i\).
+  Then
+  \[
+    \mathrm{span}_A \{b_i\}_{i \in I} \;+\; \mathfrak{m} \cdot M
+    \;=\; M.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Fix \(x \in M\) and consider its residue
+  \(\bar x \in M \otimes_A k\). Under the canonical
+  \(A\)-linear isomorphism
+  \[
+    M \otimes_A k \;\simeq\; M / \mathfrak{m} \cdot M,
+  \]
+  (the right-exactness of base change to \(A/\mathfrak{m}\), packaged
+  by Mathlib as
+  \texttt{Algebra.TensorProduct.quotIdealMapEquivQuotTensor} in the
+  algebra case, or directly as the residue identification for
+  modules), expand \(\bar x\) in the residue basis:
+  \[
+    \bar x \;=\; \sum_{i \in I} \alpha_i \bar b_i, \qquad \alpha_i \in k.
+  \]
+  Choose lifts \(a_i \in A\) of \(\alpha_i \in k = A/\mathfrak{m}\),
+  for each \(i \in I\); since \(I\) is finite, only finitely many
+  \(a_i\) are nonzero. Set
+  \[
+    y \;:=\; \sum_{i \in I} a_i \, b_i \;\in\; \mathrm{span}_A
+      \{b_i\}_{i \in I} \;\subseteq\; M.
+  \]
+  The residue of \(y\) in \(M \otimes_A k\) is
+  \(\sum_i \alpha_i \bar b_i = \bar x\) by construction of the
+  lifts, hence \(x - y\) has residue \(0\). Under the identification
+  \(M \otimes_A k \simeq M / \mathfrak{m} \cdot M\), this means
+  \(x - y \in \mathfrak{m} \cdot M\). Therefore
+  \[
+    x \;=\; y \;+\; (x - y) \;\in\; \mathrm{span}_A \{b_i\}_{i \in I}
+      \;+\; \mathfrak{m} \cdot M.
+  \]
+  Since \(x \in M\) was arbitrary, the displayed identity holds.
+\end{proof}
+
+\section{Headline: finiteness descent}
+
+\begin{theorem}
+  \label{thm:finite-of-finite-residue-flat-local}
+  \lean{Module.finite_of_finite_residue_of_flat_of_local}
+  [Stacks 04GG, finiteness descent fragment]
+  Let \(A\) be a Noetherian local ring with maximal ideal
+  \(\mathfrak{m}\) and residue field \(k\), and let \(M\) be a
+  finitely-presented flat \(A\)-module. If \(M \otimes_A k\) is
+  finite-dimensional as a \(k\)-vector space, then \(M\) is
+  module-finite over \(A\).
+\end{theorem}
+
+\begin{proof}
+  \uses{lem:lift-residue-basis-to-spanning, lem:nakayama-residue-spanning}
+  \emph{Step 1: choose a residue basis and a lift.} Let
+  \(d := \dim_k (M \otimes_A k)\), and pick a \(k\)-basis
+  \(\{\bar b_i\}_{i \in I}\) of \(M \otimes_A k\), where \(I\) is a
+  finite index set of cardinality \(d\). Choose lifts
+  \(\{b_i\}_{i \in I} \subseteq M\) of the residue basis, i.e.\
+  preimages under the projection
+  \(M \twoheadrightarrow M / \mathfrak{m} \cdot M \simeq M \otimes_A k\).
+  Let
+  \[
+    N \;:=\; \mathrm{span}_A \{b_i\}_{i \in I} \;\subseteq\; M.
+  \]
+  By construction, \(N\) is finitely generated.
+
+  \emph{Step 2: residue surjectivity.} By
+  \cref{lem:lift-residue-basis-to-spanning},
+  \[
+    N \;+\; \mathfrak{m} \cdot M \;=\; M.
+  \]
+
+  \emph{Step 3: \(M / N\) is finitely generated.} The module \(M\)
+  is finitely-presented (by hypothesis), hence in particular
+  finitely-generated. The quotient \(M/N\) is therefore the
+  quotient of a finitely-generated \(A\)-module, hence itself
+  finitely-generated. (Equivalently: a generating set of \(M\)
+  descends to a generating set of \(M/N\).)
+
+  \emph{Step 4: apply Nakayama.} Step~2 implies the projection
+  \(M \twoheadrightarrow M/N\) sends \(M\) onto
+  \(\mathfrak{m} \cdot (M/N)\), i.e.\
+  \(\mathfrak{m} \cdot (M/N) = M/N\). Equivalently, treating
+  \(N \subseteq M\) as the submodule of
+  \cref{lem:nakayama-residue-spanning}, the hypothesis
+  \(M = \mathfrak{m} \cdot M + N\) holds by Step~2.
+  \cref{lem:nakayama-residue-spanning} applied to \(M\) and the
+  submodule \(N\) (using Step~3 to know \(M\) is finitely generated)
+  yields \(N = M\).
+
+  \emph{Conclusion.} \(M = N = \mathrm{span}_A \{b_i\}_{i \in I}\),
+  so the finite set \(\{b_i\}_{i \in I}\) generates \(M\) as an
+  \(A\)-module. This is exactly \(\mathrm{Module.Finite}\,A\,M\).
+
+  \emph{Remark on the flatness hypothesis.} The argument above
+  uses only that \(M\) is finitely-presented (to obtain
+  finite-generation of \(M\) and hence of \(M/N\) at Step~3), the
+  residue identification \(M \otimes_A k \simeq M / \mathfrak{m} M\)
+  (right-exactness of base change), and Nakayama. Flatness of \(M\)
+  is the natural hypothesis in Stacks~04GG and is retained in the
+  headline statement for direct alignment with downstream
+  applications (where \(M\) is the underlying module of an étale
+  \(A\)-algebra, hence automatically flat); the proof itself does
+  not exploit flatness. A future refactor that drops the flatness
+  hypothesis would not change the proof structure.
+\end{proof}
+
+\section{Étale specialisation}
+
+\begin{corollary}
+  \label{cor:finite-of-finite-residue-etale-local}
+  \lean{Algebra.Etale.finite_of_finite_residue_of_local}
+  [Stacks 04GG, étale fibre form]
+  Let \(A\) be a Noetherian local ring with maximal ideal
+  \(\mathfrak{m}\) and residue field \(k\), and let \(B\) be an
+  étale \(A\)-algebra such that \(B \otimes_A k\) is finite-
+  dimensional as a \(k\)-vector space. Then \(B\) is module-finite
+  over \(A\).
+\end{corollary}
+
+\begin{proof}
+  \uses{thm:finite-of-finite-residue-flat-local}
+  An étale \(A\)-algebra is flat
+  (\texttt{Algebra.Etale.flat}) and finitely-presented
+  (\texttt{Algebra.Etale.finitePresentation}) over \(A\) by
+  definition / standard Mathlib carriers. Applying
+  \cref{thm:finite-of-finite-residue-flat-local} to the underlying
+  \(A\)-module \(M := B\) — whose residue is the \(k\)-vector
+  space \(B \otimes_A k\), finite-dimensional by hypothesis —
+  yields \(\mathrm{Module.Finite}\,A\,B\).
+\end{proof}
+
+\section{References}
+
+\begin{itemize}
+\item Stacks Project, Tag~\href{https://stacks.math.columbia.edu/tag/04GG}{04GG} —
+  the at-the-fibre / finiteness descent statement: a finitely
+  presented flat module over a Noetherian local ring whose special
+  fibre is finite-dimensional is module-finite. The primary source
+  of \cref{thm:finite-of-finite-residue-flat-local} and
+  \cref{cor:finite-of-finite-residue-etale-local}.
+\item Stacks Project, Tag~\href{https://stacks.math.columbia.edu/tag/00DV}{00DV} —
+  Nakayama's lemma in module form. The source of
+  \cref{lem:nakayama-residue-spanning} (in the local-ring
+  specialisation).
+\item \Cref{ch:Proetale_Mathlib_RingTheory_Etale_LocalisationFiniteAtMaximal}
+  — the downstream consumer: the étale-localised
+  \(B' := B[1/e] \simeq B_{\mathfrak n}\) feeds
+  \cref{cor:finite-of-finite-residue-etale-local} (with \(B'\) in
+  place of \(B\)) to obtain the
+  \(\mathrm{Module.Finite}\,A\,B_{\mathfrak n}\) producer required
+  by Step~2 of \cref{thm:localisation-finite-at-maximal}.
+\end{itemize}

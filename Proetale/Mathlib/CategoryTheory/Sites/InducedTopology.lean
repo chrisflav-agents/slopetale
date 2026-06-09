@@ -7,65 +7,9 @@ namespace CategoryTheory
 variable {C : Type u₁} {D : Type u₂} [Category.{v₁} C] [Category.{v₂} D]
   {E : Type u₃} [Category.{v₃} E]
 
-namespace Fix
-
-/-
-COPIED FROM MATHLIB: fix the correct universe generality. upstream!
--/
-
-open Sieve
-
-/-- Construct the finest (largest) Grothendieck topology for which the given presheaf is a sheaf. -/
-@[stacks 00Z9 "This is a special case of the Stacks entry, but following a different
-proof (see the Stacks comments)."]
-def finestTopologySingle (P : Cᵒᵖ ⥤ Type*) : GrothendieckTopology C where
-  sieves X := {S | ∀ (Y) (f : Y ⟶ X), Presieve.IsSheafFor P (S.pullback f : Presieve Y)}
-  top_mem' X Y f := by
-    rw [Sieve.pullback_top]
-    exact Presieve.isSheafFor_top P
-  pullback_stable' X Y S f hS Z g := by
-    rw [← pullback_comp]
-    apply hS
-  transitive' X S hS R hR Z g := by
-    -- This is the hard part of the construction, showing that the given set of sieves satisfies
-    -- the transitivity axiom.
-    refine Presieve.isSheafFor_trans P (pullback g S) _ (hS Z g) ?_ ?_
-    · intro Y f _
-      rw [← pullback_comp]
-      apply (hS _ _).isSeparatedFor
-    · intro Y f hf
-      have := hR hf _ (𝟙 _)
-      rw [pullback_id, pullback_comp] at this
-      apply this
-
-/-- Construct the finest (largest) Grothendieck topology for which all the given presheaves are
-sheaves. -/
-@[stacks 00Z9 "Equal to that Stacks construction"]
-def finestTopology (Ps : Set (Cᵒᵖ ⥤ Type*)) : GrothendieckTopology C :=
-  sInf (finestTopologySingle '' Ps)
-
-variable {P : Cᵒᵖ ⥤ Type*} {X : C} (J : GrothendieckTopology C)
-
-/-- Check that if `P ∈ Ps`, then `P` is indeed a sheaf for the finest topology on `Ps`. -/
-theorem sheaf_for_finestTopology (Ps : Set (Cᵒᵖ ⥤ Type _)) (h : P ∈ Ps) :
-    Presieve.IsSheaf (finestTopology Ps) P := fun X S hS => by
-  simpa using hS _ ⟨⟨_, _, ⟨_, h, rfl⟩, rfl⟩, rfl⟩ _ (𝟙 _)
-
-/--
-Check that if each `P ∈ Ps` is a sheaf for `J`, then `J` is a subtopology of `finestTopology Ps`.
--/
-theorem le_finestTopology (Ps : Set (Cᵒᵖ ⥤ Type*)) (J : GrothendieckTopology C)
-    (hJ : ∀ P ∈ Ps, Presieve.IsSheaf J P) : J ≤ finestTopology Ps := by
-  rintro X S hS _ ⟨⟨_, _, ⟨P, hP, rfl⟩, rfl⟩, rfl⟩
-  intro Y f
-  -- this can't be combined with the previous because the `subst` is applied at the end
-  exact hJ P hP (S.pullback f) (J.pullback_stable f hS)
-
-end Fix
-
 lemma mem_finestTopology_of_forall_isSheafFor (Ps : Set (Cᵒᵖ ⥤ Type*)) {X : C} (S : Sieve X)
     (H : ∀ P ∈ Ps, ∀ ⦃Y : C⦄ (f : Y ⟶ X), Presieve.IsSheafFor P (S.pullback f).arrows) :
-    S ∈ Fix.finestTopology Ps X := by
+    S ∈ Sheaf.finestTopology Ps X := by
   rintro _ ⟨⟨_, _, ⟨P, hP, rfl⟩, rfl⟩, rfl⟩
   intro Y f
   exact H P hP _
@@ -74,7 +18,7 @@ lemma mem_finestTopology_of_forall_isSheafFor (Ps : Set (Cᵒᵖ ⥤ Type*)) {X 
 topology making `F` continuous. -/
 def Functor.inducedTopology' (F : C ⥤ D) (J : GrothendieckTopology D) :
     GrothendieckTopology C :=
-  Fix.finestTopology
+  Sheaf.finestTopology
     (Set.range fun G : Sheaf J (Type (max u₁ v₁ u₂ v₂)) ↦ F.op ⋙ G.obj)
 
 /--
@@ -140,17 +84,6 @@ lemma Functor.coinducedTopology_comp (J : GrothendieckTopology C) (F : C ⥤ D) 
   · rw [Functor.le_coinducedTopology_iff]
     apply isCocontinuous_comp _ _ _ (F.coinducedTopology J)
 
-lemma Functor.IsCocontinuous.of_iso {J : GrothendieckTopology C} {K : GrothendieckTopology D}
-    {F G : C ⥤ D} (e : F ≅ G) [F.IsCocontinuous J K] :
-    G.IsCocontinuous J K where
-  cover_lift {U} S hS := by
-    sorry
-
-lemma Functor.IsCocontinuous.iff_of_iso {J : GrothendieckTopology C} {K : GrothendieckTopology D}
-    {F G : C ⥤ D} (e : F ≅ G) :
-    F.IsCocontinuous J K ↔ G.IsCocontinuous J K :=
-  ⟨fun _ ↦ .of_iso e, fun _ ↦ .of_iso e.symm⟩
-
 variable {F} in
 lemma Functor.coinducedTopology_eq_of_iso {J : GrothendieckTopology C} {G : C ⥤ D} (e : F ≅ G) :
     F.coinducedTopology J = G.coinducedTopology J := by
@@ -162,7 +95,7 @@ lemma Functor.coinducedTopology_eq_of_iso {J : GrothendieckTopology C} {G : C �
 
 instance : F.IsContinuous (F.inducedTopology' J) J where
   op_comp_isSheaf_of_types G := by
-    apply Fix.sheaf_for_finestTopology
+    apply Sheaf.sheaf_for_finestTopology
     use G
 
 @[simp]
@@ -175,7 +108,7 @@ lemma le_inducedTopology'_iff (K : GrothendieckTopology C) :
     apply Presieve.isSheaf_of_le _ h
     exact Functor.op_comp_isSheaf_of_types F (F.inducedTopology' J) J G
   · intro h
-    apply Fix.le_finestTopology
+    apply Sheaf.le_finestTopology
     rintro _ ⟨P, rfl⟩
     exact Functor.op_comp_isSheaf_of_types F K J P
 
@@ -270,29 +203,6 @@ lemma fooo : CoverPreserving (F.weakInducedTopology J) J F where
     | transitive X S R _ _ _ _ =>
       sorry
 
-lemma Functor.op_comp_isSheaf_of_isSheaf_type (J : GrothendieckTopology C)
-    {K : GrothendieckTopology D} [F.IsContinuous J K] {G : Dᵒᵖ ⥤ Type*} (h : Presieve.IsSheaf K G) :
-    Presieve.IsSheaf J (F.op ⋙ G) := by
-  rw [← isSheaf_iff_isSheaf_of_type] at h ⊢
-  exact F.op_comp_isSheaf_of_isSheaf _ _ _ h
-
-/-- Continuous functors send covering sieves to covering sieves.
-The converse is false, see [SGA4, III, Exemple 1.9.3][sga4]. -/
-lemma CoverPreserving.of_isContinuous (J : GrothendieckTopology C) (K : GrothendieckTopology D)
-    [F.IsContinuous J K] :
-    CoverPreserving J K F where
-  cover_preserve {X S} hS := by
-    rw [K.mem_iff_isSheafFor_closedSieves]
-    obtain ⟨ι, Y, f, rfl⟩ := S.exists_eq_ofArrows
-    rw [Sieve.ofArrows, ← Sieve.generate_map_eq_functorPushforward,
-      ← Presieve.isSheafFor_iff_generate, Presieve.map_ofArrows]
-    have := Functor.op_comp_isSheaf_of_isSheaf_type F J (classifier_isSheaf K) _ hS
-    rw [Sieve.ofArrows, ← Presieve.isSheafFor_iff_generate] at this
-    rw [Presieve.isSheafFor_arrows_iff] at this ⊢
-    intro x hx
-    refine this x fun i j Z gi gj hgij ↦ hx _ _ _ _ _ ?_
-    simp [← Functor.map_comp, hgij]
-
 --lemma booasdf {X : C} (S : Sieve (F.obj X)) (hs : S ∈ J (F.obj X)) :
 --    Sieve.functorPullback F S ∈ F.inducedTopology' J X := by
 --  rw [GrothendieckTopology.mem_iff_isSheafFor_closedSieves]
@@ -381,12 +291,6 @@ lemma asdfasdf (J : GrothendieckTopology C) (K : GrothendieckTopology D) :
   · sorry
 
 variable (J : GrothendieckTopology C) (K : GrothendieckTopology D)
-
-/-- If `F` is flat, it is continuous if and only if it preserves covers. -/
-lemma Functor.isContinuous_iff_coverPreserving [RepresentablyFlat F] :
-    F.IsContinuous J K ↔ CoverPreserving J K F := by
-  refine ⟨fun h ↦ .of_isContinuous _ _ _, fun h ↦ ?_⟩
-  apply Functor.isContinuous_of_coverPreserving (compatiblePreservingOfFlat _ _) h
 
 lemma aux [RepresentablyFlat F] {X : C} (S : Sieve X)
     (hS : Sieve.functorPushforward F S ∈ K _) :

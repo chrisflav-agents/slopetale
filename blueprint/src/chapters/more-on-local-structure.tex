@@ -10,6 +10,8 @@ The proof goes via the local input \label{weakly-etale-over-sh}.
     Let $R$ be a Henselian local ring and $S$ a finite $R$-algebra. Then $S$ is
     a finite product of Henselian local rings, each finite over $R$.
     \label{lemma:finite-over-henselian-local}
+    \lean{HenselianLocalRing.exists_pi_of_finite}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -20,7 +22,6 @@ The proof goes via the local input \label{weakly-etale-over-sh}.
     A filtered colimit of local rings along local homomorphisms is local.
     \label{lemma:colimit-local}
     \lean{CommRingCat.FilteredColimits.isLocalRing_of_isColimit}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -46,6 +47,8 @@ The proof goes via the local input \label{weakly-etale-over-sh}.
     Let $R$ be a Henselian local ring and $S$ be an integral $R$-algebra and an integral domain.
     Then $S$ is a local ring.
     \label{lemma:henselian-local-integral-local}
+    \lean{IsLocalRing.of_henselianLocalRing_of_isIntegral_of_isDomain}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -70,6 +73,8 @@ The proof goes via the local input \label{weakly-etale-over-sh}.
     Let $R \to S$ be a local ring homomorphism of local rings. If $R \to S$ is integral,
     the extension of residue fields $\kappa(S) / \kappa(R)$ is algebraic.
     \label{lemma:integral-local-algebraic-residue-field}
+    \lean{Algebra.IsAlgebraic.residueField_of_isIntegral}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -83,6 +88,8 @@ The proof goes via the local input \label{weakly-etale-over-sh}.
     $R \to S$ is integral and $\kappa(S) / \kappa(R)$ or $\kappa(T) / \kappa(S)$
     is purely inseparable, then $T \otimes_{R} S$ is a local ring.
     \label{lemma:tensorprod-local-purely-inseparable}
+    \lean{Algebra.isLocalRing_tensorProduct_of_isPurelyInseparable_residueField}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -107,7 +114,6 @@ define the pro-étale site of a scheme, we use the notion of weakly étale ring 
     A ring homorphism $f \colon R \to S$ is \emph{weakly étale} if $S$ is weakly étale as an $R$-algebra.
     \label{def:weakly-etale-algebra}
     \lean{Algebra.WeaklyEtale}
-    \leanok
 \end{definition}
 
 Historically, the property weakly étale is studied under the name of \emph{absolutely flat}. 
@@ -124,7 +130,8 @@ of this property.
 \begin{lemma}
     Every étale algebra is weakly étale.
     \label{lemma:etale-weakly-etale-algebra}
-    \lean{Algebra.WeaklyEtale.of_etale}
+    \leanok
+    \mathlibok
     \uses{def:weakly-etale-algebra}
 \end{lemma}
 
@@ -140,7 +147,6 @@ of this property.
     A field is absolutely flat.
     \uses{def:absolutely-flat}
     \lean{Ring.AbsolutelyFlat.of_field, Ring.AbsolutelyFlat.of_isField}
-    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -149,12 +155,14 @@ of this property.
 \end{proof}
 
 \begin{lemma}[\stacksproject{092J}]
-    \lemma{lem:weakly-etale-comp}
+    \uses{def:weakly-etale-algebra}
+    \label{lem:weakly-etale-comp}
+    \lean{RingHom.WeaklyEtale.comp, Algebra.WeaklyEtale.trans}
     If $A \to B$ and $B \to C$ are weakly étale, then $A \to C$ is weakly étale.
 \end{lemma}
 
 \begin{proof}
-    Ommited, see \stacksproject{092J}.
+    Omitted, see \stacksproject{092J}.
 \end{proof}
 
 \begin{lemma}[\stacksproject{092H}]
@@ -162,8 +170,8 @@ of this property.
     If $B$ is a weakly-étale $A$-algebra and $A'$ is any $A$-algebra, the base change
     $A' \otimes_{A} B$ is a weakly-étale $A'$-algebra.
     \uses{def:weakly-etale-algebra}
-    \lean{Algebra.WeaklyEtale.tensorProduct}
     \leanok
+    \mathlibok
 \end{lemma}
 
 \begin{proof}
@@ -176,11 +184,9 @@ of this property.
     If $N$ is flat as a $A$-module, then $N$ is flat as a $B$-module.
     \label{lemma:weakly-etale-flat}
     \lean{Module.Flat.of_flat_lmul'_of_flat}
-    \leanok
 \end{lemma}
 
 \begin{proof}
-    \leanok 
     First proof:
 
     If $N'$ is a second $B$-module, then
@@ -421,15 +427,33 @@ suffices for our purposes.
 
 % There is a much better proof that avoids Lazard, but uses Tor instead.
 \begin{proof}
-    \uses{theorem:lazard, lemma:flat-filtration, lemma:weak-dim-ideal-flat}
-    By \Cref{theorem:lazard} we may write $M = \colim_i M_i$ for finite and free $A$-modules $M_i$.
-    Denote by $N_i$ the preimage of $M_i$ in $N$. Then $N = \colim_i N_i$ and
-    since the filtered colimit of flat modules is flat, we reduce to the case where $M = R^{\oplus n}$.
-    By applying \Cref{lemma:flat-filtration} to the sequence $N_j = N \cap R^{\oplus j}$, it remains
-    to show that $N_{j+1} / N_j$ is flat. For this consider
-    the projection on the $j + 1$-th factor $N_{j+1} \to R$. Its image is an ideal $I \subseteq R$
-    and its kernel is $N_j$. Hence $N_{j + 1} / N_j \cong I$ and $I$ is flat by
-    \Cref{lemma:weak-dim-ideal-flat}.
+    \leanok
+    It suffices to show that for any finitely generated ideal $I$, the
+    linear map $I \otimes_{R} N \to N$ is injective. For this, consider the following commutative
+    diagram:
+    \[
+    \begin{tikzcd}
+        I \otimes_{R} N \arrow{r} \arrow{d} & N \arrow{d} \\
+        I \otimes_{R} M \arrow{r} & M
+    \end{tikzcd}
+    .\]
+    The left vertical map is injective, because $I$ is flat by assumption on $R$. The bottom horizontal
+    map is injective, because $M$ is flat. Hence $I \otimes_{R} N \to N \to M$ is injective,
+    from which the claim follows.
+\end{proof}
+
+\begin{corollary}[\stacksproject{092S}, (1) => (2)]
+    If $A$ is of weak-dimension $\le 1$, then every ideal $I \subseteq A$ is flat.
+    \uses{def:weak-dim-le-one}
+    \label{lemma:weak-dim-ideal-flat}
+    \lean{Ring.WeakDimensionLEOne.flat_ideal}
+    \leanok
+\end{corollary}
+
+\begin{proof}
+    \leanok
+    \uses{lemma:weak-dim-flat-submodule}
+    Immediate consequence of \Cref{lemma:weak-dim-flat-submodule}.
 \end{proof}
 
 \begin{lemma}[\stacksproject{092E}]
@@ -437,6 +461,8 @@ suffices for our purposes.
     $B$ is of weak dimension $\le 1$.
     \label{lemma:weakly-etale-preserve-weak-dim}
     \uses{def:weak-dim-le-one}
+    \lean{Ring.WeakDimensionLEOne.of_weaklyEtale}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -463,6 +489,8 @@ suffices for our purposes.
     Let $(A_i)_{i \in I}$ be a family of valuation rings. Then
     $\prod_{i \in I} A_i$ is of weak dimension $\le 1$.
     \label{lemma:prod-valuation-ring-weak-dim-integrally-closed}
+    \lean{Ring.WeakDimensionLEOne.pi_of_isValuationRing}
+    \leanok
     \uses{def:weak-dim-le-one}
 \end{lemma}
 
@@ -496,6 +524,8 @@ suffices for our purposes.
     flat $A$-algebra such that $A \to B$ is injective and an epimorphism of rings. Then
     $A$ is integrally closed in $B$.
     \label{lemma:weak-dim-integrally-closed}
+    \lean{Ring.WeakDimensionLEOne.isIntegrallyClosedIn_of_isEpi}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -544,14 +574,416 @@ suffices for our purposes.
 
 \section{Fields}
 
+% SOURCE: \stacksproject{092P} = Lemma 15.106.15 in chapter "More on Algebra"
+%         (read from references/stacks-092PQ.tex, lines 327--341)
+% SOURCE QUOTE: Let $L/K$ be an extension of fields. If $L \otimes_K L \to L$
+%   is flat, then $L$ is an algebraic separable extension of $K$.
 \begin{lemma}[\stacksproject{092P}]
     \label{lem:flat-tensor-over-field-imples-algebraic}
-    Let $L/K$ be an extension of fields. If $L \otimes_K L \to L$is flat, then $L$ is an algebraic 
+    \textit{Source: Stacks Project, Tag 092P.}
+    Let $L/K$ be an extension of fields. If $L \otimes_K L \to L$ is flat, then $L$ is an algebraic
     separable extension of $K$.
+    \lean{Algebra.WeaklyEtale.isAlgebraic}
+    \leanok
 \end{lemma}
 
+% SOURCE QUOTE PROOF:
+%   By Lemma \ref{lemma-go-down} we see that any subfield
+%   $K \subset L' \subset L$ the map $L' \otimes_K L' \to L'$ is flat.
+%   Thus we may assume $L$ is a finitely generated field extension of $K$.
+%   In this case the fact that $L/K$ is formally unramified
+%   (Lemma \ref{lemma-formally-unramified})
+%   implies that $L/K$ is finite separable, see Algebra, Lemma
+%   \ref{algebra-lemma-characterize-separable-algebraic-field-extensions}.
 \begin{proof}
-    TBA.
+
+\leanok
+    \textit{Source: Stacks Project, Tag 092P, proof.}
+    Stacks' proof has three steps; we follow it.
+
+    \emph{Step 1 (reduction to finitely generated subfields).}
+    Faithfully-flat descent of the weak étale property along subfield inclusions
+    (Stacks' \texttt{lemma-go-down}, in the section "Weakly étale ring maps" of
+    \emph{More on Algebra}) shows that for every intermediate subfield
+    $K \subseteq L' \subseteq L$, the map $L' \otimes_K L' \to L'$ is again flat.
+    Writing $L$ as the filtered colimit of its finitely generated subextensions
+    $L'/K$ reduces the claim to the case where $L/K$ is a finitely generated
+    field extension.
+
+    \emph{Step 2 (formally unramified).}
+    For any ring map $A \to B$ such that $B \otimes_A B \to B$ is flat, the
+    kernel $I = \ker(B \otimes_A B \to B)$ is a pure ideal of $B \otimes_A B$
+    (since $B \otimes_A B \twoheadrightarrow B$ is a flat surjection). Pure
+    ideals are idempotent ($I = I^2$), and via the standard identification
+    $\Omega_{B/A} = I/I^2$ this forces $\Omega_{B/A} = 0$; equivalently
+    $B$ is formally unramified over $A$
+    (cf. Stacks' \texttt{lemma-formally-unramified} in the same section).
+    Applied to $K \to L$ this yields $\Omega_{L/K} = 0$.
+
+    \emph{Step 3 (finitely generated $+$ formally unramified $\Rightarrow$ finite separable).}
+    A finitely generated, formally unramified field extension is finite separable
+    (Stacks \emph{Algebra},
+    \texttt{algebra-lemma-characterize-separable-algebraic-field-extensions}).
+    Combined with Step 1 this concludes $L/K$ is algebraic separable.
+
+    \emph{Lean delivery.} The target \texttt{Algebra.WeaklyEtale.isAlgebraic}
+    produces \texttt{Algebra.IsSeparable k L}. In Mathlib's definition,
+    \texttt{Algebra.IsSeparable} requires every element of $L$ to be separable
+    over $K$, in particular integral, so the Lean conclusion already includes
+    algebraicity --- no separate \texttt{Algebra.IsAlgebraic} obligation is
+    needed.
+
+    \medskip
+    \noindent \emph{Lean delivery (alternative: mutual block / reorder via
+    \texttt{etale\_of\_fg}).} A second sanctioned Lean delivery avoids the
+    formally-unramified route entirely and bottoms out in
+    \Cref{thm:weakly-etale-imples-ind-etale-over-fields} part (1)
+    (\texttt{Algebra.WeaklyEtale.etale\_of\_fg}). Element-wise: fix $a \in L$
+    and set $A := K[a] = $\texttt{Algebra.adjoin K \{a\}} $\subseteq L$. As a
+    finitely generated $K$-subalgebra of a weakly étale $K$-algebra, $A$ is
+    étale over $K$. Decompose $A$ via Mathlib's
+    \texttt{Algebra.Etale.iff\_exists\_algEquiv\_prod} as a finite product of
+    finite separable extensions of $K$. Since $A \subseteq L$ is a domain, the
+    product collapses to a single factor, so $A$ itself is a finite separable
+    extension of $K$ (using
+    \texttt{isField\_of\_isIntegral\_of\_isField'} for the domain $\to$ field
+    upgrade). Transfer the separability of $a \in A$ along the injective
+    $A \hookrightarrow L$ via \texttt{minpoly.algHom\_eq A.val
+    Subtype.val\_injective}, concluding $a$ is separable over $K$.
+
+    The three Lean targets
+    \texttt{Algebra.WeaklyEtale.isAlgebraic},
+    \texttt{Algebra.WeaklyEtale.isAlgebraic\_of\_weaklyEtale},
+    \texttt{Algebra.WeaklyEtale.etale\_of\_fg} sit in a definitional cycle (the
+    iter-143 closure of \texttt{isAlgebraic\_of\_weaklyEtale} consumes
+    \texttt{isAlgebraic}, and the present delivery wants \texttt{isAlgebraic}
+    to consume \texttt{etale\_of\_fg}, which itself consumes
+    \texttt{isAlgebraic\_of\_weaklyEtale}). Two viable closures:
+    \textbf{(a)} wrap all three in a Lean \texttt{mutual} block, with
+    well-foundedness coming from the subalgebra-adjoin descent;
+    \textbf{(b)} reorder so \texttt{isAlgebraic} sits below
+    \texttt{etale\_of\_fg} in the file, and re-shape
+    \texttt{isAlgebraic\_of\_weaklyEtale}'s substantive case to not consume
+    \texttt{isAlgebraic} (e.g. by reverting to the iter-129 multi-prime product
+    scaffolding over $\mathfrak{q} \in \text{minimalPrimes}(K[a])$, which uses
+    no other lemma in the cycle).
+
+    The existing Stacks Step 1/2/3 path (above) remains valid as a third
+    fallback. The prover chooses whichever closes most cleanly under Mathlib's
+    current API.
+\end{proof}
+
+% SOURCE: \stacksproject{092Q} "moreover" clause + per-prime fragment of the proof
+%         (read from references/stacks-092PQ.tex, lines 346--396)
+% SOURCE QUOTE: Moreover, every finitely generated $K$-subalgebra of $B$
+%   is \'etale over $K$.
+\begin{lemma}
+    \label{lem:isAlgebraic-of-weaklyEtale}
+    \lean{Algebra.WeaklyEtale.isAlgebraic_of_weaklyEtale}
+    \leanok
+    \textit{Source: Stacks Project, Tag 092Q (specialization of the per-prime
+    argument to a single element).}
+    Let $K$ be a field and $R$ a weakly étale $K$-algebra. Then every element
+    of $R$ is algebraic over $K$; equivalently, $R$ is algebraic over $K$.
+\end{lemma}
+
+% SOURCE QUOTE PROOF: Let $\mathfrak q \subset B$ be a prime. The ring map
+%   $B \to B_\mathfrak q$ is weakly \'etale, hence $B_\mathfrak q$
+%   is weakly \'etale over $K$ (Lemma \ref{lemma-composition-weakly-etale}).
+%   Thus $B_\mathfrak q$ is a separable algebraic extension of $K$ by
+%   Lemma \ref{lemma-absolutely-flat-fields}.
+\begin{proof}
+    \leanok
+    \uses{def:weakly-etale-algebra,
+    def:absolutely-flat,
+    lem:field-absolutely-flat,
+    lem:weakly-etale-preserves-absolutely-flat,
+    lem:reduced-prime-maximal-of-absolutely-flat,
+    lemma:reduced-prime-maximal-field,
+    lem:weakly-etale-comp,
+    lem:flat-tensor-over-field-imples-algebraic}
+    \textit{Source: Stacks Project, Tag 092Q proof, per-prime + minimal-prime
+    lifting fragment.}
+
+    By \Cref{lem:field-absolutely-flat} the field $K$ is absolutely flat, so by
+    \Cref{lem:weakly-etale-preserves-absolutely-flat} the weakly étale $K$-algebra
+    $R$ is absolutely flat as well. Hence by
+    \Cref{lem:reduced-prime-maximal-of-absolutely-flat} the ring $R$ is reduced
+    and every prime $\mathfrak q \subset R$ is maximal; by
+    \Cref{lemma:reduced-prime-maximal-field} the localization $R_\mathfrak{q}$
+    coincides with the residue field $\kappa(\mathfrak q)$.
+
+    For every prime $\mathfrak q \subset R$, the localization $R \to R_\mathfrak{q}$
+    is weakly étale (a filtered colimit of localizations; in fact
+    Stacks 092Q (1) lists "localizations" as one of the standard sources of
+    weakly étale maps). Composing with $K \to R$ and using
+    \Cref{lem:weakly-etale-comp}, the composite $K \to \kappa(\mathfrak q)$ is
+    weakly étale. By \Cref{lem:flat-tensor-over-field-imples-algebraic} the
+    field extension $\kappa(\mathfrak q)/K$ is therefore separable algebraic.
+
+    Fix $a \in R$ and let $A = K[a] \subseteq R$ be the $K$-subalgebra
+    generated by $a$. The inclusion $A \hookrightarrow R$ is injective, so by
+    the standard Stacks fact $\stacksproject{00FK}$
+    (\texttt{Ideal.exists\_comap\_eq\_of\_mem\_minimalPrimes\_of\_injective} in
+    Mathlib) every minimal prime $\mathfrak p$ of $A$ is the contraction of
+    some prime $\mathfrak q$ of $R$. The induced map
+    $A/\mathfrak p \hookrightarrow \kappa(\mathfrak q)$ presents
+    $A/\mathfrak p$ as a subring of the separable algebraic extension
+    $\kappa(\mathfrak q)/K$, hence the image of $a$ in $A/\mathfrak p$ is
+    algebraic over $K$. As $A$ is a finitely generated $K$-algebra of
+    Krull dimension zero and reduced (it inherits reducedness from $R$, which
+    is reduced as shown above), it has finitely many minimal primes, and
+    annihilates against the product of the minimal polynomials of the images
+    of $a$ in $A/\mathfrak p$ as $\mathfrak p$ ranges over the minimal primes
+    of $A$. This product is a non-zero polynomial in $K[X]$ vanishing on $a$,
+    proving $a$ is algebraic over $K$.
+
+    \medskip
+    \noindent \emph{Lean implementation note.} The Lean route used in iter-129
+    closes only the trivial case $\delta := 1 \otimes a - a \otimes 1 = 0$ in
+    $R \otimes_K R$ via $K$-linear independence of $\{1, a\}$. The substantive
+    case $\delta \ne 0$ remains as a typed sub-sorry; the planned closure is
+    the per-prime route just described, which requires the auxiliary fact
+    "localization preserves weak étale-ness" (Stacks 092Q (1)). An alternative
+    Lean route avoids localization entirely: by
+    \texttt{Algebra.WeaklyEtale.adjoin\_singleton} (proved in
+    \texttt{Proetale/Mathlib/RingTheory/WeaklyEtale/Subalgebra.lean}), the
+    subalgebra $K[a]$ is itself weakly étale over $K$. If
+    \Cref{thm:weakly-etale-imples-ind-etale-over-fields}'s
+    \texttt{etale\_of\_fg} is invoked through a route that does \emph{not}
+    feed back into \texttt{isAlgebraic\_of\_weaklyEtale}, then $K[a]$ is
+    étale over $K$, hence integral, and $a$ is algebraic. The current
+    \texttt{etale\_of\_fg} \emph{does} consume
+    \texttt{isAlgebraic\_of\_weaklyEtale}, so this alternative requires
+    refactoring the bootstrap. The per-prime + Stacks Step~1/2/3 closure
+    described in the subsection below is the iter-145 sanctioned non-circular
+    delivery; the (a) mutual-block and (b) minimal-primes routes remain
+    documented for completeness but are not the active route.
+
+    \medskip
+    \noindent \emph{Lean delivery (non-circular per-prime + Stacks Step 1/2/3).}
+    The L195 sub-sorry in
+    \texttt{Proetale/Algebra/WeaklyEtaleField.lean} asks for
+    \texttt{Algebra.IsSeparable k (Localization.AtPrime q)} where
+    $\mathfrak q \subset R$ is a prime of the weakly étale $K$-algebra $R$.
+    Following \texttt{Algebra.WeaklyEtale.of\_isLocalization} (closed iter-142)
+    and \Cref{lem:weakly-etale-comp} (\texttt{Algebra.WeaklyEtale.trans}), the
+    localization \texttt{Localization.AtPrime q} is itself a weakly étale
+    $K$-algebra; since $\mathfrak q$ is maximal in the absolutely flat $R$
+    (\Cref{lem:reduced-prime-maximal-of-absolutely-flat}), the localization is
+    in fact a field, namely the residue field $\kappa(\mathfrak q)$
+    (\Cref{lemma:reduced-prime-maximal-field}).
+
+    The goal is then to prove \texttt{Algebra.IsSeparable k
+    (Localization.AtPrime q)} without invoking
+    \Cref{lem:flat-tensor-over-field-imples-algebraic}
+    (\texttt{Algebra.WeaklyEtale.isAlgebraic}) or
+    \texttt{isAlgebraic\_of\_weaklyEtale} recursively, which would create a
+    forward-reference cycle in the file ordering fixed at iter-144. We apply
+    the Stacks Step~1/2/3 path (the upper proof of
+    \Cref{lem:flat-tensor-over-field-imples-algebraic}) directly to the field
+    extension $K \to \kappa(\mathfrak q)$:
+
+    \begin{lemma}[Purity-descent of pure ideals along flat extension of commutative rings]
+      \label{lem:more-on-local-structure-pure-ideal-descent-along-flat}
+      % NOTE: iter-147 mathlib-analogist verdict — this lemma's statement
+      % is mathematically unverified and its proof above is broken.
+      % DO NOT formalize this declaration. The replacement is the
+      % specialized weakly-étale-fg-subfield claim, named separately in
+      % the corrective annotation below. The \lean{...} hint is
+      % intentionally removed pending the corrected statement.
+      Let $\varphi : R \to S$ be a flat ring map of commutative rings.
+      Let $J \subseteq S$ be a pure ideal of $S$ (i.e. $S / J$ is a flat $S$-module).
+      Then $J^c := \varphi^{-1}(J)$ is a pure ideal of $R$.
+      Equivalently: contractions of pure ideals along flat ring maps are pure.
+      \uses{def:pure-ideal}
+    \end{lemma}
+    \begin{proof}
+      A pure ideal in a commutative ring $A$ is, by definition, an ideal $I \subseteq A$
+      such that the inclusion $I \hookrightarrow A$ remains injective after tensoring
+      with any $A$-module $M$, i.e. $I \otimes_A M \to A \otimes_A M = M$ is injective
+      for every $M$; equivalently $A / I$ is a flat $A$-module.
+
+      For the flat ring map $\varphi : R \to S$, the inclusion of contractions
+      $\varphi^{-1}(J) \hookrightarrow R$ fits in a commutative square
+      \[
+        \begin{tikzcd}
+          \varphi^{-1}(J) \otimes_R M \ar[r] \ar[d] & M \ar[d] \\
+          J \otimes_S (S \otimes_R M) \ar[r] & S \otimes_R M
+        \end{tikzcd}
+      \]
+      for every $R$-module $M$. The bottom arrow is injective by purity of $J$ in $S$.
+      The right-hand arrow is injective by flatness of $\varphi$. The left arrow is the
+      base-change of $\varphi^{-1}(J) \hookrightarrow R$ along $R \to S$; since
+      $\varphi^{-1}(J) \subseteq R$ is the contraction of $J$, this base-change factors
+      through $J \otimes_S (S \otimes_R M)$. A diagram chase shows the top arrow is
+      injective for every $M$, which says $\varphi^{-1}(J)$ is pure in $R$.
+    \end{proof}
+
+    \begin{enumerate}
+        \item \emph{Step 0 (element-wise reduction).} Fix
+        $a' \in \kappa(\mathfrak q)$. Let $L := \kappa(\mathfrak q)$ be the
+        target field, and let
+        $L' := K(a') \subseteq L$ be the finitely generated $K$-subfield
+        generated by $a'$.
+
+        \item \emph{Step 1 (weakly étale descent to $L'$ via purity).} The
+        extension $K \to L$ is weakly étale by the per-prime route
+        (see the framing paragraph above); equivalently, the multiplication
+        kernel $I_L := \ker(L \otimes_K L \twoheadrightarrow L)$ is a
+        pure ideal of $L \otimes_K L$ (Stacks tag 092A / 04PS: $L$
+        weakly étale over $K$ iff $I_L$ pure).
+
+        The subring inclusion $L' \otimes_K L' \hookrightarrow L \otimes_K L$
+        is injective because $L'$ is $K$-flat (every $K$-vector space is
+        flat) and $L$ is $K$-flat, so the tensor product inclusion is
+        injective.
+
+        Apply
+        \cref{lem:more-on-local-structure-pure-ideal-descent-along-flat}
+        with $R = L' \otimes_K L'$, $S = L \otimes_K L$, $J = I_L$: the
+        contraction $\varphi^{-1}(I_L) = I_{L'} := \ker(L' \otimes_K L'
+        \twoheadrightarrow L')$ is a pure ideal of $L' \otimes_K L'$.
+        Equivalently, $K \to L'$ is weakly étale.
+
+        \item \emph{Step 2 (formally unramified).} Since $I_{L'}$ is a pure
+        ideal of $L' \otimes_K L'$ and $L'$ is a field (so $L' \otimes_K L'
+        \twoheadrightarrow L'$ is a surjection onto a field with pure
+        kernel), $I_{L'}$ is in fact \emph{idempotent}
+        (pure $\Rightarrow$ idempotent for ideals in commutative rings;
+        Stacks tag 04PT). Hence
+        $\Omega_{L'/K} = I_{L'} / I_{L'}^2 = 0$, i.e.
+        $K \to L'$ is formally unramified.
+
+        \item \emph{Step 3 (fg formally unramified field $\Rightarrow$
+        finite separable).} The extension $K \to L'$ is finitely generated
+        as a field extension (we adjoined a single element $a'$). It is a
+        finitely generated $K$-algebra modulo the ideal generated by
+        $a'$'s minimal-polynomial-like relations (if $a'$ is algebraic) or
+        a localization of $K[a']$ (if $a'$ is transcendental). In either
+        case, $L'$ is essentially of finite type over $K$, i.e.\ it
+        satisfies the Mathlib typeclass \texttt{EssFiniteType K L'}.
+
+        Mathlib's
+        \texttt{Algebra.FormallyUnramified.isSeparable}
+        (\cite[\href{https://leanprover-community.github.io/mathlib4_docs/Mathlib/RingTheory/Unramified/Field.html}{Mathlib.RingTheory.Unramified.Field}]{Mathlib.RingTheory.Unramified.Field})
+        applies to fields $K, L'$ with $\texttt{FormallyUnramified K L'}$
+        and $\texttt{EssFiniteType K L'}$: it concludes that $L'/K$ is
+        \texttt{Algebra.IsSeparable}.
+
+        Since $a' \in L'$, transferring along the injective inclusion
+        $L' \hookrightarrow \kappa(\mathfrak q)$ via
+        \texttt{minpoly.algHom\_eq} gives that $a'$ is separable over $K$.
+
+        Moreover, by classical field theory, a formally unramified
+        extension of finite type over a field is also \emph{algebraic}
+        (the Kähler differentials of a transcendental extension cannot
+        vanish), so $L'/K$ is finite algebraic separable. In particular,
+        $a' \in L'$ is algebraic over $K$.
+    \end{enumerate}
+
+    \medskip
+    \noindent \emph{Mathlib carrier status.} The Step 1 cycle-breaker
+    \cref{lem:more-on-local-structure-pure-ideal-descent-along-flat}
+    ("contractions of pure ideals along flat ring maps are pure") as
+    stated in this chapter is \textbf{mathematically unverified} and
+    its proof sketch above is \textbf{broken}. The iter-147
+    mathlib-analogist consult (Archon \texttt{purity-descent},
+    report at \texttt{.archon/logs/iter-147/mathlib-analogist-purity-descent-report.md})
+    identified two concrete bugs in the proof and a structural obstruction
+    in the project's intended specialization:
+    \begin{itemize}
+        \item \emph{Bug 1 (flatness vs faithful flatness).} The diagram-chase
+        above claims the right vertical $M \to S \otimes_R M$ is injective
+        by flatness of $\varphi$. That direction in fact requires faithful
+        flatness; cf.\ the witness $R = \mathbb Z$, $S = \mathbb Q$,
+        $M = \mathbb Z / n$, where the map $\mathbb Z / n \to
+        \mathbb Q \otimes \mathbb Z / n = 0$ is the zero map.
+        \item \emph{Bug 2 (factorization of the left vertical).} The left
+        vertical $\varphi^{-1}(J) \otimes_R M \to J \otimes_S (S \otimes_R M)$
+        is asserted to exist "by factoring through" the contraction; no
+        such factorization is constructed. The natural candidate
+        actually factors through $\varphi(\varphi^{-1}(J)) \cdot S$,
+        which is in general a strict subideal of $J$ — so the claim
+        "$I_{L'}$ pure follows from $I_L$ pure" does not hold via this
+        route.
+        \item \emph{Specialization obstruction.} Strengthening the
+        hypothesis to faithful flatness does not rescue the
+        weakly-étale specialization either: in the setting
+        $R = L' \otimes_K L'$, $S = L \otimes_K L$, $J = I_L$, the
+        diagonal $I_L$ is \emph{not} the extension of $I_{L'}$; so
+        even a fully-correct general descent would not produce
+        $I_{L'}$ pure as the contraction of $I_L$.
+    \end{itemize}
+
+    In particular, no prover dispatch should be made against
+    \cref{lem:more-on-local-structure-pure-ideal-descent-along-flat}
+    as currently stated.
+
+    \medskip
+    \noindent \emph{Corrected path forward (iter-148+).} The analogist
+    recommends pivoting to a \textbf{specialized cycle-breaker} matching
+    the project's actual setting:
+
+    \begin{quote}
+    \emph{Specialized claim.} If $K \to L$ is weakly étale, $L$ is a
+    field, and $L' = K(a') \subseteq L$ is a finitely generated
+    $K$-subfield (the intermediate field generated by a single element
+    $a' \in L$), then $K \to L'$ is weakly étale.
+    \end{quote}
+
+    This claim should be provable directly from the free-module
+    structure of $L$ over $L'$ (every field extension is free as
+    a module over the subfield) and the universal property of
+    $I_{L'} = \ker(L' \otimes_K L' \twoheadrightarrow L')$, without
+    invoking a general purity-descent lemma. The proof skeleton is
+    expected to go through:
+    \begin{enumerate}
+        \item $L$ is faithfully flat over $L'$ (every nonzero field
+        extension is faithfully flat).
+        \item Therefore $L \otimes_{L'} (\,\cdot\,)$ is conservative on
+        the module category of $L'$, and in particular preserves
+        and reflects flatness.
+        \item Apply this conservativity to identify
+        $L \otimes_{L'} I_{L'} \cong I_L'$ for an appropriate
+        $L$-module $I_L'$ that is purely identified with the
+        image of $I_L$ under the natural map
+        $L \otimes_K L \to L \otimes_K L$, and use $I_L$ pure to
+        descend purity to $I_{L'}$.
+    \end{enumerate}
+
+    The precise diagram, including the universal property argument for
+    Step 3, is the iter-148 Lean-side work. As of iter-147 the
+    specialized claim is \textbf{not} explicitly verified against
+    Mathlib or against the literature; the iter-147 plan agent stages
+    a parallel reference-retriever dispatch for Lazard \emph{Autour
+    de la platitude}, Stenström, and Bourbaki \emph{Algèbre
+    Commutative} Ch.\ I §3 to confirm the descent.
+
+    The remaining Step 2 (pure $\Rightarrow$ idempotent) and Step 3
+    (\texttt{FormallyUnramified.isSeparable}) carriers are present
+    in Mathlib and were verified to be applicable here once Step 1
+    delivers \texttt{FormallyUnramified K L'} — but the path to Step 1
+    goes through the specialized claim, NOT through the broken
+    general descent.
+
+    Element-wise algebraicity of $a' \in \kappa(\mathfrak q)$, assuming
+    the specialized cycle-breaker is in scope, yields
+    \texttt{Algebra.IsAlgebraic k (Localization.AtPrime q)} for the
+    element $a_{\mathrm{Loc}} := \mathrm{algebraMap}\,R\,(\mathrm{Loc}\,q)\,a$
+    appearing as the L195 sub-sorry's target. The closure does
+    \emph{not} invoke
+    \Cref{lem:flat-tensor-over-field-imples-algebraic}
+    (\texttt{Algebra.WeaklyEtale.isAlgebraic}),
+    \texttt{etale\_of\_fg}, or
+    \texttt{isAlgebraic\_of\_weaklyEtale} recursively. The intended
+    cycle-breaker — Step 1's specialized "fg subfield of weakly étale
+    field is weakly étale" — sits outside the WeaklyEtale forward-
+    reference cycle, but as of iter-147 has not yet been formally
+    stated as a Lean target. Pending iter-148 confirmation against
+    the literature (Lazard / Stenström / Bourbaki), the L195 sub-sorry
+    remains gated on this specialized statement; the iter-147 prover
+    phase does \emph{not} dispatch against \texttt{Proetale/Algebra/WeaklyEtaleField.lean}.
 \end{proof}
 
 \begin{theorem}[\stacksproject{092Q}, (2) => (3) and last part]
@@ -562,8 +994,8 @@ suffices for our purposes.
         \item $B$ is a filtered colimit of
     étale $K$-algebras, i.e. $B$ is ind-\'etale.
     \end{enumerate}
-    \uses{def:weakly-etale-algebra,
-    def:ind-etale}
+    \uses{def:weakly-etale-algebra, def:ind-etale}
+    \lean{Algebra.WeaklyEtale.indEtale_field, Algebra.WeaklyEtale.etale_of_fg}
 \end{theorem}
 
 \begin{proof}
@@ -590,8 +1022,52 @@ suffices for our purposes.
     Let $K \subset A \subset B$ be a finitely generated $K$-sub algebra. We will show that
     $A$ is étale over $K$ which will finish the proof of the lemma.
 
-    TBA.
+    \emph{Decision (which route to formalize).} Stacks 092Q proves "$A$ étale
+    over $K$" by the per-prime/minimal-prime-lift chain reproduced verbatim
+    below: lifting minimal primes of $A$ to primes of $B$, reading off
+    separable algebraic residue fields, deducing $\dim A = 0$ and "$A$ =
+    product of residue fields", and concluding étale by Stacks Algebra
+    Lemma 00U3. We follow this Stacks-faithful chain (option B.1 in the
+    iter-130 directive).
 
+    Two preparatory facts are used. First, the inclusion
+    $A \hookrightarrow B$ is injective (it is a subalgebra inclusion), which
+    is what enables minimal primes of $A$ to lift to primes of $B$ via
+    Stacks Algebra Lemma 00FK. Second, $A$ is reduced because $B$ is reduced
+    (shown above), and reducedness is inherited by subrings.
+
+    \medskip
+    \emph{Note on the actual iter-129 Lean route.} The Lean file
+    \texttt{Proetale/Algebra/WeaklyEtaleField.lean} formalizes
+    \texttt{etale\_of\_fg} via an alternative semisimple--Kähler-ideal
+    pipeline that bypasses the explicit "product of residue fields"
+    decomposition, because Mathlib's analogue of Algebra Lemma 00U3
+    ("$A$ a finite product of finite separable field extensions of $K$
+    $\Rightarrow$ $A$ étale over $K$") is not directly available in the
+    needed form. The Lean pipeline:
+    (i) every element of $A$ is integral over $K$ (via
+    \Cref{lem:isAlgebraic-of-weaklyEtale});
+    (ii) finite generation $+$ integral over a field $\Rightarrow$
+    \texttt{Module.Finite K A};
+    (iii) reduced $+$ finite over a field $\Rightarrow$ Artinian $+$
+    semisimple;
+    (iv) $A \otimes_K A$ similarly Artinian $+$ semisimple, hence every
+    ideal of $A \otimes_K A$ --- in particular
+    $\ker(A \otimes_K A \to A)$ --- is generated by an idempotent and is
+    therefore idempotent;
+    (v) idempotent kernel $\Rightarrow$ $\Omega_{A/K}$ subsingleton, i.e.
+    \texttt{Algebra.FormallyUnramified K A};
+    (vi) over a field, formally unramified $+$ essentially of finite type
+    $\Rightarrow$ formally étale
+    (Mathlib's \texttt{Algebra.FormallyEtale.of\_formallyUnramified\_of\_field});
+    (vii) finite generation over a Noetherian field $\Rightarrow$
+    finite presentation;
+    (viii) étale $=$ formally étale $+$ finite presentation.
+    This route yields the same conclusion (and uses only 092P + standard
+    Mathlib infrastructure) without invoking Algebra Lemma 00U3.
+
+    \medskip
+    We now return to the Stacks-faithful chain.
     Then every minimal prime
     $p \subset A$ is the image of a prime $q$ of $B$, see Algebra, Lemma 00FK.
     Thus κ(p) as a subfield of Bq=κ(q) is separable algebraic over K. Hence
@@ -608,23 +1084,28 @@ suffices for our purposes.
     Let $A$ be a ring, let $f: R \to R',\, g : S \to S'$ be two ring maps of $A$-algebras.
     Then the kernel of $R \otimes_A S \to R' \otimes_A S'$ is generated by $\ker f \otimes_A S$ and
     $R \otimes_A \ker g$.
+    \lean{Algebra.TensorProduct.map_ker}
+    \mathlibok
 \end{lemma}
 
 \begin{proof}
+    \mathlibok
     Omitted.
 \end{proof}
 
 \begin{lemma}
     \label{lem:local-dim-zero-tensor}
-    Let $k$ be a field, $A$ be a local $k$-algebra of dimension zero, i.e. there is a unique 
+    Let $k$ be a field, $A$ be a local $k$-algebra of dimension zero, i.e. there is a unique
     prime ideal in $A$. Suppose that the residue field of $A$ is identified with $k$.
     Then $A \otimes_k A$ is a local $k$ algebra of dimension zero.
+    \lean{Algebra.isLocalRing_tensorProduct_of_krullDimLE_zero,
+      Algebra.krullDimLE_zero_tensorProduct_of_krullDimLE_zero}
 \end{lemma}
 
 \begin{proof}
     \uses{lem:ker-tensor-generated-by}
-    The unique prime ideal of $A$ is the nilradical $N$ of $A$. By 
-    \Cref{lem:ker-tensor-generated-by}, the kernel of $A \otimes_k A \to k = A/N$ is generated by 
+    The unique prime ideal of $A$ is the nilradical $N$ of $A$. By
+    \Cref{lem:ker-tensor-generated-by}, the kernel of $A \otimes_k A \to k = A/N$ is generated by
     $N \otimes_k A$ and $A \otimes_k N$, which are all consisiting of nilpotent elements.
     Thus the nilpotent ideal of $A \otimes_k A$ is also the maximal ideal. This finishes the proof.
 \end{proof}
@@ -632,29 +1113,33 @@ suffices for our purposes.
 \begin{lemma}
     \label{lem:bij-on-spectrum-of-unique-lying-over-and-residue-field-eq}
     Let $A \to B$ be a ring map. For all $\mathfrak{p} \subset A$,
-    there is a unique prime $\mathfrak{q} \subset B$ lying over $\mathfrak{p}$ and 
-    $\kappa(\mathfrak{p}) = \kappa(\mathfrak{q})$. Then $B \otimes_A B \to B$ is bijective on 
+    there is a unique prime $\mathfrak{q} \subset B$ lying over $\mathfrak{p}$ and
+    $\kappa(\mathfrak{p}) = \kappa(\mathfrak{q})$. Then $B \otimes_A B \to B$ is bijective on
     spectra.
+    \lean{Algebra.bijective_comap_lmul'_of_bijective_of_bijective}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lem:local-dim-zero-tensor}
-    It suffices to show that, for every prime $p$ of $A$, there is exactly one prime ideal $q'$ 
+    It suffices to show that, for every prime $p$ of $A$, there is exactly one prime ideal $q'$
     of $B \otimes_A B$ lying over $p$. To detect this, we may assume $A$ is a field by replacing
-    $A$ with $\kappa(\mathfrak{p})$, $B$ with $\kappa(\mathfrak{p}) \otimes_A B$ which is a local 
+    $A$ with $\kappa(\mathfrak{p})$, $B$ with $\kappa(\mathfrak{p}) \otimes_A B$ which is a local
     ring. Now the goal follows from \Cref{lem:local-dim-zero-tensor}.
 \end{proof}
 
 \begin{lemma}
     \label{lem:iso-of-bij-on-spectrum-and-surj-and-flat}
-    Let $A \to B$ be a ring map that is bijective on spectra, as well as surjective and flat, then 
+    Let $A \to B$ be a ring map that is bijective on spectra, as well as surjective and flat, then
     it is an isomorphism.
+    \lean{Algebra.bijective_of_bijective_of_flat}
+    \leanok
 \end{lemma}
 
 \begin{proof}
-    Recall that a \emph{pure} ideal $I$ in $A$ is an ideal such that $A/I$ is flat. 
-    (Use \verb|Ideal.Pure|.) In our case, let $I$ be the kernel of the map $A \to B$. 
-    Then $I$ is pure and have empty vanishing locus. But we know that pure ideals are determined by
+    Recall that a \emph{pure} ideal $I$ in $A$ is an ideal such that $A/I$ is flat.
+    (Use \verb|Ideal.Pure|.) In our case, let $I$ be the kernel of the map $A \to B$.
+    Then $I$ is pure and has empty vanishing locus. But we know that pure ideals are determined by
     their vanishing locus (\verb`Ideal.zeroLocus_inj_of_pure`) and zero ideal is also a pure
     ideal having the same vanishing locus with $I$, thus $I = 0$.
 \end{proof}
@@ -676,80 +1161,91 @@ suffices for our purposes.
 
 \begin{lemma}[\stacksproject{04VU}]
     \label{lem:isom-of-ff-and-mul-isom}
-    Let $A \to B$ be a faithfully flat ring epimorphism. Then $A \to B$ is an isomrophism.
+    Let $A \to B$ be a faithfully flat ring epimorphism. Then $A \to B$ is an isomorphism.
+    \lean{Algebra.bijective_of_faithfullyFlat_of_isEpi}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lem:ring-epi-tfae}
-    By \Cref{em:ring-epi-tfae}, the map $B \to B \otimes_A B$, which is a base change of $A \to B$,
+    By \Cref{lem:ring-epi-tfae}, the map $B \to B \otimes_A B$, which is a base change of $A \to B$,
     is isomorphism. So is $A \to B$ by faithfully flatness.
 \end{proof}
 
 \begin{lemma}
     \label{lem:isom-of-unique-lying-over-and-residue-field-eq}
-    Let $A \to B$ be a local homomorphism of local rings. For all $\mathfrak{p} \subset A$, 
-    there is a unique prime $\mathfrak{q} \subset B$ lying over $\mathfrak{p}$ and 
+    Let $A \to B$ be a weakly étale local homomorphism of local rings. For all $\mathfrak{p} \subset A$,
+    there is a unique prime $\mathfrak{q} \subset B$ lying over $\mathfrak{p}$ and
     $\kappa(\mathfrak{p}) = \kappa(\mathfrak{q})$. Then $A \to B$ is an isomorphism.
+    \lean{Algebra.WeaklyEtale.bijective_algebraMap_of_bijective_residueFieldMap}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lem:bij-on-spectrum-of-unique-lying-over-and-residue-field-eq,
-    def:weakly-etale-algebra, 
-    lem:iso-of-bij-on-spectrum-and-surj-and-flat, 
+    def:weakly-etale-algebra,
+    lem:iso-of-bij-on-spectrum-and-surj-and-flat,
     lem:isom-of-ff-and-mul-isom}
-    To see this, suppose that we are under the above hypothesis. 
-    This implies that $\mu : B \otimes_A B \to B$ is bijective on spectra by 
+    To see this, suppose that we are under the above hypothesis.
+    This implies that $\mu : B \otimes_A B \to B$ is bijective on spectra by
     \Cref{lem:bij-on-spectrum-of-unique-lying-over-and-residue-field-eq},
-    as well as surjective and flat (immediately by \Cref{def:weakly-etale-algebra}). 
+    as well as surjective and flat (immediately by \Cref{def:weakly-etale-algebra}).
     Hence it is an isomorphism by \Cref{lem:iso-of-bij-on-spectrum-and-surj-and-flat}. Together with
-    the fact that $A \to B$ is a faithfully (by surjectivity on spectrum) flat, we can apply 
+    the fact that $A \to B$ is a faithfully (by surjectivity on spectrum) flat, we can apply
     \Cref{lem:isom-of-ff-and-mul-isom} to conclude $A = B$.
 \end{proof}
 
 \begin{lemma}
     \label{lem:totally-disconnected-inverse-limit}
-    Let $I$ be a directed set. Let $T_i, \, i \in I$ be a series of totally disconnected 
-    topological spaces. Then 
+    Let $I$ be a directed set. Let $T_i, \, i \in I$ be a series of totally disconnected
+    topological spaces. Then
     $$T = \varprojlim_{i \in I} T_i $$ is also totally disconnected.
+    \lean{TopCat.limitCone_pt_totallyDisconnectedSpace}
+    \leanok
 \end{lemma}
 
 \begin{proof}
-    Suppose $x, y$ are two distinct points that lives in the same connected component. Then the 
-    projection of $x, y$ will be always fall in the same connected components, thus equal. This 
+    \leanok
+    Suppose $x, y$ are two distinct points that lives in the same connected component. Then the
+    projection of $x, y$ will be always fall in the same connected components, thus equal. This
     is a contradiction.
 \end{proof}
 
 \begin{lemma}
     \label{lem:idempotent-in-ind-etale-of-primes}
     % It is unclear whether this lemma is in the most general form.
-    Let $B$ be a ind-\'etale algebra over some field $K$. If there are 
-    two different prime ideals $q_1$ and $q_2$ in $B$, then $B$ has a nontrivial 
+    Let $B$ be a ind-\'etale algebra over some field $K$. If there are
+    two different prime ideals $q_1$ and $q_2$ in $B$, then $B$ has a nontrivial
     idempotent element $e$ (i.i. $e^2 = e$).
+    \lean{Algebra.IndEtale.exists_isIdempotentElem_of_two_primes}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     \uses{lem:totally-disconnected-inverse-limit}
     Writing $B$ as a filtered colimit $\colim B_i$ of \'etale algebra over $K$. Each $B_i$ is a
-    product of separable field extensions of $K$. In particular, the spectrum of $B_i$'s are totally 
+    product of separable field extensions of $K$. In particular, the spectrum of $B_i$'s are totally
     disconnected. By \Cref{lem:totally-disconnected-inverse-limit}, the spectrum of $B$ is again
-    totally disconnected. Thus different prime ideals $q_1$ and $q_2$ livs in 
+    totally disconnected. Thus different prime ideals $q_1$ and $q_2$ livs in
     different connected components. This giving the desire nontrivial idempotent element.
 \end{proof}
 
 \begin{lemma}
     \label{lem:idempotent-in-ind-etale-of-field-ext}
     % It is unclear whether this lemma is in the most general form.
-    Let $B$ be a ind-\'etale algebra over some field $K$. If there exists 
+    Let $B$ be a ind-\'etale algebra over some field $K$. If there exists
     a prime ideal $q$ of $B$, such that the residue field of $q$ is not $K$, then
-    $\kappa(q) \otimes_A B$ has a nontrivial element.
+    $\kappa(q) \otimes_A B$ has a nontrivial idempotent element.
     \uses{def:ind-etale}
+    \lean{Algebra.IndEtale.exists_isIdempotentElem_tensorProduct_of_residueField_ne}
+    \leanok
 \end{lemma}
 
 \begin{proof}
     Writing $B$ as a filtered colimit $\colim B_i$ of \'etale algebra over $K$. (Each $B_i$ is a
     product of separable field extensions of $K$.) Let $q_i$ be the inverse image of $q$ in $B_i$,
     $\kappa(q_i)$ be the residue field of $q_i$, then $K_i$ is a separable field extensions of $K$.
-    Now $\kappa(q) = \colim \kappa(q_i)$ is again a separable extension of $K$. Then 
+    Now $\kappa(q) = \colim \kappa(q_i)$ is again a separable extension of $K$. Then
     $\kappa(q) \otimes_A B = \kappa(q) \otimes_K \kappa(q)$ splits. The conclusion follows.
 \end{proof}
 
@@ -759,6 +1255,8 @@ suffices for our purposes.
     Let $\mathfrak{p}$ be a prime ideal of $R$ and $L$ an algebraic field
     extension of $\kappa(\mathfrak{p})$. Then $L \otimes_{R} S$ has no non-trivial idempotents.
     \label{lemma:weakly-etale-over-sh-aux}
+    \lean{Algebra.WeaklyEtale.eq_of_isIdempotentElem}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -780,6 +1278,8 @@ suffices for our purposes.
     Let $A \to B$ be a local homomorphism of local rings. If $A$ is henselian, the residue field
     of $A$ is separably closed, and $A \to B$ is weakly étale, then $A = B$.
     \uses{def:weakly-etale-algebra}
+    \lean{Algebra.WeaklyEtale.bijective_of_henselianLocalRing}
+    \leanok
 \end{theorem}
 
 \begin{proof}
@@ -789,22 +1289,22 @@ suffices for our purposes.
     lem:idempotent-in-ind-etale-of-primes,
     lem:idempotent-in-ind-etale-of-field-ext,
     lemma:weakly-etale-over-sh-aux}
-    It suffices to show that for all $\mathfrak{p} \subset A$ there is a unique prime 
-    $\mathfrak{q} \subset B$ lying over $\mathfrak{p}$ and $\kappa(\mathfrak{p}) = 
+    It suffices to show that for all $\mathfrak{p} \subset A$ there is a unique prime
+    $\mathfrak{q} \subset B$ lying over $\mathfrak{p}$ and $\kappa(\mathfrak{p}) =
     \kappa(\mathfrak{q})$ by \Cref{lem:isom-of-unique-lying-over-and-residue-field-eq}
-    
-    Note that the fibre ring $\kappa(\mathfrak{p}) \otimes_A B$ is weakly etale over 
-    $\kappa(\mathfrak{p})$ by \Cref{lem:weakly-etale-base-change}, thus it is a colimit of étale 
+
+    Note that the fibre ring $\kappa(\mathfrak{p}) \otimes_A B$ is weakly etale over
+    $\kappa(\mathfrak{p})$ by \Cref{lem:weakly-etale-base-change}, thus it is a colimit of étale
     extensions of $\kappa(\mathfrak{p})$ by \Cref{thm:weakly-etale-imples-ind-etale-over-fields}.
     If the conclusion does not hold, at least one of the following cases is true:
     \begin{enumerate}
-        \item there exists more than one prime $\mathfrak{q}\_1, \mathfrak{q}\_2$ lying over 
+        \item there exists more than one prime $\mathfrak{q}\_1, \mathfrak{q}\_2$ lying over
     $\mathfrak{p}$;
         \item if $\kappa(\mathfrak{p}) \neq \kappa(\mathfrak{q})$ for some $\mathfrak{q}$.
     \end{enumerate}
-    In the first case, by \Cref{lem:idempotent-in-ind-etale-of-primes}; in the second case, by 
-    \Cref{lem:idempotent-in-ind-etale-of-field-ext}, we can always find some $L$ 
-    then $L \otimes_A B$ has a nontrivial idempotent for some (separable) 
+    In the first case, by \Cref{lem:idempotent-in-ind-etale-of-primes}; in the second case, by
+    \Cref{lem:idempotent-in-ind-etale-of-field-ext}, we can always find some $L$
+    then $L \otimes_A B$ has a nontrivial idempotent for some (separable)
     algebraic field extension $L/\kappa(\mathfrak{p})$.
 
     Now the statement follows from \Cref{lemma:weakly-etale-over-sh-aux}.
@@ -816,6 +1316,8 @@ suffices for our purposes.
     and $A \to B$ is weakly étale, then $A = B$.
     \uses{def:weakly-etale-algebra,
     def:strictly-henselian-local-ring}
+    \lean{Algebra.WeaklyEtale.bijective_of_isStrictlyHenselianLocalRing}
+    \leanok
 \end{theorem}
 
 \begin{proof}
@@ -831,6 +1333,8 @@ suffices for our purposes.
     Let $A \to B$ be a w-local ring map of w-local-rings that identifies local rings. Then
     $A \to B$ is ind-Zariski.
     \label{lemma:w-local-bijective-on-stalks-ind-zariski}
+    \lean{RingHom.BijectiveOnStalks.indZariski_of_isWLocal}
+    \leanok
 \end{lemma}
 
 \begin{proof}
@@ -841,6 +1345,7 @@ suffices for our purposes.
     Let $A \to B$ be a ring map that is bijective on stalks. Then there exists a faithfully flat,
     ind-Zariski map $B \to B'$ such that $A \to B'$ is ind-Zariski.
     \label{prop:bijective-on-stalks-ind-zariski}
+    \lean{Algebra.BijectiveOnStalks.exists_indZariski, RingHom.BijectiveOnStalks.exists_indZariski}
 \end{proposition}
 
 \begin{proof}
@@ -857,6 +1362,7 @@ suffices for our purposes.
     Let $R \to S$ be weakly étale. Then there exists a faithfully flat ind-étale morphism
     $S \to T$ such that the composition $R \to T$ is ind-étale.
     \label{thm:weakly-etale-ind-etale}
+    \lean{RingHom.WeaklyEtale.exists_indEtale_comp, Algebra.WeaklyEtale.exists_indEtale}
 \end{theorem}
 
 \begin{proof}

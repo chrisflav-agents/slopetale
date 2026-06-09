@@ -1,0 +1,20 @@
+# archon-protected.yaml
+# Declarations whose signatures must not be modified by any agent.
+# The mathematician owns these; agents are read-only on them.
+#
+# Format:
+#   path/to/file.lean:
+#     - declaration_name
+#     - another_declaration
+#
+# Add entries as you decide which parts of the formalization are stable.
+# This file is committed to git so the whole team shares it.
+#
+# Example:
+#   DecouplingMomentCurve/Main.lean:
+#     - main_decoupling_theorem
+#     - decoupling_torsion_curve
+#
+#   DecouplingMomentCurve/Defs.lean:
+#     - HasFourierSupport
+#     - decouplingConstant
