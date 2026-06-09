@@ -16,6 +16,9 @@ import Proetale.Algebra.WeakDimension
 import Proetale.Algebra.WeaklyEtale
 import Proetale.Mathlib.RingTheory.TensorProduct.Maps
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Localization
+import Proetale.Mathlib.RingTheory.WeaklyEtale.GoDown
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Defs
 
 /-!
 # Weakly étale algebras over a field
@@ -254,8 +257,49 @@ theorem isAlgebraic_of_weaklyEtale [WeaklyEtale k R] : Algebra.IsAlgebraic k R :
         obtain ⟨k_val, hk⟩ := h_aLoc_in_k
         refine ⟨Polynomial.X - Polynomial.C k_val, Polynomial.X_sub_C_ne_zero k_val, ?_⟩
         simp [hk]
-      · -- Substantive sub-case: structural cycle. See block comment above.
-        sorry
+      · -- Substantive sub-case: Stacks 04PV (go-down) route.
+        -- L' := IntermediateField.adjoin k {aLoc} ⊆ Loc q.
+        -- K → L' → Loc q satisfies Stacks 04PV part (2): L' → Loc q faithfully flat
+        -- (field extension), K → Loc q weakly étale (hWE_kLoc).
+        -- Hence K → L' is weakly étale.
+        -- L' is ess.f.t. over k (singleton-generated), so FormallyUnramified +
+        -- EssFiniteType over the field k ⇒ IsSeparable ⇒ IsAlgebraic.
+        let L' : IntermediateField k (Localization.AtPrime q) :=
+          IntermediateField.adjoin k {aLoc}
+        have haLoc_in_L' : aLoc ∈ L' :=
+          IntermediateField.subset_adjoin k {aLoc} rfl
+        have hFGL' : L'.FG :=
+          IntermediateField.fg_adjoin_of_finite (Set.finite_singleton _)
+        haveI hEFTL' : Algebra.EssFiniteType k L' :=
+          IntermediateField.essFiniteType_iff.mpr hFGL'
+        -- L' → Loc q is faithfully flat: L' is a field, Loc q is a nontrivial L'-module
+        -- (free by Module.Free.of_divisionRing), hence faithfully flat.
+        haveI hNontrivLoc : Nontrivial (Localization.AtPrime q) :=
+          hLocField.toNontrivial
+        haveI hFreeL'Loc : Module.Free L' (Localization.AtPrime q) :=
+          Module.Free.of_divisionRing L' (Localization.AtPrime q)
+        haveI hFFL' : Module.FaithfullyFlat L' (Localization.AtPrime q) :=
+          Module.FaithfullyFlat.of_linearEquiv _ _
+            (Module.Free.chooseBasis L' (Localization.AtPrime q)).repr
+        -- IsScalarTower k L' (Loc q) is automatic from IntermediateField instances.
+        haveI hSTkL'Loc : IsScalarTower k L' (Localization.AtPrime q) := inferInstance
+        -- Apply GoDown (Stacks 04PV part 2): K → L' is weakly étale.
+        haveI hWEL' : Algebra.WeaklyEtale k L' :=
+          Algebra.WeaklyEtale.of_faithfullyFlat_intermediate
+            (K := k) (B := ↥L') (C := Localization.AtPrime q)
+        -- WeaklyEtale ⇒ FormallyUnramified (instance in WeaklyEtale.lean).
+        haveI hFUL' : Algebra.FormallyUnramified k L' := inferInstance
+        -- FormallyUnramified + EssFiniteType over a field ⇒ IsSeparable.
+        haveI hSepL' : Algebra.IsSeparable k L' :=
+          Algebra.FormallyUnramified.isSeparable k L'
+        -- IsSeparable ⇒ IsAlgebraic (instance via Nontrivial k).
+        haveI hAlgL' : Algebra.IsAlgebraic k L' := inferInstance
+        -- Transfer algebraicity of ⟨aLoc, haLoc_in_L'⟩ : L' to aLoc via L'.val.
+        have hAlg_elem : IsAlgebraic k (⟨aLoc, haLoc_in_L'⟩ : L') :=
+          hAlgL'.isAlgebraic _
+        have : IsAlgebraic k (L'.val ⟨aLoc, haLoc_in_L'⟩) :=
+          hAlg_elem.algHom L'.val
+        rwa [IntermediateField.val_mk] at this
     obtain ⟨μ, hμ_ne, hμ_eval⟩ := h_aLoc_alg
     -- Step 6: derive a contradiction.
     -- Translate `Polynomial.aeval aLoc μ = 0` to `algebraMap R Loc (aeval a μ) = 0`

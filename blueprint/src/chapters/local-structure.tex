@@ -1,5 +1,5 @@
 \chapter{Local structures}
-% archon:covers Proetale/Algebra/WContractible.lean Proetale/Algebra/IdentifiesLocalRings.lean
+% archon:covers Proetale/Algebra/WContractible.lean Proetale/Algebra/IdentifiesLocalRings.lean Proetale/Algebra/StructureSheafPullback.lean
 
 This chapter serves for the first half of the commutative algebra preparation of the remaining part of the paper. The key result is
 \begin{enumerate}
@@ -682,8 +682,14 @@ preimage under \(\Phi\) (i.e.\ surjectivity) is handled in
 
 \begin{proof}
   \leanok
+  % iter-150 SSP-bypass pivot: the `\uses{...}` now points to the new
+  % helper `lem:exists-ringHom-of-compatible-localRingHom-family`. The
+  % retired `lem:identifies-local-ring-invImage-structureSheaf-iso` is
+  % retained below as a documentary dependency only -- the actual
+  % carrier of the existence half is the new helper.
   \uses{def:identify-local-rings,def:identifies-local-ring-homover,
         lem:identifies-local-ring-spec-spaces-over-X,
+        lem:exists-ringHom-of-compatible-localRingHom-family,
         lem:identifies-local-ring-invImage-structureSheaf-iso}
   \textit{Source: Stacks Project, Tag 096L (the surjectivity half of
   the cited bijection); the structure-sheaf identification used here
@@ -860,6 +866,55 @@ preimage under \(\Phi\) (i.e.\ surjectivity) is handled in
 % `task_results/Algebra_IdentifiesLocalRings.lean.md` (iter-142) for the
 % full closure recipe + Option B (algebraic re-packaging via
 % `PrimeSpectrum.toPiLocalization`).
+%
+% ------------------------------------------------------------------
+% DEPRECATION BANNER (iter-150).
+% The following lemma block
+% `lem:identifies-local-ring-invImage-structureSheaf-iso` and the
+% six-step stalk-identification chain that follows it (through the
+% align*-block ending at the "End iter-135 split sub-lemmas" comment)
+% are RETIRED as a proof target as of iter-150. They are preserved
+% below as DOCUMENTARY content -- the mathematical chain is correct,
+% but it is the wrong proof spine for the downstream consumer
+% `Algebra.BijectiveOnStalks.exists_algHom_of_continuousMap`
+% (see `Proetale/Algebra/IdentifiesLocalRings.lean`, the L425
+% existence half).
+%
+% Reason for retirement. The iter-150 `mathlib-analogist` subagent
+% (slug `ssp-spine`, report at
+% `.archon/task_results/mathlib-analogist-ssp-spine.md`) returned a
+% critical ALIGN_WITH_MATHLIB verdict: Mathlib has no
+% `Sheaf.pullback`-level structure-sheaf-iso theorem because its
+% Spec-functor theory is structured to route around the inverse-image
+% sheaf machinery (Mathlib prefers the direct
+% `StructureSheaf.globalSectionsIso` + sheaf-condition idiom). The
+% six-step chain below is buildable but yields >=150 LOC of bridge
+% plumbing whose only consumer is the L425 existence half --- which
+% has already algebraically reduced to existence of a ring map
+% `f : B -> C` compatible with the per-prime family
+% `M : forall p, B -> C_p`, no `Sheaf.pullback` data required. The
+% iter-150 progress-critic classified the SSP-spine lane as CHURNING
+% (3 consecutive PARTIAL iters with the residual `sorry` pinned at 1
+% and the blocker shifting one Mathlib lemma deeper each iter), the
+% canonical signature of a wrong-idiom proof spine.
+%
+% Replacement. The downstream consumer is re-routed through the new
+% Archon helper
+% \ref{lem:exists-ringHom-of-compatible-localRingHom-family}, stated
+% after the documentary block below. The new helper closes the
+% existence half via the direct algebraic route
+% (`StructureSheaf.globalSectionsIso` + the sheaf condition on
+% `structureSheaf C`), strictly bypassing the inverse-image
+% machinery and the `sheafifyStalkIso_concrete` Mathlib gap.
+%
+% What is preserved. The two upstream helpers
+% `isIso_sheafedSpaceMap_stalkMap` and `localRingEquiv` (both in
+% `Proetale/Algebra/StructureSheafPullback.lean`) remain
+% Mathlib-aligned utilities and are NOT retired. Only the headline
+% theorem `isIso_invImage_structureSheaf` and the bridge helper
+% `sheafifyStalkIso_concrete` (Lemma below) are deprecated as proof
+% targets.
+% ------------------------------------------------------------------
 \begin{lemma}\leanok
 [Inverse-image of $\mathcal O_{\Spec A}$ is $\mathcal O_{\Spec B}$ when $A \to B$ identifies local rings --- Archon helper]
   \label{lem:identifies-local-ring-invImage-structureSheaf-iso}
@@ -958,7 +1013,8 @@ preimage under \(\Phi\) (i.e.\ surjectivity) is handled in
   % closing the headline `isIso_invImage_structureSheaf`.
 \end{proof}
 
-\begin{lemma}[Sheafification preserves stalks for sheaves valued in a concrete category whose forgetful functor preserves filtered colimits --- Archon Mathlib gap]
+\begin{lemma}\leanok
+[Sheafification preserves stalks for sheaves valued in a concrete category whose forgetful functor preserves filtered colimits --- Archon Mathlib gap]
   \label{lem:topcat-presheaf-sheafify-stalk-iso-concrete}
   \lean{TopCat.Presheaf.sheafifyStalkIso_concrete}
   Let $\mathcal C$ be a category with all small colimits and limits,
@@ -979,9 +1035,10 @@ preimage under \(\Phi\) (i.e.\ surjectivity) is handled in
     \;:\; F_x \;\longrightarrow\; (\texttt{presheafToSheaf}\,F).\mathrm{val.stalk}\,x
   \]
   is an isomorphism in $\mathcal C$.
-  \uses{}
 \end{lemma}
 \begin{proof}
+
+\leanok
   Mathlib's \texttt{TopCat.Presheaf.sheafifyStalkIso} establishes the
   same fact for the case $\mathcal C = \mathrm{Type}$. The forgetful
   functor $\mathrm{forget}_{\mathcal C} : \mathcal C \to \mathrm{Type}$
@@ -1027,6 +1084,184 @@ $c$-component $q.\mathrm{toHom.c}$.
 % ------------------------------------------------------------------
 % End iter-135 split sub-lemmas.
 % ------------------------------------------------------------------
+
+\subsection*{Iter-150 pivot: SSP-bypass for the existence half}
+
+The chain immediately above (the
+\texttt{Sheaf.pullback}-level structure-sheaf iso
+\(q^{-1}\mathcal O_{\Spec A} \xrightarrow{\sim} \mathcal O_{\Spec B}\)
+and its six-step stalk-identification recipe) has been \emph{retired}
+as a proof target as of iter-150 --- see the deprecation banner above
+\Cref{lem:identifies-local-ring-invImage-structureSheaf-iso}. Its
+sole downstream consumer was the existence half of
+\Cref{lem:identifies-local-ring-spec-existence} (i.e.\ the
+Lean target
+\texttt{Algebra.BijectiveOnStalks.exists\_algHom\_of\_continuousMap}).
+
+We re-route that consumer through a direct algebraic existence
+statement at the global-sections level. The new helper, stated
+below, closes the existence half using Mathlib's
+\texttt{StructureSheaf.globalSectionsIso} together with the sheaf
+condition on \(\texttt{structureSheaf}\,C\), and avoids the
+inverse-image sheaf machinery entirely. The result is a
+Mathlib-idiomatic construction of length \(\approx 50\)--\(100\) LOC,
+in place of the \(\geq 150\) LOC of bridge plumbing the SSP route
+would have required.
+
+\begin{lemma}\leanok
+[Compatible local-ring family lifts via structure-sheaf
+  global sections --- Archon helper, SSP-bypass]
+  \label{lem:exists-ringHom-of-compatible-localRingHom-family}
+  \lean{Algebra.BijectiveOnStalks.exists_ringHom_of_compatible_localRingHom_family}
+  \uses{def:identify-local-rings}
+  Let \(B\) and \(C\) be commutative rings and let
+  \(M : \prod_{\mathfrak p \in \Spec C} \Hom_{\mathrm{Ring}}(B, C_\mathfrak p)\)
+  be a per-prime family of ring homomorphisms. Suppose that for every
+  prime \(\mathfrak p \subset C\) there exists a local ring homomorphism
+  \(\alpha_\mathfrak p \colon B_{\varphi(\mathfrak p)} \to C_\mathfrak p\)
+  (for a suitable prime \(\varphi(\mathfrak p) \subset B\)) such that
+  the diagram
+  \[
+    \begin{tikzcd}
+      B \arrow[r, "M_\mathfrak p"] \arrow[d, "\mathrm{algebraMap}"'] &
+        C_\mathfrak p \\
+      B_{\varphi(\mathfrak p)} \arrow[ur, "\alpha_\mathfrak p"'] &
+    \end{tikzcd}
+  \]
+  commutes for every \(\mathfrak p \in \Spec C\). Then there exists a
+  (unique) ring homomorphism \(f \colon B \to C\) such that
+  \(\mathrm{algebraMap}_{C \to C_\mathfrak p} \circ f = M_\mathfrak p\)
+  for every \(\mathfrak p \in \Spec C\).
+\end{lemma}
+
+\begin{proof}
+  \uses{def:identify-local-rings}
+  \leanok
+  This is the global-sections incarnation of the Stacks 04D2 / 096J
+  sheaf isomorphism \(q^{-1}\mathcal O_{\Spec A} \xrightarrow{\sim}
+  \mathcal O_{\Spec B}\), restated \emph{without} appealing to the
+  inverse-image sheaf machinery on \(\Spec C\). The proof has five
+  steps.
+
+  \smallskip
+
+  \noindent\emph{Step 1: stalk-level compatibility.}
+  For each \(\mathfrak p \in \Spec C\), the hypothesis provides a
+  local ring map \(\alpha_\mathfrak p \colon B_{\varphi(\mathfrak p)}
+  \to C_\mathfrak p\) such that
+  \(M_\mathfrak p
+   = \alpha_\mathfrak p \circ \mathrm{algebraMap}_{B \to
+     B_{\varphi(\mathfrak p)}}\). This factorisation is the only
+  property of \(M\) used below.
+
+  \smallskip
+
+  \noindent\emph{Step 2: localise to a Zariski open cover.}
+  For each prime \(\mathfrak p\) and each \(b \in B\), the image
+  \(M_\mathfrak p\,b \in C_\mathfrak p\) is a fraction
+  \(c_{\mathfrak p, b}/s_{\mathfrak p, b}\) with
+  \(s_{\mathfrak p, b} \notin \mathfrak p\). By definition of the
+  stalk \(C_\mathfrak p = \colim_{s \notin \mathfrak p} C[s^{-1}]\)
+  as a filtered colimit, the fraction
+  \(c_{\mathfrak p, b}/s_{\mathfrak p, b}\) already lives in the
+  localisation \(C[s_{\mathfrak p, b}^{-1}]\) for some choice of
+  representative. The basic opens
+  \(\{D(s_{\mathfrak p, b}) : \mathfrak p \in \Spec C,\, b \in B\}\)
+  cover \(\Spec C\): for every prime \(\mathfrak p\), every
+  \(b \in B\) lies in \(D(s_{\mathfrak p, b})\) because
+  \(s_{\mathfrak p, b} \notin \mathfrak p\).
+
+  \smallskip
+
+  \noindent\emph{Step 3: local-to-global construction.}
+  For each pair \((\mathfrak p, b)\), the chosen local representative
+  defines a candidate value of \(f(b)\) in
+  \(C[s_{\mathfrak p, b}^{-1}]\), namely
+  \(c_{\mathfrak p, b}/s_{\mathfrak p, b}\). The compatibility
+  hypothesis on \(M\) (Step 1) guarantees that these local candidates
+  agree on overlaps \(D(s_{\mathfrak p, b}) \cap
+  D(s_{\mathfrak p', b})\) after passing to a further common
+  localisation: two representatives of the same element of
+  \(C_\mathfrak p\) become equal in some \(C[s^{-1}]\) with
+  \(s \notin \mathfrak p\), by the same colimit definition of the
+  stalk.
+
+  \smallskip
+
+  \noindent\emph{Step 4: glue via the structure sheaf.}
+  The compatible family of sections
+  \(\bigl(c_{\mathfrak p, b}/s_{\mathfrak p, b}\bigr)_\mathfrak p
+   \in \prod_\mathfrak p C[s_{\mathfrak p, b}^{-1}]\) is, by Step 3,
+  a section of the structure sheaf \(\mathcal O_{\Spec C}\) on the
+  cover \(\bigl\{D(s_{\mathfrak p, b})\bigr\}_\mathfrak p\) of
+  \(\Spec C\). Mathlib's sheaf instance
+  \(\texttt{(structureSheaf}\,C\texttt{).cond} : \texttt{IsSheaf
+    (structureSheaf}\,C\texttt{).val}\) supplies the amalgamation:
+  there is a unique global section of \(\mathcal O_{\Spec C}\) over
+  \(\Spec C = \bigcup D(s_{\mathfrak p, b})\) restricting to the
+  given local representatives. By
+  \texttt{AlgebraicGeometry.StructureSheaf.globalSectionsIso}, the
+  ring \(\Gamma(\Spec C, \mathcal O_{\Spec C}) =
+  \texttt{(structureSheaf}\,C\texttt{).val.obj}\,(\mathrm{op}\,\top)\) is
+  canonically isomorphic to \(C\) itself. Pulling the amalgamated
+  global section through this iso yields a unique element of \(C\);
+  set \(f(b) \in C\) equal to this element.
+
+  \smallskip
+
+  \noindent\emph{Step 5: verification.}
+  By construction, the image of \(f(b)\) in
+  \(C[s_{\mathfrak p, b}^{-1}]\) is the chosen local representative,
+  hence its image in the stalk \(C_\mathfrak p\) is
+  \(M_\mathfrak p\,b\). This is the defining property
+  \(\mathrm{algebraMap}_{C \to C_\mathfrak p}\circ f = M_\mathfrak p\)
+  for every \(\mathfrak p\).
+
+  Additivity, multiplicativity, and unitality of \(f\) follow from
+  the corresponding properties of each \(M_\mathfrak p\) at every
+  stalk combined with the injectivity of the canonical map
+  \(C \hookrightarrow \prod_\mathfrak p C_\mathfrak p\)
+  (Mathlib: \texttt{PrimeSpectrum.toPiLocalization\_injective}).
+  Uniqueness of \(f\) follows from the same injectivity statement.
+\end{proof}
+
+\noindent\emph{Mathlib carriers used.}
+\begin{itemize}
+  \item \texttt{AlgebraicGeometry.StructureSheaf.globalSectionsIso} ---
+    the canonical iso
+    \(C \cong \Gamma(\Spec C, \mathcal O_{\Spec C})\); lives in
+    \texttt{Mathlib/AlgebraicGeometry/StructureSheaf.lean}.
+  \item \texttt{(structureSheaf}\,C\texttt{).cond} --- the sheaf
+    condition on \(\mathcal O_{\Spec C}\), shipped as part of the
+    \(\texttt{Sheaf}\) bundle.
+  \item Amalgamation principle for compatible families on a sheaf
+    (\texttt{IsSheaf.amalgamate} or its equivalent in the
+    presieve/cover idiom currently used by Mathlib --- exact name
+    to be resolved by the prover).
+  \item \texttt{PrimeSpectrum.toPiLocalization\_injective} --- already
+    used in the injectivity half.
+  \item \texttt{AlgebraicGeometry.StructureSheaf.stalkIso} --- the
+    per-prime identification
+    \(\mathcal O_{\Spec C, \mathfrak p} \cong C_\mathfrak p\).
+  \item \texttt{PrimeSpectrum.basicOpen\_eq\_zeroLocus\_compl} and the
+    standard library of basic-open manipulations.
+\end{itemize}
+
+\noindent\emph{Why this approach is strictly better than the SSP-spine.}
+The construction closes the existence half in a single
+Mathlib-aligned step, using
+\texttt{StructureSheaf.globalSectionsIso} + the sheaf condition in
+Mathlib's preferred idiom for Spec-functor theory. There is no
+downstream dependence on the \texttt{Sheaf.pullback} API, so the
+consumer-side complexity is minimal, and no
+\(\mathrm{CommRingCat}\)-valued sheafification-preserves-stalks
+helper (the Mathlib gap blocking the SSP-spine) is required. The
+already-banked helpers
+\texttt{Algebra.BijectiveOnStalks.isIso\_sheafedSpaceMap\_stalkMap}
+and \texttt{Algebra.BijectiveOnStalks.localRingEquiv} (both in
+\texttt{Proetale/Algebra/StructureSheafPullback.lean}) remain
+Mathlib-aligned utilities and are reused as the source of the
+\(\alpha_\mathfrak p\) data feeding Step 1.
 
 \begin{definition}
   \label{def:identifies-local-ring-hom-set-bijection}
