@@ -25,6 +25,65 @@ namespace Algebra.IsLocalIso
 
 instance refl : IsLocalIso R R := inferInstance
 
+lemma span_isStandardOpenImmersion_eq_top [Algebra.IsLocalIso R S] :
+    Ideal.span {g : S | Algebra.IsStandardOpenImmersion R (Localization.Away g)} = ⊤ := by
+  by_contra hne
+  obtain ⟨m, hm, hms⟩ := Ideal.exists_le_maximal _ hne
+  obtain ⟨g, hgm, hstd⟩ :=
+    Algebra.IsLocalIso.exists_notMem_isStandardOpenImmersion (R := R) m
+  exact hgm (hms (Ideal.subset_span hstd))
+
+lemma iff_span_isStandardOpenImmersion_eq_top :
+    IsLocalIso R S ↔
+      Ideal.span {g : S | IsStandardOpenImmersion R (Localization.Away g)} = ⊤ := by
+  refine ⟨fun _ ↦ span_isStandardOpenImmersion_eq_top R S, fun h ↦ ⟨fun q hq ↦ ?_⟩⟩
+  by_contra!
+  apply hq.ne_top
+  rw [_root_.eq_top_iff, ← h, Ideal.span_le]
+  grind [SetLike.mem_coe]
+
+/-- Local isomorphisms are stable under composition. -/
+lemma trans (T : Type*) [CommSemiring T] [Algebra S T] [Algebra R T] [IsScalarTower R S T]
+    [IsLocalIso R S] [IsLocalIso S T] : IsLocalIso R T := by
+  -- The proof is purely formal given that open immersions are stable under composition.
+  let s : Set S := {g : S | IsStandardOpenImmersion R (Localization.Away g)}
+  let T' (g : S) := Localization.Away (algebraMap S T g)
+  let (g : S) : Algebra (Localization.Away g) (T' g) := localizationAlgebra (.powers g) T
+  let T'' (g : S) (x : T) := Localization.Away (algebraMap _ (T' g) x)
+  let t (g : S) : Set T := {x : T | IsStandardOpenImmersion (Localization.Away g) (T'' g x)}
+  let ι : Type _ := Σ i : s, t i.1
+  have (i : ι) : IsStandardOpenImmersion (Localization.Away i.1.1) (T'' i.1 i.2) := i.2.2
+  suffices h : Ideal.span (Set.range fun i : ι ↦ algebraMap S T i.1 * i.2) = ⊤ by
+    have (i : ι) : IsStandardOpenImmersion R (T'' i.1 i.2) :=
+      have : IsScalarTower R (Localization.Away i.1.1) (T' i.1.1) :=
+        IsScalarTower.to₁₃₄ _ S _ _
+      have : IsStandardOpenImmersion (Localization.Away i.1.1) (T'' i.1.1 i.2.1) := i.2.2
+      have : IsStandardOpenImmersion R (Localization.Away i.1.1) := i.1.2
+      .trans _ (Localization.Away i.1.1) _
+    exact .of_span_range_eq_top _ h fun i : ι ↦ T'' i.1 i.2
+  have h1 := congr(Ideal.map (algebraMap S T) $(span_isStandardOpenImmersion_eq_top R S))
+  rw [Ideal.map_top, Ideal.map_span] at h1
+  nth_rw 1 [_root_.eq_top_iff, ← Ideal.top_mul ⊤, ← h1, ← span_isStandardOpenImmersion_eq_top S T,
+    Ideal.span_mul_span, Ideal.span_le, Set.mul_subset_iff]
+  simp only [Set.mem_image, Set.mem_setOf_eq, SetLike.mem_coe, forall_exists_index, and_imp,
+    forall_apply_eq_imp_iff₂]
+  intro g hg x hx
+  refine Ideal.subset_span ⟨⟨⟨g, hg⟩, ⟨x, ?_⟩⟩, rfl⟩
+  simp only [Set.mem_setOf_eq, t]
+  let : Algebra (Localization.Away x) (T'' g x) :=
+    localizationAlgebra (.powers x) (T' g)
+  have : IsScalarTower S (Localization.Away x) (T'' g x) :=
+    IsScalarTower.to₁₃₄ _ T _ _
+  have : IsLocalization (algebraMapSubmonoid (Localization.Away x) (.powers g)) (T'' g x) := by
+    have : algebraMapSubmonoid (Localization.Away x) (.powers g) =
+      algebraMapSubmonoid (Localization.Away x) (.powers (algebraMap S T g)) := by
+        simp [IsScalarTower.algebraMap_apply S T (Localization.Away x)]
+    rw [this]
+    exact .commutes _ (T' g) _ (.powers x) (.powers (algebraMap S T g))
+  have : IsPushout S (Localization.Away x) (Localization.Away g) (T'' g x) :=
+    Algebra.isPushout_of_isLocalization (.powers g) _ _ _
+  exact .of_isPushout S (Localization.Away x) _ _
+
 end Algebra.IsLocalIso
 
 section Flat

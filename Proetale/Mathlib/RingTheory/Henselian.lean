@@ -11,6 +11,15 @@ instance (R : Type*) [CommRing R] [IsStrictlyHenselianLocalRing R] :
     IsSepClosed (IsLocalRing.ResidueField R) :=
   IsStrictlyHenselianLocalRing.isSepClosed_residueField
 
+/-- A local ring is strictly Henselian if and only if it is Henselian and its residue
+field is separably closed. -/
+theorem isStrictlyHenselianLocalRing_iff_henselianLocalRing_and_isSepClosed
+    (R : Type*) [CommRing R] [IsLocalRing R] :
+    IsStrictlyHenselianLocalRing R ↔
+      HenselianLocalRing R ∧ IsSepClosed (IsLocalRing.ResidueField R) :=
+  ⟨fun _ ↦ ⟨inferInstance, inferInstance⟩,
+    fun h ↦ have := h.1; ⟨h.2⟩⟩
+
 /-- `HenselianLocalRing` transfers along a ring isomorphism. -/
 theorem HenselianLocalRing.of_ringEquiv {R S : Type*} [CommRing R] [CommRing S]
     [HenselianLocalRing R] (e : R ≃+* S) : HenselianLocalRing S := by
@@ -194,38 +203,31 @@ theorem henselian_if_exists_section (R : Type u)
     HenselianRing R I where
   jac := Ideal.jacobson_bot (R := R) ▸ hI
   is_henselian := by
-    intro f monic a₀ e u
-    obtain ⟨σ, hσ⟩ := h (S f) (g e u)
-    use σ (mk _ (X 0))
-    constructor
-    · rw [IsRoot]
-      suffices hs : Polynomial.aeval (mk (idealJ f) (X 0)) f = 0 by
-        calc
-          _ = aeval (σ ((Ideal.Quotient.mk (idealJ f)) (MvPolynomial.X 0))) f := rfl
-          _ = σ (aeval ((Ideal.Quotient.mk (idealJ f)) (MvPolynomial.X 0)) f) :=
-                Polynomial.aeval_algHom_apply _ _ _
-          _ = 0 := by rw [hs]; simp
-      suffices ht : Ideal.Quotient.mk (idealJ f) (Polynomial.aeval (X 0) f) = 0 by
-        rw [← Ideal.Quotient.mkₐ_eq_mk R, Polynomial.aeval_algHom_apply,
-          Ideal.Quotient.mkₐ_eq_mk R, ht]
-      apply Ideal.Quotient.eq_zero_iff_mem.mpr
-      simp only [idealJ, Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Matrix.range_cons,
-        Matrix.range_empty, Set.union_empty, Set.union_singleton]
-      suffices this : (Polynomial.aeval (MvPolynomial.X (0 : Fin 2))) f = (toMvPolynomial 0) f by
-        rw [this]
-        apply Ideal.subset_span
-        simp
-      rfl
-    · suffices hq : (Ideal.Quotient.mk I) (σ ((Ideal.Quotient.mk (idealJ f)) (X 0)) - a₀) = 0 by
-        apply Ideal.Quotient.eq_zero_iff_mem.mp hq
-      calc
-        _ = (Ideal.Quotient.mk I) (σ ((Ideal.Quotient.mk (idealJ f)) (X 0)))
-              - (Ideal.Quotient.mk I) a₀ := by simp
-        _ = ((Ideal.Quotient.mk I).comp σ.toRingHom) ((Ideal.Quotient.mk (idealJ f)) (X 0))
-              - (Ideal.Quotient.mk I) a₀ := by simp
-        _ = (g e u).toRingHom ((Ideal.Quotient.mk (idealJ f)) (X 0))
-              - (Ideal.Quotient.mk I) a₀ := by simp [hσ]
-        _ = 0 := sorry
+    intro f hf a₀ hfa hdf
+    obtain ⟨σ, hσ⟩ := h (S f) (g hfa hdf)
+    refine ⟨σ (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)), ?_, ?_⟩
+    · rw [Polynomial.IsRoot, ← Polynomial.coe_aeval_eq_eval]
+      have key : σ (Ideal.Quotient.mk (idealJ f) (Polynomial.toMvPolynomial (0 : Fin 2) f))
+          = Polynomial.aeval (σ (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0))) f := by
+        have h1 := MvPolynomial.aeval_unique (σ.comp (Ideal.Quotient.mkₐ R (idealJ f)))
+        have h2 := AlgHom.congr_fun h1 (Polynomial.toMvPolynomial (0 : Fin 2) f)
+        simp only [AlgHom.comp_apply, MvPolynomial.aeval_toMvPolynomial] at h2
+        exact h2
+      have hmem : (Ideal.Quotient.mk (idealJ f)) (Polynomial.toMvPolynomial (0 : Fin 2) f) = 0 :=
+        Ideal.Quotient.eq_zero_iff_mem.mpr (Ideal.subset_span ⟨0, by simp [Matrix.cons_val_zero]⟩)
+      simp only [hmem] at key
+      -- key : σ 0 = aeval a f; we need aeval a f = 0
+      -- Since σ is an AlgHom, σ 0 = 0
+      exact key.symm.trans (map_zero σ)
+    · have hσ' : ∀ x : S f, Ideal.Quotient.mk I (σ x) = g hfa hdf x := by
+        intro x; exact RingHom.congr_fun hσ x
+      rw [← Ideal.Quotient.eq, hσ']
+      -- change g hfa hdf (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)) = Ideal.Quotient.mk I a₀
+      change (Ideal.Quotient.liftₐ (idealJ f) (MvPolynomial.aeval
+          (![Ideal.Quotient.mk I a₀, ↑hdf.unit⁻¹])) _)
+          (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)) = _
+      rw [Ideal.Quotient.liftₐ_apply, Ideal.Quotient.lift_mk]
+      simp [MvPolynomial.aeval_X, Matrix.cons_val_zero]
 
 -- Success
 

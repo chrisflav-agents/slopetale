@@ -217,8 +217,15 @@ alias exists_isPullback_of_isCofiltered_of_hom := ProSpreads.exists_isPullback_o
 
 -- TODO: this is in mathlib with the correct assumptions, fix this one
 instance [P.IsStableUnderComposition] [PreProSpreads.{w} P] :
-    IsStableUnderComposition (pro.{w} P) :=
-    sorry
+    IsStableUnderComposition (pro.{w} P) := by
+  have : PreIndSpreads.{w} P.op := by
+    constructor
+    intro J _ _ D c hc T f hf
+    obtain ⟨j, T', f', g, h, hf'⟩ := P.exists_isPullback_of_isCofiltered
+      (coneLeftOpOfCocone c) (isLimitConeLeftOpOfCocone _ hc) f.unop hf
+    exact ⟨j.unop, Opposite.op T', f'.op, g.op, h.op.flip, hf'⟩
+  rw [pro_eq_unop_ind_op]
+  infer_instance
 
 -- TODO: this is in mathlib with the correct assumptions, fix this one
 instance [P.IsMultiplicative] [PreProSpreads.{w} P] : (pro.{w} P).IsMultiplicative where
