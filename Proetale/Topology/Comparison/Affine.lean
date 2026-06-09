@@ -20,6 +20,7 @@ import Proetale.Mathlib.CategoryTheory.Sites.Grothendieck
 import Proetale.Mathlib.CategoryTheory.Sites.Hypercover.Zero
 import Proetale.Mathlib.AlgebraicGeometry.AffineTransitionLimit
 import Proetale.Mathlib.AlgebraicGeometry.Sites.AffineEtale
+import Proetale.Mathlib.AlgebraicGeometry.Sites.AffineRefinement
 import Mathlib.CategoryTheory.Filtered.Connected
 
 /-!
@@ -255,8 +256,63 @@ noncomputable def zariskiPrecoverage : Precoverage (AffineProEt S) :=
   deriving Precoverage.HasIsos, Precoverage.IsStableUnderComposition,
     Precoverage.IsStableUnderBaseChange
 
-instance : (toProEt S).LocallyCoverDense (ProEt.zariskiTopology S) :=
-  sorry
+instance : (toProEt S).LocallyCoverDense (ProEt.zariskiTopology S) := by
+  refine ⟨fun {X} T => ?_⟩
+  -- `zariskiTopology S` is `(Over.forget WeaklyEtale ⊤ S).inducedTopology
+  -- (overGrothendieckTopology @IsOpenImmersion S)`, so `T.property` is by definition
+  -- `T.val.functorPushforward (Over.forget ...) ∈ overGrothendieckTopology ...`.
+  have hTP : T.val.functorPushforward (MorphismProperty.Over.forget @WeaklyEtale ⊤ S) ∈
+      S.overGrothendieckTopology @IsOpenImmersion X.toComma :=
+    T.property
+  obtain ⟨𝒰, h𝒰, hle⟩ :=
+    (Scheme.mem_overGrothendieckTopology (S := S) (P := @IsOpenImmersion) X.toComma _).mp hTP
+  -- Refine the open-immersion cover `𝒰` of the affine `X.left` by basic opens
+  -- `D(g x) ↪ X.left` that each factor through some `𝒰.f (idx x)`.
+  have hcov : ⋃ j, Set.range (𝒰.f j).base = Set.univ := by
+    rw [Set.eq_univ_iff_forall]
+    intro x
+    obtain ⟨j, y, hy⟩ := Scheme.Cover.exists_eq 𝒰 x
+    exact Set.mem_iUnion.mpr ⟨j, y, hy⟩
+  have : IsAffine X.toComma.left := X.prop.isAffine
+  obtain ⟨idx, g, e, hmem, he⟩ := exists_basicOpen_lift_of_isAffine_cover 𝒰.f hcov
+  -- Package each basic open `D(g x)` as an affine pro-étale `S`-object `Zx x` and a
+  -- morphism `ix x : Zx x ⟶ X` in `S.AffineProEt`.
+  let Zx (x : X.toComma.left) : S.AffineProEt :=
+    AffineProEt.mk ((X.toComma.left.basicOpen (g x)).ι ≫ X.hom)
+      (proAffineEtale.comp_mem _ _ (proAffineEtale.of_isAffine _) X.prop)
+  let ix (x : X.toComma.left) : Zx x ⟶ X :=
+    MorphismProperty.Over.homMk (X.toComma.left.basicOpen (g x)).ι
+  -- The pushforward `(toProEt S).map (ix x)` lies in `T.val` for every `x`.
+  have hix (x : X.toComma.left) : T.val ((toProEt S).map (ix x)) := by
+    obtain ⟨Z_j, h_j, k_j, hTh_j, hcomp_j⟩ :=
+      hle ((𝒰.X (idx x)).asOver S) ((𝒰.f (idx x)).asOver S) ⟨idx x⟩
+    have hk_over : k_j.left ≫ h_j.left = 𝒰.f (idx x) := by
+      have heq := congr_arg Over.Hom.left hcomp_j
+      simp only [Over.comp_left, OverClass.asOverHom_left, MorphismProperty.Comma.forget_map,
+        MorphismProperty.Comma.Hom.hom_left] at heq
+      exact heq.symm
+    have hZj : Z_j.hom = h_j.left ≫ X.hom := by
+      have := h_j.toCommaMorphism.w
+      simp at this
+      exact this.symm
+    have h_assoc : (e x ≫ k_j.left) ≫ h_j.left = (X.toComma.left.basicOpen (g x)).ι :=
+      (Category.assoc _ _ _).trans ((congrArg (e x ≫ ·) hk_over).trans (he x))
+    have heq : (e x ≫ k_j.left) ≫ Z_j.hom = (Zx x).hom :=
+      (congrArg ((e x ≫ k_j.left) ≫ ·) hZj).trans
+        ((Category.assoc _ _ _).symm.trans ((congrArg (· ≫ X.hom) h_assoc).trans rfl))
+    let f_x : (toProEt S).obj (Zx x) ⟶ Z_j :=
+      MorphismProperty.Over.homMk (e x ≫ k_j.left) heq
+    have heq_map : f_x ≫ h_j = (toProEt S).map (ix x) :=
+      MorphismProperty.Over.Hom.ext h_assoc
+    exact heq_map ▸ T.val.downward_closed hTh_j f_x
+  -- Conclude by exhibiting, for each point `x` of `((toProEt S).obj X).left`,
+  -- the open-immersion morphism `(toProEt S).map (ix x)` covering `x`.
+  simp only [ProEt.zariskiTopology,
+    Scheme.smallGrothendieckTopologyOfLE_eq_toGrothendieck_smallPretopology]
+  refine (Scheme.mem_toGrothendieck_smallPretopology _ _).mpr fun x => ?_
+  refine ⟨(toProEt S).obj (Zx x), (toProEt S).map (ix x), ⟨x, hmem x⟩, ?_,
+    inferInstanceAs (IsOpenImmersion (X.left.basicOpen (g x)).ι), rfl⟩
+  exact ⟨Zx x, ix x, 𝟙 _, hix x, (Category.id_comp _).symm⟩
 
 variable (S)
 
