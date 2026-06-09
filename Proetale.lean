@@ -102,6 +102,7 @@ import Proetale.Mathlib.RingTheory.TensorProduct.Maps
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Local
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Localization
 import Proetale.Mathlib.RingTheory.WeaklyEtale.Pi
+import Proetale.Mathlib.RingTheory.WeaklyEtale.TensorSelf
 import Proetale.Mathlib.Topology.Category.TopCat.Limits.Pullbacks
 import Proetale.Mathlib.Topology.Connected.TotallyDisconnected
 import Proetale.Mathlib.Topology.Constructions
