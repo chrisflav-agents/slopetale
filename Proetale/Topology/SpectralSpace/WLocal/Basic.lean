@@ -40,6 +40,8 @@ structure IsWLocalMap {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] (f
 
 variable {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
 
+open Topology
+
 /-- A w-local map sends closed points to closed points. -/
 lemma IsWLocalMap.isClosed_singleton {f : X → Y} (hf : IsWLocalMap f)
     {x : X} (hx : IsClosed {x}) :
@@ -116,20 +118,23 @@ lemma Topology.IsClosedEmbedding.wLocalSpace {f : X → Y} (hf : IsClosedEmbeddi
   hf.isEmbedding.wLocalSpace_of_stableUnderSpecialization_range
     hf.isClosedMap.isClosed_range.stableUnderSpecialization
 
+-- In process of being PRed to mathlib #39332
+lemma IsCompact.isClosed_constructibleTopology_of_isOpen {s : Set X}
+    (hs : IsCompact s) (ho : IsOpen s) : IsClosed[constructibleTopology X] s := by
+  rw [← @isOpen_compl_iff]
+  apply TopologicalSpace.isOpen_generateFrom_of_mem
+  simp [constructibleTopologySubbasis, ho, hs]
+
 lemma isClosed_generalizationHull_of_wLocalSpace [WLocalSpace X] {s : Set X} (hs : IsClosed s) :
     IsClosed (generalizationHull s) := by
-  apply IsClosed.of_isClosed_constructibleTopology
-  · obtain ⟨S, hS_sub, hS_eq⟩ := @generalizationHull.eq_sInter_of_isCompact X _ _ s hs.isCompact
-    rw [hS_eq]
-    apply @isClosed_sInter (WithConstructibleTopology X)
-    intro U hU
-    obtain ⟨hU_open, hU_compact⟩ := hS_sub hU
-    rw [← @isOpen_compl_iff (WithConstructibleTopology X)]
-    show @IsOpen (WithConstructibleTopology X) _ Uᶜ
-    have : @IsCompact X _ U := hU_compact
-    have : @IsClosed X _ Uᶜ := hU_open.isClosed_compl
-    exact (by rwa [compl_compl] : @IsCompact X _ (Uᶜ)ᶜ).isOpen_constructibleTopology_of_isClosed this
-  · exact hs.stableUnderSpecialization.generalizationHull_of_wLocalSpace
+  have ⟨u, hu1, hu2⟩ := generalizationHull.eq_sInter_of_isCompact
+    (isCompact_univ.of_isClosed_subset hs (Set.subset_univ s))
+  have hsg : IsClosed[constructibleTopology X] (generalizationHull s) := by
+    refine hu2 ▸ @isClosed_sInter X (constructibleTopology X) _ fun t ht ↦ ?_
+    obtain ⟨ht1, ht2⟩ := hu1 ht
+    exact ht2.isClosed_constructibleTopology_of_isOpen ht1
+  exact hsg.of_isClosed_constructibleTopology
+    hs.stableUnderSpecialization.generalizationHull_of_wLocalSpace
 
 /-- If `X` is w-local, the composition `closedPoints X → X → ConnectedComponents X` is
 a homeomorphism. -/

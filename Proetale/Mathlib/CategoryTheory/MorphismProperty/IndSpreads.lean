@@ -61,8 +61,8 @@ lemma PreIndSpreads.of_univLE [UnivLE.{w, w'}] [PreIndSpreads.{w'} P] :
     exact ⟨e.inverse.obj j', T', f', g, hpb, hf'⟩
 
 /--
-- Given a `colim Dᵢ`-morphism `f : A = colim Dᵢ ⨿_[Dᵢ] A' ⟶ colim Dᵢ ⨿_[Dⱼ] B' = B` where `A' ⟶ Dᵢ` and
-  `B' ⟶ Dⱼ` satisfiy `P`, there exists
+- Given a `colim Dᵢ`-morphism `f : A = colim Dᵢ ⨿_[Dᵢ] A' ⟶ colim Dᵢ ⨿_[Dⱼ] B' = B`
+  where `A' ⟶ Dᵢ` and `B' ⟶ Dⱼ` satisfiy `P`, there exists
   `k ≥ i` and `k ≥ j` and a diagram
   ```
   A <--------------- Dₖ ⨿_[Dᵢ] A'
@@ -92,7 +92,8 @@ alias exists_isPushout_of_isFiltered_of_hom := IndSpreads.exists_isPushout_of_ho
 variable (Q : MorphismProperty C)
 
 -- TODO: this is in mathlib with the correct assumptions, fix this one
-instance [P.IsStableUnderComposition] [PreIndSpreads.{w} P] : IsStableUnderComposition (ind.{w} P) where
+instance [P.IsStableUnderComposition] [PreIndSpreads.{w} P] :
+    IsStableUnderComposition (ind.{w} P) where
   comp_mem {X Y Z} f g :=
       fun ⟨If, _, _, Df, tf, sf, hsf, hstf⟩ ⟨Ig, _, _, Dg, tg, sg, hsg, hstg⟩ ↦ by
     choose σ T' f' u h hf' using fun i ↦ P.exists_isPushout_of_isFiltered hsf (tg.app i) (hstg i).1
@@ -171,7 +172,8 @@ class ProSpreads (P : MorphismProperty C) : Prop extends PreProSpreads.{w} P whe
 alias exists_isPullback_of_isCofiltered_of_hom := ProSpreads.exists_isPullback_of_hom
 
 -- TODO: this is in mathlib with the correct assumptions, fix this one
-instance [P.IsStableUnderComposition] [PreProSpreads.{w} P] : IsStableUnderComposition (pro.{w} P) := by
+instance [P.IsStableUnderComposition] [PreProSpreads.{w} P] :
+    IsStableUnderComposition (pro.{w} P) := by
   have : PreIndSpreads.{w} P.op := by
     constructor
     intro J _ _ D c hc T f hf
@@ -185,3 +187,5 @@ instance [P.IsStableUnderComposition] [PreProSpreads.{w} P] : IsStableUnderCompo
 instance [P.IsMultiplicative] [PreProSpreads.{w} P] : (pro.{w} P).IsMultiplicative where
 
 end MorphismProperty
+
+end CategoryTheory

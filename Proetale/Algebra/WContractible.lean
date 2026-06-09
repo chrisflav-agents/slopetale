@@ -370,7 +370,8 @@ instance commRing : CommRing (Pullback S f) :=
 instance algebra' : Algebra (S → A) (Pullback S f) :=
   inferInstanceAs <| Algebra (S → A) <| Restriction (Z S f)
 
-instance algebra : Algebra A (Pullback S f) := Algebra.compHom _ (Pi.ringHom fun _ : S ↦ RingHom.id A)
+instance algebra : Algebra A (Pullback S f) :=
+  Algebra.compHom _ (Pi.ringHom fun _ : S ↦ RingHom.id A)
 
 instance isScalarTower : IsScalarTower A (S → A) (Pullback S f) :=
   .of_algebraMap_eq' rfl
@@ -404,59 +405,9 @@ Let `R` be a w-contractible ring and `I` an ideal of `R` cutting out the set `X^
 points in `Spec R`. Then every faithfully flat ind-étale map `R →+* S` with `S` w-local and
 whose closed points of `Spec S` are exactly `V(IB)` has a retraction.
 -/
--- An ind-etale map from a w-strictly-local ring to a w-local ring (with matching closed points)
--- is bijective on stalks. This corresponds to the first step of
--- thm:ind-etale-plus-c-has-retraction-if-w-contractible in the blueprint.
--- The proof uses thm:ind-etale-strictly-henselian-localization-isom: if A is a strictly
--- Henselian local ring and A -> B is ind-etale, then A -> B_n is an isomorphism for any
--- maximal ideal n lying over the maximal ideal of A.
-private lemma bijectiveOnStalks_of_indEtale_wStrictlyLocal [IsWStrictlyLocalRing R]
-    {I : Ideal R} (hI : zeroLocus I = closedPoints (PrimeSpectrum R))
-    {S : Type u} [CommRing S] [Algebra R S] [Algebra.IndEtale R S]
-    [IsWLocalRing S]
-    (hS : zeroLocus (I.map (algebraMap R S)) = closedPoints (PrimeSpectrum S)) :
-    (algebraMap R S).BijectiveOnStalks := by
-  -- For each prime q of S, need to show localRingHom (q.comap f) q f rfl is bijective.
-  -- The key case is when q is maximal (lies in V(IS) = closedPoints).
-  -- Then q.comap f lies in V(I) = closedPoints(Spec R), so q.comap f is maximal.
-  -- Since R is w-strictly-local, R_(comap q) is strictly Henselian.
-  -- Since R → S is ind-étale, the stalk map R_(comap q) → S_q is ind-étale
-  -- and hence an isomorphism (thm:ind-etale-strictly-henselian-localization-isom).
-  -- For non-maximal primes q, BijectiveOnStalks follows by passing through the
-  -- unique closed point that q specializes to (using w-local structure).
-  sorry
-
--- If R is w-local with extremally disconnected pi_0(Spec R) and R -> S is faithfully flat,
--- bijective on stalks, with S w-local and matching closed points, then R -> S has a retraction.
--- This corresponds to thm:ff-identifies-local-rings-plus-c-has-retraction-if in the blueprint.
--- The proof uses:
--- (1) ExtremallyDisconnected projectivity to get a section of closed points map
--- (2) WContractification.Restriction to restrict S to a quotient S_T
--- (3) RingHom.IsWLocal.bijective_of_bijective (sorry in WLocal.lean) to conclude A -> S_T is iso
-private lemma exists_retraction_of_bijectiveOnStalks [IsWLocalRing R]
-    (hED : ExtremallyDisconnected (ConnectedComponents (PrimeSpectrum R)))
-    {I : Ideal R} (hI : zeroLocus I = closedPoints (PrimeSpectrum R))
-    {S : Type u} [CommRing S] [Algebra R S] [Module.FaithfullyFlat R S] [IsWLocalRing S]
-    (hS : zeroLocus (I.map (algebraMap R S)) = closedPoints (PrimeSpectrum S))
-    (hbij : (algebraMap R S).BijectiveOnStalks) :
-    ∃ (f : S →+* R), f.comp (algebraMap R S) = RingHom.id R := by
-  -- The closed points V(IS) map to V(I) via Spec(algebraMap R S).
-  -- V(I) ≅ π₀(Spec R) is extremally disconnected (compact T2 projective).
-  -- So the surjection π₀(Spec S) → π₀(Spec R) has a section, giving a retraction
-  -- of S via the Restriction construction and the isomorphism theorem.
-  -- The full proof requires:
-  -- 1. Show V(IS) → V(I) is surjective (from faithfully flat)
-  -- 2. Get section using extremally disconnected projectivity
-  -- 3. Use Restriction construction to get S → S_T
-  -- 4. Show R ≅ S_T using RingHom.IsWLocal.bijective_of_bijective
-  -- 5. Compose to get retraction
-  -- All steps except (4) use formalized infrastructure.
-  -- Step (4) depends on the sorry'd RingHom.IsWLocal.bijective_of_bijective.
-  -- Blueprint: thm:ff-identifies-local-rings-plus-c-has-retraction-if. Blocked on RingHom.IsWLocal.bijective_of_bijective.
-  sorry
-
-theorem IsWContractibleRing.exists_retraction_of_zeroLocus_map_eq_closedPoints [IsWContractibleRing R]
-    {I :Ideal R} (hI : zeroLocus I = closedPoints (PrimeSpectrum R)) {S : Type u} [CommRing S]
+theorem IsWContractibleRing.exists_retraction_of_zeroLocus_map_eq_closedPoints
+    [IsWContractibleRing R]
+    {I : Ideal R} (hI : zeroLocus I = closedPoints (PrimeSpectrum R)) {S : Type u} [CommRing S]
     [Algebra R S] [Algebra.IndEtale R S] [Module.FaithfullyFlat R S] [IsWLocalRing S]
     (hS : zeroLocus (I.map (algebraMap R S)) = closedPoints (PrimeSpectrum S)) :
     ∃ (f : S →+* R), f.comp (algebraMap R S) = RingHom.id R := by
@@ -478,7 +429,8 @@ theorem IsWContractibleRing.exists_retraction [IsWContractibleRing R]
     ∃ (f : S →+* R), f.comp (algebraMap R S) = RingHom.id R := by
   let I := vanishingIdeal (closedPoints (PrimeSpectrum R))
   have hI : zeroLocus I = closedPoints (PrimeSpectrum R) := by
-    rw [zeroLocus_vanishingIdeal_eq_closure, IsClosed.closure_eq (IsWLocalRing.wLocalSpace_primeSepectrum.isClosed_closedPoints)]
+    rw [zeroLocus_vanishingIdeal_eq_closure,
+      IsClosed.closure_eq IsWLocalRing.wLocalSpace_primeSepectrum.isClosed_closedPoints]
   let S' := (I.map (algebraMap R S)).WLocalization
   have : Module.FaithfullyFlat R S' :=
     Ideal.WLocalization.faithfullyFlat_map_algebraMap hI

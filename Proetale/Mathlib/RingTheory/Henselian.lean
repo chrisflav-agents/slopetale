@@ -20,7 +20,8 @@ variable {R : Type u} [CommRing R] (f : R[X])
 
 -- f(X), f'(X)Y - 1
 private def idealJ (f : R[X]) : Ideal (MvPolynomial (Fin 2) R) :=
-  (span (Set.range ![toMvPolynomial (0 : Fin 2) f, (toMvPolynomial (0 : Fin 2) f.derivative) * X 1 - 1]))
+  (span (Set.range
+    ![toMvPolynomial (0 : Fin 2) f, (toMvPolynomial (0 : Fin 2) f.derivative) * X 1 - 1]))
 
 private def S : Type u := MvPolynomial (Fin 2) R ⧸ (idealJ f)
 
@@ -93,7 +94,7 @@ private def submersivePresentationS (f : R[X]) : SubmersivePresentation R (S f) 
       have (x : (MvPolynomial (Fin 2) R)) :
           (algebraMap (preSubmersivePresentationS f).Ring (S f)) x = mk (idealJ f) x := by rfl
       rw [this]
-      simp
+      simp only [Fin.isValue, map_sub, map_mul]
       rw [preSubmersivePresentationS_jacobiMatrix_00]
       rw [preSubmersivePresentationS_jacobiMatrix_11]
       rw [preSubmersivePresentationS_jacobiMatrix_01]
@@ -107,6 +108,38 @@ private instance : IsStandardSmoothOfRelativeDimension 0 R (S f) := by
   constructor
   use (Fin 2), (Fin 2), inferInstance, inferInstance, (submersivePresentationS f)
   simp [Presentation.dimension]
+
+private theorem aeval_zero_of_mem_span {I : Ideal R} {f : R[X]} {a₀ : R}
+    (e : Polynomial.eval a₀ f ∈ I)
+    (u : IsUnit ((mk I) ((derivative f).eval a₀))) {a : MvPolynomial (Fin 2) R}
+    (ha : a ∈ idealJ f) :
+    (MvPolynomial.aeval
+    ![(mk I) a₀, u.unit.inv]) a = 0 := by
+  suffices hJ : idealJ f ≤ RingHom.ker (MvPolynomial.aeval ![(mk I) a₀, u.unit.inv]) by
+    exact hJ ha
+  simp only [idealJ, Nat.succ_eq_add_one, Nat.reduceAdd, span_le]
+  intro a ha
+  simp only [Fin.isValue, Matrix.range_cons, Matrix.range_empty, Set.union_empty,
+    Set.union_singleton, Set.mem_insert_iff, Set.mem_singleton_iff] at ha
+  symm at ha
+  cases ha with
+  | inl ha =>
+    rw [ha]
+    simp only [SetLike.mem_coe, RingHom.mem_ker, aeval_toMvPolynomial,
+      Matrix.cons_val_zero]
+    rw [← Ideal.Quotient.algebraMap_eq, Polynomial.aeval_algebraMap_apply,
+      Ideal.Quotient.algebraMap_eq]
+    simp [Ideal.Quotient.eq_zero_iff_mem, e]
+  | inr ha =>
+    rw [ha]
+    simp only [Fin.isValue, SetLike.mem_coe, RingHom.mem_ker, map_sub,
+      map_mul, aeval_toMvPolynomial, Matrix.cons_val_zero, MvPolynomial.aeval_X,
+      Matrix.cons_val_one, Matrix.cons_val_fin_one, map_one]
+    conv =>
+      enter [1, 1, 1]
+      rw [← Ideal.Quotient.algebraMap_eq, Polynomial.aeval_algebraMap_apply,
+        Ideal.Quotient.algebraMap_eq]
+    simp
 
 private def g {I : Ideal R} {f : R[X]} {a₀ : R} (e : Polynomial.eval a₀ f ∈ I)
     (u : IsUnit ((Ideal.Quotient.mk I) (Polynomial.eval a₀ (derivative f)))) : S f →ₐ[R] R ⧸ I := by
@@ -160,8 +193,10 @@ theorem henselian_if_exists_section (R : Type u)
     · have hσ' : ∀ x : S f, Ideal.Quotient.mk I (σ x) = g hfa hdf x := by
         intro x; exact RingHom.congr_fun hσ x
       rw [← Ideal.Quotient.eq, hσ']
-      show g hfa hdf (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)) = Ideal.Quotient.mk I a₀
-      change (Ideal.Quotient.liftₐ (idealJ f) (MvPolynomial.aeval (![Ideal.Quotient.mk I a₀, ↑hdf.unit⁻¹])) _) (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)) = _
+      -- change g hfa hdf (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)) = Ideal.Quotient.mk I a₀
+      change (Ideal.Quotient.liftₐ (idealJ f) (MvPolynomial.aeval
+          (![Ideal.Quotient.mk I a₀, ↑hdf.unit⁻¹])) _)
+          (Ideal.Quotient.mk (idealJ f) (MvPolynomial.X 0)) = _
       rw [Ideal.Quotient.liftₐ_apply, Ideal.Quotient.lift_mk]
       simp [MvPolynomial.aeval_X, Matrix.cons_val_zero]
 

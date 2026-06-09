@@ -316,7 +316,8 @@ theorem submonoid_le {f f' : A} {I I' : Ideal A} (h : locClosedSubset f' I' ⊆ 
   rw [mem_submonoid_iff_not_mem_locClosedSubset] at ha ⊢
   exact fun p hp => ha p (h hp)
 
-noncomputable def map {f f' : A} {I I' : Ideal A} (h : locClosedSubset f' I' ⊆ locClosedSubset f I) :
+noncomputable def map {f f' : A} {I I' : Ideal A}
+    (h : locClosedSubset f' I' ⊆ locClosedSubset f I) :
     Generalization f I →ₐ[A] Generalization f' I' where
   toRingHom := IsLocalization.map (T := Generalization.submonoid f' I')
     (Generalization f' I') (RingHom.id A) (submonoid_le h)
@@ -1829,3 +1830,5 @@ instance faithfullyFlat : Module.FaithfullyFlat A (WLocalization A) := by
   exact_mod_cast this
 
 open PrimeSpectrum
+
+end WLocalization

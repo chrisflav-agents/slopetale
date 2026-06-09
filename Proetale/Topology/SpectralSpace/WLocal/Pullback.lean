@@ -294,3 +294,9 @@ theorem ConnectedComponents.isWLocalMap_of_isPullback {f : C(Y, X)} {g : C(Y, T)
   closedPoints_subset_preimage_closedPoints := by
     intro y hy
     rwa [preimage_closedPoints_eq_closedPoints_of_isPullback pb]
+
+@[stacks 096C "second part"]
+theorem ConnectedComponents.preimage_closedPoints_eq_closedPoints_of_isPullback {f : C(Y, X)}
+    {g : C(Y, T)} {i : C(T, ConnectedComponents X)}
+    (pb : IsPullback (ofHom g) (ofHom f) (ofHom i) (ofHom ⟨mk, continuous_coe⟩)) :
+    f ⁻¹' (closedPoints X) = closedPoints Y := sorry

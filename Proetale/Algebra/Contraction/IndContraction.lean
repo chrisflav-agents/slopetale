@@ -35,55 +35,63 @@ lemma isFiltered_costructuredArrow_forget' [HasPushouts C]
     [PreservesColimitsOfShape WalkingParallelPair (Under.forget P ⊤ X)]
     {S : Under X} :
     IsFiltered (CostructuredArrow (Under.forget P ⊤ X) S) := by
-  have : Nonempty (CostructuredArrow (Under.forget P ⊤ X) S) :=
-    ⟨CategoryTheory.CostructuredArrow.mk
-      (show (Under.forget P ⊤ X).obj (Under.mk ⊤ (𝟙 X) (P.id_mem X)) ⟶ S from
-        CategoryTheory.Under.homMk S.hom (by exact Category.id_comp _))⟩
+  have : Nonempty (CostructuredArrow (Under.forget P ⊤ X) S) := by
+    constructor
+    fapply CategoryTheory.CostructuredArrow.mk
+    · exact (Under.mk ⊤ (𝟙 X) (P.id_mem X))
+    · fapply CategoryTheory.Under.homMk
+      · exact S.hom
+      · simp
   have : IsFilteredOrEmpty (CostructuredArrow (Under.forget P ⊤ X) S) := by
     refine ⟨fun u v ↦ ⟨?_, ?_, ?_, trivial⟩, fun u v f g ↦ ?_⟩
-    · -- Common upper bound: pushout in C, with descent to S via pushout.desc
-      have hu := CategoryTheory.Under.w u.hom
-      have hv := CategoryTheory.Under.w v.hom
-      -- hu : ((Under.forget P ⊤ X).obj u.left).hom ≫ u.hom.right = S.hom
-      -- hv : ((Under.forget P ⊤ X).obj v.left).hom ≫ v.hom.right = S.hom
-      -- ((Under.forget P ⊤ X).obj u.left).hom = u.left.hom definitionally
-      have hcompat : u.left.hom ≫ u.hom.right = v.left.hom ≫ v.hom.right := by
-        change ((Under.forget P ⊤ X).obj u.left).hom ≫ _ =
-          ((Under.forget P ⊤ X).obj v.left).hom ≫ _
-        rw [hu]; exact hv.symm
-      have hw : (u.left.hom ≫ pushout.inl u.left.hom v.left.hom) ≫
-          pushout.desc u.hom.right v.hom.right hcompat = S.hom := by
-        rw [Category.assoc, pushout.inl_desc]; exact hu
-      exact CategoryTheory.CostructuredArrow.mk
-        (show (Under.forget P ⊤ X).obj (Under.mk ⊤
-            (u.left.hom ≫ pushout.inl u.left.hom v.left.hom)
-            (P.comp_mem _ _ u.left.2 (P.pushout_inl _ _ v.left.2))) ⟶ S from
-          CategoryTheory.Under.homMk (pushout.desc u.hom.right v.hom.right hcompat) hw)
-    · -- Morphism from u to the upper bound
-      exact CategoryTheory.CostructuredArrow.homMk (Under.homMk (pushout.inl _ _))
-        (by ext; exact pushout.inl_desc _ _ _)
-    · -- Morphism from v to the upper bound
-      exact CategoryTheory.CostructuredArrow.homMk
-        (Under.homMk (pushout.inr _ _) (pushout.condition ..).symm)
-        (by ext; exact pushout.inr_desc _ _ _)
-    · -- Coequalizer: use coequalizer in P.Under ⊤ X, preserved by Under.forget
-      have hcoeq : IsColimit (Cofork.ofπ
-          ((Under.forget P ⊤ X).map (coequalizer.π f.left g.left))
-          (by simp only [← Functor.map_comp]; congr 1; exact coequalizer.condition f.left g.left) :
-          Cofork ((Under.forget P ⊤ X).map f.left) ((Under.forget P ⊤ X).map g.left)) :=
-        isColimitCoforkMapOfIsColimit (Under.forget P ⊤ X)
-          (coequalizer.condition f.left g.left) (coequalizerIsCoequalizer f.left g.left)
-      -- v.hom coequalizes the images since f and g are parallel CostructuredArrow morphisms
-      have hv : (Under.forget P ⊤ X).map f.left ≫ v.hom =
-          (Under.forget P ⊤ X).map g.left ≫ v.hom := by
-        rw [CostructuredArrow.w f, CostructuredArrow.w g]
-      refine ⟨?_, ?_, ?_⟩
-      · exact CategoryTheory.CostructuredArrow.mk (Cofork.IsColimit.desc hcoeq v.hom hv)
-      · refine CategoryTheory.CostructuredArrow.homMk (coequalizer.π f.left g.left) ?_
-        -- Goal: (Under.forget P ⊤ X).map (coequalizer.π f.left g.left) ≫ (mk desc).hom = v.hom
-        -- This is definitionally (Cofork.ofπ ...).π ≫ desc = v.hom
-        exact Cofork.IsColimit.π_desc' hcoeq v.hom hv
-      · simpa using coequalizer.condition f.left g.left
+    · fapply CategoryTheory.CostructuredArrow.mk
+      · apply Under.mk ⊤ (u.left.hom ≫ pushout.inl u.left.hom v.left.hom)
+          (P.comp_mem _ _ u.left.2 (P.pushout_inl _ _ v.left.2))
+      · fapply CategoryTheory.Under.homMk
+        · fapply pushout.desc
+          · exact u.hom.right
+          · exact v.hom.right
+          · simp
+        · simp
+    · fapply CategoryTheory.CostructuredArrow.homMk
+      · fapply Under.homMk
+        · exact pushout.inl _ _
+        · simp
+        · simp
+      · ext
+        simp
+    · fapply CategoryTheory.CostructuredArrow.homMk
+      · fapply Under.homMk
+        · exact pushout.inr _ _
+        · simp [pushout.condition]
+        · simp
+      · ext
+        simp
+    · refine ⟨?_, ?_, ?_⟩
+      · fapply CategoryTheory.CostructuredArrow.mk
+        · exact coequalizer f.left g.left
+        · let hc : IsColimit ((Under.forget P ⊤ X).mapCocone (coequalizer.cofork f.left g.left)) :=
+            isColimitOfPreserves _ <| colimit.isColimit (parallelPair f.left g.left)
+          let s : Cocone (parallelPair f.left g.left ⋙ Under.forget P ⊤ X) := {
+            pt := S
+            ι.app x := match x with
+              | .zero => u.hom
+              | .one => v.hom
+            ι.naturality i j t := by
+              rcases t
+              · simpa using u.w _
+              · simpa using u.w _
+              · simp
+          }
+          exact hc.desc s
+      · fapply CategoryTheory.CostructuredArrow.homMk
+        · apply coequalizer.π
+        · change (Under.forget P ⊤ X).map _ ≫ _ = _
+          apply
+            (isColimitOfPreserves (Under.forget P ⊤ X)
+            (colimit.isColimit (parallelPair f.left g.left))).fac
+      · ext : 1
+        exact coequalizer.condition _ _
   constructor
 
 lemma isFiltered_costructuredArrow_forget [HasPushouts C] [P.IsMultiplicative]
@@ -187,7 +195,8 @@ lemma exists_costructuredArrow_aux [HasPushouts C] [IndSpreads P]
     (hQf : Q f.right)
     (j : CostructuredArrow (Under.forget P ⊤ X) S)
     (T' : C)
-    (f' : ((CostructuredArrow.proj _ _ ⋙ Under.forget P ⊤ X) ⋙ CategoryTheory.Under.forget X).obj j ⟶ T')
+    (f' : ((CostructuredArrow.proj _ _ ⋙ Under.forget P ⊤ X) ⋙
+        CategoryTheory.Under.forget X).obj j ⟶ T')
     (g : T' ⟶ T.right)
     (h : IsPushout ((indContractionCocone P S).ι.app j).right f' f.right g)
     (hf' : P f') :
