@@ -117,6 +117,7 @@ import Proetale.Pro.Basic
 import Proetale.Pro.Generating
 import Proetale.Pro.PresheafColimit
 import Proetale.Replete.Basic
+import Proetale.Replete.EnoughProjectives
 import Proetale.Replete.WeaklyContractible
 import Proetale.Topology.Coherent.Affine
 import Proetale.Topology.Coherent.Etale

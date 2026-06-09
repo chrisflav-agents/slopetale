@@ -136,9 +136,12 @@ this holds in abelian categories and (pre)topoi.
     If $\mathcal{C}$ has enough weakly contractible objects, it is replete.
     \uses{def:weakly-contractible, def:replete}
     \label{prop:wc-replete}
+    \lean{CategoryTheory.IsReplete.of_enoughProjectives}
+    \leanok
 \end{proposition}
 
 \begin{proof}
+    \leanok
     This follows from \ref{lemma:wc-epi-criterion}, the fact that $\mathrm{Hom}(Y, -)$ commutes with
     limits and the corresponding statement in the category of sets.
     \uses{lemma:wc-epi-criterion}
