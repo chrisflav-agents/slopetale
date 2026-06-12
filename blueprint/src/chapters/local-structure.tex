@@ -43,7 +43,7 @@ The reason that we are interested in extremally disconnected space is the follow
   \mathlibok
   \leanok
   Let \(X\) be a topological space. The \emph{Stone-Čech compactification} of \(X\) is the
-  profinite space \(\beta(X)\) such that
+  compact Hausdorff space \(\beta(X)\) such that
   \begin{enumerate}
     \item \(X\) is dense in \(\beta(X)\);
     \item every continuous map \(f: X \to Y\) to a quasi-compact Hausdorff space \(Y\)
@@ -53,10 +53,10 @@ The reason that we are interested in extremally disconnected space is the follow
 \end{definition}
 
 \begin{theorem}
-    Let \(X\) be a topological space. Then the Stone-Čech compactification \(\beta(X)\) is extremally disconnected.
+    Let \(X\) be a discrete topological space. Then the Stone-Čech compactification \(\beta(X)\) is extremally disconnected.
     \label{thm:stone-cech-extremally-disconnected}
-    \uses{def:extremally-disconnected, def:stone-cech-compactification}
-    \lean{StoneCech.projective}
+    \uses{def:extremally-disconnected, def:stone-cech-compactification, thm:extremally-disconnected-projective}
+    \lean{StoneCech.projective,CompactT2.Projective.extremallyDisconnected}
     \mathlibok
     \leanok
 \end{theorem}
@@ -71,7 +71,7 @@ The reason that we are interested in extremally disconnected space is the follow
   Let $X$ be a quasi-compact Hausdorff space. There exists a continuous surjection $X' \to X$ with $X'$ quasi-compact, Hausdorff, and extremally disconnected.
   \label{thm:extremally-disconnected-cover}
   \uses{def:extremally-disconnected, def:stone-cech-compactification}
-  \lean{CompHaus.presentation,CompHaus.presentation.π,CompHaus.presentation.epi_π,CompHaus.lift}
+  \lean{CompHaus.projectivePresentation,CompHaus.projective_ultrafilter}
   \mathlibok
   \leanok
 \end{proposition}
@@ -79,8 +79,8 @@ The reason that we are interested in extremally disconnected space is the follow
 \begin{proof}
   \mathlibok
   \leanok
-  \uses{thm:stone-cech-extremally-disconnected}
-  Let $Y=X$ but endowed with the discrete topology. Let $X'=\beta (Y)$, which is extremally disconnected by \Cref{thm:stone-cech-extremally-disconnected}. The continuous map $Y \to X$ factors as $Y \to X' \to X$.
+  \uses{def:extremally-disconnected,thm:extremally-disconnected-projective}
+  Let $X'$ be the space of ultrafilters $\operatorname{Ultrafilter}(X)$ on the underlying set of $X$; equivalently, this is the Stone-Čech compactification $\beta(Y)$ of the set $Y = X$ endowed with the discrete topology. It is a projective object in the category of quasi-compact Hausdorff spaces, hence extremally disconnected by \Cref{thm:extremally-disconnected-projective}. The ultrafilter extension of the identity map yields a continuous surjection $X' \to X$.
 \end{proof}
 
 We need the following lemmas about connected components. {\color{red} jiedong: This is WRONG. 
