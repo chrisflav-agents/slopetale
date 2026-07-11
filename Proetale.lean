@@ -55,6 +55,7 @@ import Proetale.Mathlib.AlgebraicGeometry.Sites.AffineEtale
 import Proetale.Mathlib.AlgebraicGeometry.Sites.AffineRefinement
 import Proetale.Mathlib.AlgebraicGeometry.Sites.BigZariski
 import Proetale.Mathlib.AlgebraicGeometry.Sites.DerivedPushforward
+import Proetale.Mathlib.AlgebraicGeometry.Sites.GeometricPoint
 import Proetale.Mathlib.AlgebraicGeometry.Sites.MorphismProperty
 import Proetale.Mathlib.AlgebraicGeometry.Sites.Small
 import Proetale.Mathlib.AlgebraicGeometry.Sites.SmallBaseChange
@@ -62,6 +63,7 @@ import Proetale.Mathlib.CategoryTheory.Abelian.SequentialSystem
 import Proetale.Mathlib.CategoryTheory.CofilteredSystem
 import Proetale.Mathlib.CategoryTheory.Comma.ArrowRefinement
 import Proetale.Mathlib.CategoryTheory.Comma.StructuredArrow.Basic
+import Proetale.Mathlib.CategoryTheory.Elements
 import Proetale.Mathlib.CategoryTheory.Filtered.Basic
 import Proetale.Mathlib.CategoryTheory.Limits.Comma
 import Proetale.Mathlib.CategoryTheory.Limits.FilteredColimitCommutesProduct

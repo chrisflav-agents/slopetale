@@ -95,7 +95,7 @@ An abelian sheaf $`F` on a site is *locally torsion* if every section is, locall
 a covering, killed by a positive integer.
 :::
 
-:::theorem "thm:proper-base-change" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion, thm:pbc-special-case") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app")
+:::theorem "thm:proper-base-change" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion, thm:enough-points, thm:pbc-special-case") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app")
 (Proper base change, SGA 4 XII 5.1.) If the square is cartesian and $`f` is proper,
 the derived base change transformation is an isomorphism on every bounded below
 complex with locally torsion cohomology sheaves.
@@ -112,6 +112,41 @@ henselization, which is the special case {bpref "thm:pbc-special-case"}[].
 :::
 
 # Reduction to the strictly henselian case
+
+:::definition "def:geometric-point" (parent := "proper-base-change") (lean := "AlgebraicGeometry.Scheme.Etale.geometricPoint")
+A *geometric point* of a scheme `X` is a morphism `x̄ : Spec Ω ⟶ X` with `Ω`
+separably closed. It defines a point of the small étale site of `X` in the sense of
+topos theory: the fiber functor sends an étale `X`-scheme `U` to the set of lifts of
+`x̄` to `U`, and the associated fiber functor on sheaves is the *stalk* at `x̄`.
+:::
+
+:::proof "def:geometric-point"
+The fiber functor preserves finite limits because the étale neighbourhoods of a
+geometric point form a cofiltered category (fiber products and equalizers of étale
+`X`-schemes are again étale), it sends covering sieves to jointly surjective families
+by lifting the geometric point along an étale cover through the separable residue
+field extensions, and the affine étale neighbourhoods form an initial small
+subfamily. In Lean, the point is obtained by restricting the point of the big étale
+site defined by the fiber functor `Hom(Spec Ω, ·)` along the continuous inclusion of
+the small étale site.
+:::
+
+:::theorem "thm:enough-points" (parent := "proper-base-change") (uses := "def:geometric-point") (lean := "AlgebraicGeometry.Scheme.isConservativeFamilyOfPoints_geometricPoint")
+(SGA 4 VIII 3.5.) The small étale site of a scheme `X` has enough points: the
+geometric points with values in the separable closures of the residue fields of `X`
+form a conservative family. In particular, isomorphy of morphisms of étale sheaves
+may be checked on stalks.
+:::
+
+:::proof "thm:enough-points"
+By the site-theoretic criterion (SGA 4 IV 6.5 (a)) it suffices to show that a sieve
+`S` on an étale `X`-scheme `U` whose fibers over every geometric point are jointly
+surjective is a covering sieve. For a point `q` of `U` with image `p` in `X`, the
+residue field extension `κ(q)/κ(p)` is finite separable because `U → X` is étale, so
+it embeds into the separable closure of `κ(p)`; this produces a lift of the canonical
+geometric point at `p` through `q`, which by hypothesis factors through an arrow of
+`S`. Hence the arrows of `S` are jointly surjective and `S` refines an étale cover.
+:::
 
 The following statements require infrastructure that is not yet available: strictly
 henselian local rings, and the computation of stalks of higher direct images at
