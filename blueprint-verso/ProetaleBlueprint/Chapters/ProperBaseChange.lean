@@ -95,7 +95,7 @@ An abelian sheaf $`F` on a site is *locally torsion* if every section is, locall
 a covering, killed by a positive integer.
 :::
 
-:::theorem "thm:proper-base-change" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion, thm:enough-points, thm:pbc-special-case") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app")
+:::theorem "thm:proper-base-change" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion, cor:stalkwise-iso, thm:pbc-special-case") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app")
 (Proper base change, SGA 4 XII 5.1.) If the square is cartesian and $`f` is proper,
 the derived base change transformation is an isomorphism on every bounded below
 complex with locally torsion cohomology sheaves.
@@ -146,6 +146,20 @@ residue field extension `κ(q)/κ(p)` is finite separable because `U → X` is �
 it embeds into the separable closure of `κ(p)`; this produces a lift of the canonical
 geometric point at `p` through `q`, which by hypothesis factors through an arrow of
 `S`. Hence the arrows of `S` are jointly surjective and `S` refines an étale cover.
+:::
+
+:::corollary "cor:stalkwise-iso" (parent := "proper-base-change") (uses := "thm:enough-points") (lean := "AlgebraicGeometry.Scheme.isIso_iff_sheafFiber_geometricPoint")
+A morphism of abelian sheaves on the small étale site of a scheme `X` is an
+isomorphism if and only if it induces isomorphisms on the stalks at the geometric
+points of `X` with values in the separable closures of the residue fields.
+:::
+
+:::proof "cor:stalkwise-iso"
+Immediate from {bpref "thm:enough-points"}[], after lifting the fiber functors of the
+conservative family of points to the universe over which the coefficient category is
+concrete (postcomposition with the universe lift functor preserves cofilteredness and
+initial smallness of the categories of étale neighbourhoods, and conservativity of
+the family).
 :::
 
 The following statements require infrastructure that is not yet available: strictly

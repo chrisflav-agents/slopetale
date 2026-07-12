@@ -8,6 +8,7 @@ import Mathlib.CategoryTheory.Sites.Point.Comap
 import Mathlib.CategoryTheory.Sites.Point.Over
 import Mathlib.FieldTheory.SeparableClosure
 import Proetale.Mathlib.CategoryTheory.Elements
+import Proetale.Mathlib.CategoryTheory.Sites.Point.ULift
 
 /-!
 # Geometric points of the small étale site
@@ -30,7 +31,7 @@ geometric point.
 
 -/
 
-universe u
+universe v' u' u
 
 open CategoryTheory Limits MorphismProperty
 
@@ -216,6 +217,44 @@ theorem isConservativeFamilyOfPoints_geometricPoint :
 open GrothendieckTopology in
 instance : HasEnoughPoints.{u} X.smallEtaleTopology :=
   ⟨_, inferInstance, isConservativeFamilyOfPoints_geometricPoint⟩
+
+open GrothendieckTopology in
+/-- The universe lifts of the geometric points form a conservative family of
+`Type (u + 1)`-valued points of the small étale site. This allows checking isomorphisms
+of sheaves valued in categories concrete over `Type (u + 1)` (such as `Ab.{u + 1}`) on
+stalks at geometric points. -/
+theorem isConservativeFamilyOfPoints_geometricPoint_ulift :
+    (ObjectProperty.ofObj fun p : X ↦
+        Point.ulift.{u + 1}
+          (Etale.geometricPoint (X.sepClosurePoint p))).IsConservativeFamilyOfPoints :=
+  ObjectProperty.IsConservativeFamilyOfPoints.ulift.{u + 1}
+    isConservativeFamilyOfPoints_geometricPoint
+
+open GrothendieckTopology in
+instance : HasEnoughPoints.{u + 1} X.smallEtaleTopology :=
+  ⟨_, inferInstance, isConservativeFamilyOfPoints_geometricPoint_ulift⟩
+
+open GrothendieckTopology in
+/-- A morphism of sheaves on the small étale site of `X` valued in a suitable concrete
+category over `Type (u + 1)` (e.g. `Ab.{u + 1}`) is an isomorphism if and only if it
+induces isomorphisms on stalks at the geometric points of `X`. -/
+theorem isIso_iff_sheafFiber_geometricPoint {A : Type u'} [Category.{v'} A]
+    [HasColimitsOfSize.{u + 1, u + 1} A]
+    {FC : A → A → Type*} {CC : A → Type (u + 1)}
+    [∀ (M N : A), FunLike (FC M N) (CC M) (CC N)] [ConcreteCategory.{u + 1} A FC]
+    [(CategoryTheory.forget A).ReflectsIsomorphisms]
+    [PreservesFilteredColimitsOfSize.{u + 1, u + 1} (CategoryTheory.forget A)]
+    [X.smallEtaleTopology.HasSheafCompose (CategoryTheory.forget A)]
+    {K L : Sheaf X.smallEtaleTopology A} (f : K ⟶ L) :
+    IsIso f ↔ ∀ p : X,
+      IsIso ((Point.ulift.{u + 1}
+        (Etale.geometricPoint (X.sepClosurePoint p))).sheafFiber.map f) := by
+  rw [(isConservativeFamilyOfPoints_geometricPoint_ulift.jointlyReflectIsomorphisms
+    A).isIso_iff]
+  constructor
+  · exact fun h p ↦ h ⟨_, ⟨p⟩⟩
+  · rintro h ⟨Φ, ⟨p⟩⟩
+    exact h p
 
 end SepClosurePoint
 

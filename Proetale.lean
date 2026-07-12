@@ -96,6 +96,7 @@ import Proetale.Mathlib.CategoryTheory.Sites.Hypercover.Zero
 import Proetale.Mathlib.CategoryTheory.Sites.InducedTopology
 import Proetale.Mathlib.CategoryTheory.Sites.IsSheafFor
 import Proetale.Mathlib.CategoryTheory.Sites.MorphismProperty
+import Proetale.Mathlib.CategoryTheory.Sites.Point.ULift
 import Proetale.Mathlib.CategoryTheory.Sites.Precoverage
 import Proetale.Mathlib.CategoryTheory.Sites.PrecoverageGenerating
 import Proetale.Mathlib.CategoryTheory.Sites.Pullback

@@ -16,7 +16,7 @@ category of elements of a type-valued functor on an essentially `w`-small catego
 essentially `w`-small.
 -/
 
-universe w v' v u' u
+universe w' w v' v u' u
 
 namespace CategoryTheory
 
@@ -49,6 +49,19 @@ instance (G : C ⥤ D) (F : D ⥤ Type w) [G.EssSurj] : (pre G F).EssSurj where
       types_id_apply]
 
 instance (G : C ⥤ D) (F : D ⥤ Type w) [G.IsEquivalence] : (pre G F).IsEquivalence where
+
+/-- The category of elements of `F ⋙ uliftFunctor.{w'}` is equivalent to the category of
+elements of `F`. -/
+def compUliftEquivalence (F : C ⥤ Type w) :
+    (F ⋙ uliftFunctor.{w'}).Elements ≌ F.Elements where
+  functor :=
+    { obj p := ⟨p.1, p.2.down⟩
+      map f := ⟨f.val, congrArg ULift.down f.property⟩ }
+  inverse :=
+    { obj p := ⟨p.1, ULift.up p.2⟩
+      map f := ⟨f.val, congrArg ULift.up f.property⟩ }
+  unitIso := NatIso.ofComponents fun p ↦ Iso.refl _
+  counitIso := NatIso.ofComponents fun p ↦ Iso.refl _
 
 end CategoryOfElements
 
