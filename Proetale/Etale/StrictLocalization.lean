@@ -286,12 +286,15 @@ private lemma exists_descent_etale (B : Type u) [CommRing B]
     T', f', g, inferInstanceAs (IsAffine (Spec (unop j.unop.1.left))), hpb, hf'⟩
 
 /-- **Retractions of étale algebras over the strict localization.** An étale algebra `B`
-over the strict localization at a geometric point whose spectrum surjects onto the
-spectrum of the strict localization admits a retraction of the algebra map. -/
-theorem exists_retraction_of_etale (B : Type u) [CommRing B]
+over the strict localization at a geometric point which admits a prime over the maximal
+ideal (e.g. because its spectrum surjects onto the spectrum of the strict localization)
+admits a retraction of the algebra map. This is the section-through-the-closed-point
+property of strictly henselian local rings (Stacks 04GG (8)). -/
+theorem exists_retraction_of_etale_of_exists_prime (B : Type u) [CommRing B]
     [Algebra (strictLocalization x) B] (hB : Algebra.Etale (strictLocalization x) B)
-    (hsurj : Function.Surjective
-      (PrimeSpectrum.comap (algebraMap (strictLocalization x) B))) :
+    (hq : ∃ q : Ideal B, q.IsPrime ∧
+      q.comap (algebraMap (strictLocalization x) B) =
+        IsLocalRing.maximalIdeal (strictLocalization x)) :
     ∃ f : B →+* strictLocalization x,
       f.comp (algebraMap (strictLocalization x) B) = RingHom.id (strictLocalization x) := by
   letI : Algebra (strictLocalization x) Ω := (strictLocalizationEval x).hom.toAlgebra
@@ -302,12 +305,12 @@ theorem exists_retraction_of_etale (B : Type u) [CommRing B]
     ext z
     rw [RingHom.mem_ker, mem_maximalIdeal_strictLocalization_iff]
     rfl
-  obtain ⟨Q, hQ⟩ := hsurj (IsLocalRing.closedPoint (strictLocalization x))
-  have hQ' : Q.asIdeal.comap (algebraMap (strictLocalization x) B) =
+  obtain ⟨q, hqp, hqm⟩ := hq
+  have hQ' : q.comap (algebraMap (strictLocalization x) B) =
       RingHom.ker (algebraMap (strictLocalization x) Ω) := by
     rw [hker]
-    exact congrArg PrimeSpectrum.asIdeal hQ
-  obtain ⟨χ⟩ := Algebra.Etale.exists_algHom_to_isSepClosed B ⟨Q.asIdeal, Q.isPrime, hQ'⟩
+    exact hqm
+  obtain ⟨χ⟩ := Algebra.Etale.exists_algHom_to_isSepClosed B ⟨q, hqp, hQ'⟩
   -- Step 2: descend `B` to an étale ring map `f'` on an affine étale neighbourhood.
   obtain ⟨pE, T', f', g, haff, hpb, hf'⟩ := exists_descent_etale x B hB
   haveI : IsAffine pE.1.left := haff
@@ -357,6 +360,19 @@ theorem exists_retraction_of_etale (B : Type u) [CommRing B]
   have h2 := congrArg CommRingCat.Hom.hom hcomp
   rw [CommRingCat.hom_comp, CommRingCat.hom_ofHom, CommRingCat.hom_id] at h2
   exact h2
+
+/-- Specialization of `exists_retraction_of_etale_of_exists_prime` to étale algebras
+with surjective spectrum map, as consumed by the retraction criterion for strictly
+henselian local rings. -/
+theorem exists_retraction_of_etale (B : Type u) [CommRing B]
+    [Algebra (strictLocalization x) B] (hB : Algebra.Etale (strictLocalization x) B)
+    (hsurj : Function.Surjective
+      (PrimeSpectrum.comap (algebraMap (strictLocalization x) B))) :
+    ∃ f : B →+* strictLocalization x,
+      f.comp (algebraMap (strictLocalization x) B) = RingHom.id (strictLocalization x) := by
+  obtain ⟨Q, hQ⟩ := hsurj (IsLocalRing.closedPoint (strictLocalization x))
+  exact exists_retraction_of_etale_of_exists_prime x B hB
+    ⟨Q.asIdeal, Q.isPrime, congrArg PrimeSpectrum.asIdeal hQ⟩
 
 /-- **The strict localization of a scheme at a geometric point is strictly henselian**:
 it is a henselian local ring with separably closed residue field. -/
