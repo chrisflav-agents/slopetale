@@ -35,6 +35,7 @@ import Proetale.Etale.DevissageComparisonA
 import Proetale.Etale.DevissageComparisonB
 import Proetale.Etale.DevissageHomological
 import Proetale.Etale.FinitePushforwardStalk
+import Proetale.Etale.FinitePushforwardStalkCofinal
 import Proetale.Etale.FinitePushforwardStalkIso
 import Proetale.Etale.Finiteness
 import Proetale.Etale.ProperBaseChange
