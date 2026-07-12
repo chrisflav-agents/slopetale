@@ -166,11 +166,29 @@ The following statements require infrastructure that is not yet available: stric
 henselian local rings, and the computation of stalks of higher direct images at
 geometric points as cohomology over the strict henselization.
 
-:::definition "def:strictly-henselian" (parent := "proper-base-change")
+:::definition "def:strictly-henselian" (parent := "proper-base-change") (uses := "def:geometric-point") (lean := "AlgebraicGeometry.Scheme.Etale.strictLocalization")
 A local ring $`R` is *strictly henselian* if it is henselian with separably closed
 residue field. For a geometric point $`\bar{s}` of a scheme $`S`, the *strict
-localization* $`\operatorname{Spec} \mathcal{O}^{sh}_{S, \bar{s}}` is the limit of
-the étale neighbourhoods of $`\bar{s}`.
+localization* $`\mathcal{O}^{sh}_{S, \bar{s}}` is the filtered colimit of the rings
+of functions over the étale neighbourhoods of $`\bar{s}`.
+:::
+
+:::theorem "thm:strict-localization-henselian" (parent := "proper-base-change") (uses := "def:strictly-henselian") (lean := "AlgebraicGeometry.Scheme.Etale.isStrictlyHenselianLocalRing_strictLocalization")
+The strict localization of a scheme at a geometric point is a strictly henselian
+local ring.
+:::
+
+:::proof "thm:strict-localization-henselian"
+The strict localization is local: a germ is invertible if and only if its value at the
+geometric point is nonzero, because the basic open on which a function is invertible
+is again an étale neighbourhood. By the retraction criterion
+({bpref "lemma:retractions-strictly-henselian"}[]) it then suffices to show that every étale algebra over the strict localization with
+surjective spectrum map admits a retraction: such an algebra descends to an étale
+algebra over the functions of some affine étale neighbourhood (étale ring maps spread
+out through filtered colimits), the geometric point lifts to the corresponding étale
+scheme (étale algebras over the evaluation character acquire points valued in the
+separably closed field), and the germ map of the resulting refined étale neighbourhood
+provides the retraction.
 :::
 
 :::theorem "thm:pbc-special-case" (parent := "proper-base-change") (uses := "def:strictly-henselian, lemma:pbc-degree-zero, lemma:pbc-finite, thm:pbc-curves, lemma:pbc-devissage")

@@ -3,7 +3,11 @@ Copyright (c) 2026 Christian Merten. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Christian Merten
 -/
+import Proetale.Algebra.Etale
+import Proetale.Algebra.EtalePoint
+import Proetale.Algebra.RetractionsStrictlyHenselian
 import Proetale.Mathlib.AlgebraicGeometry.Sites.GeometricPoint
+import Proetale.Mathlib.CategoryTheory.Filtered.Final
 
 /-!
 # The strict localization of a scheme at a geometric point
@@ -203,5 +207,173 @@ lemma mem_maximalIdeal_strictLocalization_iff (z : strictLocalization x) :
       (strictLocalizationEval x).hom z = 0 := by
   rw [IsLocalRing.mem_maximalIdeal, mem_nonunits_iff,
     isUnit_iff_strictLocalizationEval_ne_zero, not_not]
+
+/-!
+### Retractions of étale algebras over the strict localization
+
+Every étale algebra `B` over the strict localization whose spectrum surjects onto the
+spectrum of the strict localization admits a retraction: `B` descends to an étale
+algebra over an affine étale neighbourhood, and evaluation at the geometric point
+provides a section of the descended neighbourhood, i.e. a further étale neighbourhood
+mapping to it, whose ring of functions receives `B`.
+-/
+
+section Retraction
+
+/-- The affine étale neighbourhoods are initial among the étale neighbourhoods of a
+geometric point (spelled with the fiber functor of `geometricPoint`). -/
+instance initial_pre_affineEtaleSpec_geometricPoint :
+    (CategoryOfElements.pre (AffineEtale.Spec X) (geometricPoint x).fiber).Initial :=
+  inferInstanceAs (CategoryOfElements.pre (AffineEtale.Spec X)
+    (Etale.forget X ⋙ ((geometricFiber Ω).over x).fiber)).Initial
+
+/-- The category of affine étale neighbourhoods of a geometric point is cofiltered. -/
+instance isCofiltered_elements_affineEtaleSpec_geometricPoint :
+    IsCofiltered (AffineEtale.Spec X ⋙ (geometricPoint x).fiber).Elements :=
+  IsCofiltered.of_initial_of_fullyFaithful
+    (CategoryOfElements.pre (AffineEtale.Spec X) (geometricPoint x).fiber)
+
+/-- Étale ring maps out of a filtered colimit over an essentially `u`-small shape
+descend to a finite stage. -/
+private lemma exists_isPushout_etale_of_essentiallySmall {J : Type*} [Category J]
+    [EssentiallySmall.{u} J] [IsFiltered J] {D : J ⥤ CommRingCat.{u}} {c : Cocone D}
+    (hc : IsColimit c) {T : CommRingCat.{u}} (f : c.pt ⟶ T)
+    (hf : CommRingCat.etale f) :
+    ∃ (j : J) (T' : CommRingCat.{u}) (f' : D.obj j ⟶ T') (g : T' ⟶ T),
+      IsPushout (c.ι.app j) f' f g ∧ CommRingCat.etale f' := by
+  let e := equivSmallModel.{u} J
+  haveI : IsFiltered (SmallModel.{u} J) := IsFiltered.of_equivalence e
+  obtain ⟨j', T', f', g, hpb, hf'⟩ := CommRingCat.etale.exists_isPushout_of_isFiltered
+    ((Functor.Final.isColimitWhiskerEquiv e.inverse c).symm hc) f hf
+  exact ⟨e.inverse.obj j', T', f', g, hpb, hf'⟩
+
+/-- The top-level sections of the inverse of `isoSpec` are the inverse of `ΓSpecIso`. -/
+private lemma isoSpec_inv_appTop (Y : Scheme.{u}) [IsAffine Y] :
+    Y.isoSpec.inv.appTop = (Scheme.ΓSpecIso Γ(Y, ⊤)).inv := by
+  rw [← Iso.comp_hom_eq_id (Scheme.ΓSpecIso Γ(Y, ⊤)), ← Scheme.toSpecΓ_appTop,
+    ← Scheme.Hom.comp_appTop, Scheme.toSpecΓ_isoSpec_inv, Scheme.Hom.id_appTop]
+
+/-- A morphism `Spec R ⟶ Y` to an affine scheme is recovered from the associated map on
+global sections, postcomposed with any factorization through `Spec` of a ring `T'`. -/
+private lemma specMap_comp_isoSpec_inv_eq {Y : Scheme.{u}} [IsAffine Y]
+    {R T' : CommRingCat.{u}} (v : Spec R ⟶ Y)
+    (f' : Scheme.Γ.obj (op Y) ⟶ T') (ψ : T' ⟶ R)
+    (hψ : f' ≫ ψ = Scheme.Γ.map v.op ≫ (Scheme.ΓSpecIso R).hom) :
+    Spec.map ψ ≫ Spec.map f' ≫ Y.isoSpec.inv = v := by
+  rw [← Category.assoc, ← Spec.map_comp, hψ, Spec.map_comp, Scheme.Γ_map,
+    Quiver.Hom.unop_op, SpecMap_ΓSpecIso_hom, Category.assoc,
+    ← Scheme.toSpecΓ_naturality_assoc, Scheme.toSpecΓ_isoSpec_inv, Category.comp_id]
+
+/-- An étale algebra over the strict localization descends to an étale ring map on the
+functions of some affine étale neighbourhood of the geometric point. -/
+private lemma exists_descent_etale (B : Type u) [CommRing B]
+    [Algebra (strictLocalization x) B] (hB : Algebra.Etale (strictLocalization x) B) :
+    ∃ (p : (geometricPoint x).fiber.Elements) (T' : CommRingCat.{u})
+      (f' : Scheme.Γ.obj (op p.1.left) ⟶ T') (g : T' ⟶ CommRingCat.of B),
+      IsAffine p.1.left ∧
+      IsPushout (toStrictLocalization x p) f'
+        (CommRingCat.ofHom (algebraMap (strictLocalization x) B)) g ∧
+      CommRingCat.etale f' := by
+  have hf : CommRingCat.etale (CommRingCat.ofHom (algebraMap (strictLocalization x) B)) := by
+    rw [CommRingCat.etale_iff]
+    exact RingHom.etale_algebraMap.mpr hB
+  obtain ⟨j, T', f', g, hpb, hf'⟩ := exists_isPushout_etale_of_essentiallySmall
+    ((Functor.Final.isColimitWhiskerEquiv (CategoryOfElements.pre (AffineEtale.Spec X)
+        (geometricPoint x).fiber).op _).symm
+      (colimit.isColimit (strictLocalizationDiagram x)))
+    (CommRingCat.ofHom (algebraMap (strictLocalization x) B)) hf
+  exact ⟨(CategoryOfElements.pre (AffineEtale.Spec X) (geometricPoint x).fiber).obj j.unop,
+    T', f', g, inferInstanceAs (IsAffine (Spec (unop j.unop.1.left))), hpb, hf'⟩
+
+/-- **Retractions of étale algebras over the strict localization.** An étale algebra `B`
+over the strict localization at a geometric point whose spectrum surjects onto the
+spectrum of the strict localization admits a retraction of the algebra map. -/
+theorem exists_retraction_of_etale (B : Type u) [CommRing B]
+    [Algebra (strictLocalization x) B] (hB : Algebra.Etale (strictLocalization x) B)
+    (hsurj : Function.Surjective
+      (PrimeSpectrum.comap (algebraMap (strictLocalization x) B))) :
+    ∃ f : B →+* strictLocalization x,
+      f.comp (algebraMap (strictLocalization x) B) = RingHom.id (strictLocalization x) := by
+  letI : Algebra (strictLocalization x) Ω := (strictLocalizationEval x).hom.toAlgebra
+  -- Step 1: evaluation at the geometric point extends to a character `χ : B →ₐ Ω`,
+  -- because the maximal ideal of the strict localization lifts to `B`.
+  have hker : RingHom.ker (algebraMap (strictLocalization x) Ω) =
+      IsLocalRing.maximalIdeal (strictLocalization x) := by
+    ext z
+    rw [RingHom.mem_ker, mem_maximalIdeal_strictLocalization_iff]
+    rfl
+  obtain ⟨Q, hQ⟩ := hsurj (IsLocalRing.closedPoint (strictLocalization x))
+  have hQ' : Q.asIdeal.comap (algebraMap (strictLocalization x) B) =
+      RingHom.ker (algebraMap (strictLocalization x) Ω) := by
+    rw [hker]
+    exact congrArg PrimeSpectrum.asIdeal hQ
+  obtain ⟨χ⟩ := Algebra.Etale.exists_algHom_to_isSepClosed B ⟨Q.asIdeal, Q.isPrime, hQ'⟩
+  -- Step 2: descend `B` to an étale ring map `f'` on an affine étale neighbourhood.
+  obtain ⟨pE, T', f', g, haff, hpb, hf'⟩ := exists_descent_etale x B hB
+  haveI : IsAffine pE.1.left := haff
+  haveI : Etale pE.1.hom := pE.1.prop
+  haveI : Etale (Spec.map f') :=
+    (HasRingHomProperty.Spec_iff (P := @Etale)).mpr ((CommRingCat.etale_iff f').mp hf')
+  -- Step 3: `χ` provides a lift of the geometric point to `Spec T'`.
+  set ψ : T' ⟶ CommRingCat.of Ω := g ≫ CommRingCat.ofHom χ.toRingHom with hψdef
+  have h1 : CommRingCat.ofHom (algebraMap (strictLocalization x) B) ≫
+      CommRingCat.ofHom χ.toRingHom = strictLocalizationEval x := by
+    ext1
+    exact χ.comp_algebraMap
+  have hring : f' ≫ ψ =
+      Scheme.Γ.map pE.2.val.op ≫ (Scheme.ΓSpecIso (CommRingCat.of Ω)).hom := by
+    rw [← toStrictLocalization_strictLocalizationEval x pE, hψdef, ← Category.assoc,
+      ← hpb.w, Category.assoc, h1]
+  have hkey : Spec.map ψ ≫ Spec.map f' ≫ pE.1.left.isoSpec.inv = pE.2.val :=
+    specMap_comp_isoSpec_inv_eq (Y := pE.1.left) pE.2.val f' ψ hring
+  -- Step 4: `Spec T'` is an étale neighbourhood of the geometric point refining `pE`.
+  haveI : Etale ((Spec.map f' ≫ pE.1.left.isoSpec.inv) ≫ pE.1.hom) := by
+    haveI : Etale (Spec.map f' ≫ pE.1.left.isoSpec.inv) := inferInstance
+    infer_instance
+  let V : X.Etale :=
+    MorphismProperty.Over.mk _ ((Spec.map f' ≫ pE.1.left.isoSpec.inv) ≫ pE.1.hom)
+      inferInstance
+  have hVx : Spec.map ψ ≫ (Spec.map f' ≫ pE.1.left.isoSpec.inv) ≫ pE.1.hom = x := by
+    rw [← Category.assoc, hkey]
+    exact pE.2.property
+  let eltW : (geometricPoint x).fiber.obj V := geometricPoint.mkFiber x (Spec.map ψ) hVx
+  let pW : (geometricPoint x).fiber.Elements := ⟨V, eltW⟩
+  let gW : pW ⟶ pE :=
+    ⟨MorphismProperty.Over.homMk (Spec.map f' ≫ pE.1.left.isoSpec.inv) rfl trivial,
+      Subtype.ext (by exact hkey)⟩
+  -- Step 5: the germ map of the refined neighbourhood retracts `f'`, hence `B`.
+  have hmap : (strictLocalizationDiagram x).map (op gW) =
+      f' ≫ (Scheme.ΓSpecIso T').inv := by
+    change (Spec.map f' ≫ pE.1.left.isoSpec.inv).appTop = f' ≫ (Scheme.ΓSpecIso T').inv
+    rw [Scheme.Hom.comp_appTop, isoSpec_inv_appTop, Scheme.ΓSpecIso_inv_naturality]
+    rfl
+  have htri : toStrictLocalization x pE ≫ 𝟙 (strictLocalization x) =
+      f' ≫ (Scheme.ΓSpecIso T').inv ≫ toStrictLocalization x pW := by
+    rw [Category.comp_id, ← toStrictLocalization_w x gW, hmap, Category.assoc]
+  refine ⟨(hpb.desc (𝟙 (strictLocalization x))
+    ((Scheme.ΓSpecIso T').inv ≫ toStrictLocalization x pW) htri).hom, ?_⟩
+  have hcomp := hpb.inl_desc (𝟙 (strictLocalization x))
+    ((Scheme.ΓSpecIso T').inv ≫ toStrictLocalization x pW) htri
+  have h2 := congrArg CommRingCat.Hom.hom hcomp
+  rw [CommRingCat.hom_comp, CommRingCat.hom_ofHom, CommRingCat.hom_id] at h2
+  exact h2
+
+/-- **The strict localization of a scheme at a geometric point is strictly henselian**:
+it is a henselian local ring with separably closed residue field. -/
+instance isStrictlyHenselianLocalRing_strictLocalization :
+    IsStrictlyHenselianLocalRing (strictLocalization x) := by
+  haveI h := IsStrictlyHenselianLocalRing.localization_atPrime_of_forall_retraction
+    (fun B _ _ hB hsurj ↦ exists_retraction_of_etale x B hB hsurj)
+    (IsLocalRing.maximalIdeal (strictLocalization x))
+  have e : (strictLocalization x : Type u) ≃ₐ[strictLocalization x]
+      Localization.AtPrime (IsLocalRing.maximalIdeal (strictLocalization x)) :=
+    IsLocalization.atUnits (strictLocalization x)
+      (IsLocalRing.maximalIdeal (strictLocalization x)).primeCompl
+      (fun y (hy : y ∉ IsLocalRing.maximalIdeal (strictLocalization x)) ↦ by
+        by_contra hn
+        exact hy ((IsLocalRing.mem_maximalIdeal y).mpr (mem_nonunits_iff.mpr hn)))
+  exact .of_ringEquiv e.toRingEquiv.symm
+
+end Retraction
 
 end AlgebraicGeometry.Scheme.Etale

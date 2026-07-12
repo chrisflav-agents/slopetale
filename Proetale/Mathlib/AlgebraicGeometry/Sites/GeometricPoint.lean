@@ -66,14 +66,13 @@ namespace Etale
 
 variable {Ω : Type u} [Field Ω] [IsSepClosed Ω] (x : Spec (CommRingCat.of Ω) ⟶ X)
 
-/-- The étale neighbourhoods of a geometric point admit an initial small family, given
-by the affine étale neighbourhoods. -/
-instance initiallySmall_elements :
-    InitiallySmall.{u}
-      (Etale.forget X ⋙ ((geometricFiber Ω).over x).fiber).Elements := by
+/-- The affine étale neighbourhoods of a geometric point are initial among all étale
+neighbourhoods. -/
+instance initial_pre_affineEtaleSpec :
+    (CategoryOfElements.pre (AffineEtale.Spec X)
+      (Etale.forget X ⋙ ((geometricFiber Ω).over x).fiber)).Initial := by
   set F : X.Etale ⥤ Type u := Etale.forget X ⋙ ((geometricFiber Ω).over x).fiber with hF
-  have : (CategoryOfElements.pre (AffineEtale.Spec X) F).Initial := by
-    refine Functor.initial_of_exists_of_isCofiltered_of_fullyFaithful _ (fun p ↦ ?_)
+  · refine Functor.initial_of_exists_of_isCofiltered_of_fullyFaithful _ (fun p ↦ ?_)
     obtain ⟨U, u⟩ := p
     -- `φ` is the geometric point of `U` given by the element `u`.
     let φ : Spec (CommRingCat.of Ω) ⟶ U.left := u.val
@@ -101,8 +100,15 @@ instance initiallySmall_elements :
     · refine Subtype.ext ?_
       show (φ' ≫ W.isoSpec.hom) ≫ W.isoSpec.inv ≫ U.left.affineCover.f i = φ
       simp [φ', IsOpenImmersion.lift_fac]
-  exact initiallySmall_of_initial_of_essentiallySmall
-    (CategoryOfElements.pre (AffineEtale.Spec X) F)
+
+/-- The étale neighbourhoods of a geometric point admit an initial small family, given
+by the affine étale neighbourhoods. -/
+instance initiallySmall_elements :
+    InitiallySmall.{u}
+      (Etale.forget X ⋙ ((geometricFiber Ω).over x).fiber).Elements :=
+  initiallySmall_of_initial_of_essentiallySmall
+    (CategoryOfElements.pre (AffineEtale.Spec X)
+      (Etale.forget X ⋙ ((geometricFiber Ω).over x).fiber))
 
 /-- A geometric point `x : Spec Ω ⟶ X` with `Ω` separably closed defines a point of the
 small étale site of `X` whose fiber functor sends an étale `X`-scheme `U` to the set of

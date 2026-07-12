@@ -2,6 +2,7 @@ import Proetale.Algebra.Bijective
 import Proetale.Algebra.Contraction.Covers
 import Proetale.Algebra.Contraction.IndContraction
 import Proetale.Algebra.Etale
+import Proetale.Algebra.EtalePoint
 import Proetale.Algebra.FaithfullyFlat
 import Proetale.Algebra.FilteredLocalColimit
 import Proetale.Algebra.HenselianLocalRing
@@ -66,6 +67,7 @@ import Proetale.Mathlib.CategoryTheory.Comma.ArrowRefinement
 import Proetale.Mathlib.CategoryTheory.Comma.StructuredArrow.Basic
 import Proetale.Mathlib.CategoryTheory.Elements
 import Proetale.Mathlib.CategoryTheory.Filtered.Basic
+import Proetale.Mathlib.CategoryTheory.Filtered.Final
 import Proetale.Mathlib.CategoryTheory.Limits.Comma
 import Proetale.Mathlib.CategoryTheory.Limits.FilteredColimitCommutesProduct
 import Proetale.Mathlib.CategoryTheory.Limits.FunctorToTypes
