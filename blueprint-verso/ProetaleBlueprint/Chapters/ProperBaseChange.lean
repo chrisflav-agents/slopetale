@@ -95,7 +95,7 @@ An abelian sheaf $`F` on a site is *locally torsion* if every section is, locall
 a covering, killed by a positive integer.
 :::
 
-:::theorem "thm:proper-base-change" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion, cor:stalkwise-iso, thm:pbc-special-case") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app")
+:::theorem "thm:proper-base-change" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion, lemma:pbc-devissage-K, cor:stalkwise-iso, thm:pbc-special-case") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app")
 (Proper base change, SGA 4 XII 5.1.) If the square is cartesian and $`f` is proper,
 the derived base change transformation is an isomorphism on every bounded below
 complex with locally torsion cohomology sheaves.
@@ -109,6 +109,26 @@ filtered colimits, reduce to sheaves of $`\mathbb{Z}/n`-modules. Isomorphy may b
 checked on stalks at geometric points of $`S'`; the stalk of $`R^q f'_*` at a
 geometric point is the cohomology of the base change of $`X` to the strict
 henselization, which is the special case {bpref "thm:pbc-special-case"}[].
+:::
+
+:::lemma_ "lemma:pbc-devissage-K" (parent := "proper-base-change") (uses := "def:derived-base-change, def:locally-torsion") (lean := "AlgebraicGeometry.Scheme.isIso_derivedBaseChangeNatTrans_app_of_singleFunctor")
+If the derived base change transformation is an isomorphism on every locally torsion
+abelian sheaf placed in degree zero, then it is an isomorphism on every bounded below
+complex with locally torsion cohomology sheaves.
+:::
+
+:::proof "lemma:pbc-devissage-K"
+Dévissage along the canonical truncation filtration. The transformation is computed on
+a fibrant (degreewise injective) resolution by a concrete comparison map of complexes,
+so isomorphy can be checked on homology in each degree; short exact sequences of
+bounded below complexes admit componentwise injective resolutions (horseshoe lemma),
+giving the two-out-of-three property via the homology ladder. Singles in arbitrary
+degrees are reached from degree zero by the two-term acyclic complexes linking
+consecutive singles, bounded complexes by induction on the cohomological amplitude,
+and the general case follows because a bounded below complex of injectives that is
+exact in low degrees has a partial contracting homotopy, so its image under any
+additive functor remains exact in low degrees — each homology of the value therefore
+only depends on a finite truncation.
 :::
 
 # Reduction to the strictly henselian case

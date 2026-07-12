@@ -32,6 +32,7 @@ import Proetale.Algebra.WeaklyEtaleIndEtale
 import Proetale.Basic
 import Proetale.Etale.Finiteness
 import Proetale.Etale.ProperBaseChange
+import Proetale.Etale.ProperBaseChangeDevissage
 import Proetale.Etale.StrictLocalization
 import Proetale.FromPi1.Etale
 import Proetale.Mathlib.Algebra.Algebra.Pi
