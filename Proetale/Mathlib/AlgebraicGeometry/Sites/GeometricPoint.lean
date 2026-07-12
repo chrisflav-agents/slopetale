@@ -256,6 +256,26 @@ theorem isIso_iff_sheafFiber_geometricPoint {A : Type u'} [Category.{v'} A]
   · rintro h ⟨Φ, ⟨p⟩⟩
     exact h p
 
+open GrothendieckTopology in
+/-- Version of `isIso_iff_sheafFiber_geometricPoint` with the stalks computed as
+colimits over the `u`-small categories of étale neighbourhoods. -/
+theorem isIso_iff_sheafFiber_geometricPoint' {A : Type u'} [Category.{v'} A]
+    [HasColimitsOfSize.{u, u} A] [HasColimitsOfSize.{u + 1, u + 1} A]
+    {FC : A → A → Type*} {CC : A → Type (u + 1)}
+    [∀ (M N : A), FunLike (FC M N) (CC M) (CC N)] [ConcreteCategory.{u + 1} A FC]
+    [(CategoryTheory.forget A).ReflectsIsomorphisms]
+    [PreservesFilteredColimitsOfSize.{u + 1, u + 1} (CategoryTheory.forget A)]
+    [X.smallEtaleTopology.HasSheafCompose (CategoryTheory.forget A)]
+    {K L : Sheaf X.smallEtaleTopology A} (f : K ⟶ L) :
+    IsIso f ↔ ∀ p : X,
+      IsIso ((Etale.geometricPoint (X.sepClosurePoint p)).sheafFiber.map f) := by
+  rw [isIso_iff_sheafFiber_geometricPoint f]
+  refine forall_congr' fun p ↦ ?_
+  exact (MorphismProperty.isomorphisms A).arrow_mk_iso_iff
+    (((Functor.mapArrowFunctor _ _).mapIso
+      (Point.uliftSheafFiberIso
+        (Etale.geometricPoint (X.sepClosurePoint p)))).app (Arrow.mk f))
+
 end SepClosurePoint
 
 end AlgebraicGeometry.Scheme

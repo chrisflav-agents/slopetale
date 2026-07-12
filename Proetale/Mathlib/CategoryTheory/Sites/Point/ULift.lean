@@ -19,7 +19,7 @@ over a bigger universe than the one where a conservative family of points is ava
 (e.g. `Ab.{u + 1}`-valued sheaves on the small étale site of a `u`-scheme).
 -/
 
-universe s w t v u
+universe s w t v'' u'' v u
 
 namespace CategoryTheory
 
@@ -51,6 +51,32 @@ def ulift.{s', w', v', u'} {C : Type u'} [Category.{v'} C] {J : GrothendieckTopo
 lemma ulift_fiber (Φ : Point.{w} J) :
     (Point.ulift.{s} Φ).fiber = Φ.fiber ⋙ uliftFunctor.{s} :=
   rfl
+
+instance (Φ : Point.{w} J) {A : Type u''} [Category.{v''} A]
+    [HasColimitsOfSize.{max w s, max w s} A] :
+    HasColimitsOfShape (Φ.fiber ⋙ uliftFunctor.{s, w}).Elementsᵒᵖ A :=
+  inferInstanceAs (HasColimitsOfShape (Point.ulift.{s} Φ).fiber.Elementsᵒᵖ A)
+
+open CategoryOfElements in
+/-- The stalk of a presheaf at the universe lift of a point agrees with the stalk at
+the point itself. -/
+noncomputable def uliftPresheafFiberIso.{s', w', v', u'}
+    {C : Type u'} [Category.{v'} C] {J : GrothendieckTopology C} (Φ : Point.{w'} J)
+    {A : Type u''} [Category.{v''} A]
+    [HasColimitsOfSize.{w', w'} A] [HasColimitsOfSize.{max w' s', max w' s'} A] :
+    (Point.ulift.{s'} Φ).presheafFiber (A := A) ≅ Φ.presheafFiber :=
+  Functor.isoWhiskerLeft ((Functor.whiskeringLeft _ _ A).obj (π Φ.fiber).op)
+    (Functor.Final.colimIso (compUliftEquivalence.{s'} Φ.fiber).functor.op)
+
+open CategoryOfElements in
+/-- The stalk of a sheaf at the universe lift of a point agrees with the stalk at
+the point itself. -/
+noncomputable def uliftSheafFiberIso.{s', w', v', u'}
+    {C : Type u'} [Category.{v'} C] {J : GrothendieckTopology C} (Φ : Point.{w'} J)
+    {A : Type u''} [Category.{v''} A]
+    [HasColimitsOfSize.{w', w'} A] [HasColimitsOfSize.{max w' s', max w' s'} A] :
+    (Point.ulift.{s'} Φ).sheafFiber (A := A) ≅ Φ.sheafFiber :=
+  Functor.isoWhiskerLeft (sheafToPresheaf J A) (uliftPresheafFiberIso Φ)
 
 end GrothendieckTopology.Point
 
