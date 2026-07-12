@@ -233,7 +233,28 @@ this is the lifting of idempotents along the finite $`\mathcal{O}_S`-algebra
 $`f_* \mathcal{O}_X` over the henselian local base.
 :::
 
-:::lemma_ "lemma:pbc-finite" (parent := "proper-base-change") (uses := "def:etale-pushforward")
+:::lemma_ "lemma:finite-split-henselian" (parent := "proper-base-change") (uses := "thm:strict-localization-henselian") (lean := "IsLocalRing.finite_maximalSpectrum_and_bijective_pi_localization_of_forall_retraction, AlgebraicGeometry.Scheme.Etale.finite_maximalSpectrum_and_bijective_pi_localization_of_finite")
+A finite algebra over the strict localization at a geometric point — more generally,
+over a local ring in which every étale algebra with a prime over the maximal ideal
+admits a retraction — has finitely many maximal ideals, and the canonical map to the
+product of its localizations at the maximal ideals is bijective.
+:::
+
+:::proof "lemma:finite-split-henselian"
+All maximal ideals contract to the maximal ideal of the base by integrality, and there
+are finitely many of them because the fiber over the residue field is Artinian. For
+each maximal ideal, Zariski's main theorem in its étale-idempotent form produces an
+étale algebra over the base with a prime of trivial residue extension and an
+idempotent in the base change isolating the given maximal ideal; after shrinking the
+étale algebra so that this prime is the unique one over the maximal ideal, the
+retraction transports the idempotent into the finite algebra itself, where it is
+primitive at the given maximal ideal. Orthogonalizing the resulting family and
+observing that the sum is congruent to `1` modulo every maximal ideal yields a
+complete orthogonal family of idempotents; each factor is identified with the
+localization at the corresponding maximal ideal.
+:::
+
+:::lemma_ "lemma:pbc-finite" (parent := "proper-base-change") (uses := "def:etale-pushforward, lemma:finite-split-henselian")
 For a finite morphism $`f`, one has $`R^q f_* F = 0` for $`q > 0`, and the base
 change transformation is an isomorphism for every abelian sheaf $`F`.
 :::

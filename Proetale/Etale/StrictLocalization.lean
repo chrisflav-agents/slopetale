@@ -5,6 +5,7 @@ Authors: Christian Merten
 -/
 import Proetale.Algebra.Etale
 import Proetale.Algebra.EtalePoint
+import Proetale.Algebra.FiniteSplitHenselian
 import Proetale.Algebra.RetractionsStrictlyHenselian
 import Proetale.Mathlib.AlgebraicGeometry.Sites.GeometricPoint
 import Proetale.Mathlib.CategoryTheory.Filtered.Final
@@ -389,6 +390,21 @@ instance isStrictlyHenselianLocalRing_strictLocalization :
         by_contra hn
         exact hy ((IsLocalRing.mem_maximalIdeal y).mpr (mem_nonunits_iff.mpr hn)))
   exact .of_ringEquiv e.toRingEquiv.symm
+
+/-- **Finite algebras over the strict localization split into local factors**
+(Stacks 04GG (10)): the maximal spectrum of a finite algebra over the strict
+localization at a geometric point is finite, and the canonical map to the product of
+the localizations at the maximal ideals is bijective. This computes the fiber of a
+finite morphism over the strict localization, as needed for the vanishing of higher
+direct images along finite morphisms. -/
+theorem finite_maximalSpectrum_and_bijective_pi_localization_of_finite
+    (S : Type u) [CommRing S] [Algebra (strictLocalization x) S]
+    [Module.Finite (strictLocalization x) S] :
+    Finite (MaximalSpectrum S) ∧
+    Function.Bijective (Pi.ringHom
+      (fun m : MaximalSpectrum S => algebraMap S (Localization.AtPrime m.asIdeal))) :=
+  IsLocalRing.finite_maximalSpectrum_and_bijective_pi_localization_of_forall_retraction
+    (fun B _ _ hB hq => exists_retraction_of_etale_of_exists_prime x B hB hq) S
 
 end Retraction
 

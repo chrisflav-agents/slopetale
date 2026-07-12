@@ -5,6 +5,7 @@ import Proetale.Algebra.Etale
 import Proetale.Algebra.EtalePoint
 import Proetale.Algebra.FaithfullyFlat
 import Proetale.Algebra.FilteredLocalColimit
+import Proetale.Algebra.FiniteSplitHenselian
 import Proetale.Algebra.HenselianLocalRing
 import Proetale.Algebra.IdentifiesLocalRings
 import Proetale.Algebra.Ind
@@ -30,6 +31,9 @@ import Proetale.Algebra.WeaklyEtale
 import Proetale.Algebra.WeaklyEtaleField
 import Proetale.Algebra.WeaklyEtaleIndEtale
 import Proetale.Basic
+import Proetale.Etale.DevissageComparisonA
+import Proetale.Etale.DevissageComparisonB
+import Proetale.Etale.DevissageHomological
 import Proetale.Etale.Finiteness
 import Proetale.Etale.ProperBaseChange
 import Proetale.Etale.ProperBaseChangeDevissage
