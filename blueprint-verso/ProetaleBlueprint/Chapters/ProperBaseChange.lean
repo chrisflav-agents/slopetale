@@ -292,17 +292,45 @@ algebraic, extension of the separably closed residue field of the strict
 localization, hence separably closed. Now apply {bpref "lemma:etale-section-split"}[].
 :::
 
-:::lemma_ "lemma:pbc-finite" (parent := "proper-base-change") (uses := "def:etale-pushforward, lemma:finite-split-henselian, thm:fiber-sections-henselian")
+:::lemma_ "lemma:pbc-finite" (parent := "proper-base-change") (uses := "def:etale-pushforward, lemma:finite-split-henselian, thm:fiber-sections-henselian, lemma:pbc-finite-stalk") (lean := "AlgebraicGeometry.Scheme.Etale.preservesFiniteColimits_etalePushforward, AlgebraicGeometry.Scheme.Etale.isZero_homology_derivedPushforward_single_of_isFinite, AlgebraicGeometry.Scheme.Etale.isIso_etaleBaseChangeNatTrans_app_of_isFinite, AlgebraicGeometry.Scheme.Etale.isIso_derivedBaseChangeNatTrans_app_of_isFinite")
 For a finite morphism $`f`, one has $`R^q f_* F = 0` for $`q > 0`, and the base
-change transformation is an isomorphism for every abelian sheaf $`F`.
+change transformation is an isomorphism for every abelian sheaf $`F`. Consequently the
+derived base change transformation is an isomorphism on the whole bounded below derived
+category, without any torsion hypothesis.
 :::
 
 :::proof "lemma:pbc-finite"
-The stalk of $`f_* F` at a geometric point $`\bar{s}` is
-$`\prod_{\bar{x} \mapsto \bar{s}} F_{\bar{x}}`, because a finite algebra over a
-strictly henselian local ring decomposes as a finite product of strictly henselian
-local algebras. Exactness of $`\prod` and the same computation after base change give
-both claims.
+By {bpref "lemma:pbc-finite-stalk"}[], the stalk of $`f_* F` at a geometric point
+$`\bar{s}` is $`\prod_{\bar{x} \mapsto \bar{s}} F_{\bar{x}}`. Since the stalk functors
+are left adjoints and a finite product of surjections of abelian groups is surjective,
+$`f_*` preserves epimorphisms; being additive and left exact it therefore preserves
+homology, hence all finite colimits, so it is exact and $`R^q f_* = 0` for $`q > 0`.
+For the base change transformation: composing with $`g'` identifies the lifts of a
+geometric point $`\bar{z}` of $`S'` to $`X'` with the lifts of $`\bar{z} \circ g` to
+$`X`, so the two stalk decompositions have the same index set, and the base change map
+matches them leg by leg.
+:::
+
+:::lemma_ "lemma:pbc-finite-stalk" (parent := "proper-base-change") (uses := "def:geometric-point, def:strictly-henselian, lemma:finite-split-henselian, thm:fiber-sections-henselian") (lean := "AlgebraicGeometry.Scheme.Etale.exists_forall_isIso_pushforwardStalkToPiStalk, AlgebraicGeometry.Scheme.Etale.liftEquivMaximalSpectrum, AlgebraicGeometry.Scheme.Etale.isIso_pushforwardStalkToPiStalk_of_bijective")
+**The stalk formula.** Let $`f \colon X \to S` be finite and $`\bar{s}` a geometric
+point of $`S`. Then for every abelian sheaf $`F` on $`\et{X}` the canonical map
+$$`(f_* F)_{\bar{s}} \longrightarrow \prod_{\bar{x} \mapsto \bar{s}} F_{\bar{x}}`
+is an isomorphism, the product being over the (finitely many) lifts of $`\bar{s}` to
+$`X`, which correspond bijectively to the maximal ideals of the ring of fiber sections
+over the strict localization.
+:::
+
+:::proof "lemma:pbc-finite-stalk"
+The ring $`T` of fiber sections is finite over the strictly henselian local ring
+$`\mathcal{O}^{sh}_{S,\bar{s}}`, hence splits as a finite product of local rings
+indexed by its maximal ideals, each of which is strictly henselian
+({bpref "thm:fiber-sections-henselian"}[]). The splitting idempotents are already
+defined over some étale neighbourhood, and the corresponding summands of the fibers
+form a system that is initial in the system of étale neighbourhoods of the lifted
+geometric point; the colimit over each summand is therefore the stalk of $`F` at that
+lift. A lift is determined by, and determines, a character of $`T`, whose kernel is a
+maximal ideal — the residue extension is purely inseparable over the separably closed
+residue field, so a compatible character is determined by its kernel.
 :::
 
 # Cohomology of curves
