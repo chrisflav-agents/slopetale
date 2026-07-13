@@ -39,6 +39,7 @@ import Proetale.Etale.FiberSectionsHenselian
 import Proetale.Etale.Finiteness
 import Proetale.Etale.FinitePushforwardCofinality
 import Proetale.Etale.FinitePushforwardExact
+import Proetale.Etale.FinitePushforwardLifts
 import Proetale.Etale.FinitePushforwardStalk
 import Proetale.Etale.FinitePushforwardStalkCofinal
 import Proetale.Etale.FinitePushforwardStalkFormula
