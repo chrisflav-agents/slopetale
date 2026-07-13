@@ -254,7 +254,45 @@ complete orthogonal family of idempotents; each factor is identified with the
 localization at the corresponding maximal ideal.
 :::
 
-:::lemma_ "lemma:pbc-finite" (parent := "proper-base-change") (uses := "def:etale-pushforward, lemma:finite-split-henselian")
+:::lemma_ "lemma:etale-section-split" (parent := "proper-base-change") (uses := "lemma:finite-split-henselian") (lean := "IsLocalRing.bijective_algebraMap_localization_atPrime_of_etale, IsLocalRing.exists_retraction_of_etale_of_ker_comp_eq, IsLocalRing.retraction_eq_of_comp_eq, IsStrictlyHenselianLocalRing.of_forall_module_finite_bijective_pi")
+Let $`L` be a local ring with separably closed residue field whose module-finite
+algebras all decompose as the products of their localizations at maximal ideals. Then
+for every étale $`L`-algebra $`B` and every prime $`q` of $`B` over the maximal ideal,
+the canonical map $`L \to B_q` is bijective. Consequently for every character
+$`\chi \colon B \to \Omega` to a field whose restriction to $`L` has kernel the
+maximal ideal there is a unique retraction $`\sigma \colon B \to L` compatible with
+$`\chi`, and $`L` is strictly henselian.
+:::
+
+:::proof "lemma:etale-section-split"
+This is Stacks 04GG, (10) ⇒ (8). By Zariski's main theorem, $`B` coincides near `q`
+with a localization of a module-finite subalgebra $`S' \subseteq B`; the splitting
+hypothesis applied to $`S'` shows that $`B_q` is a localization of $`S'` at a maximal
+ideal, hence a direct factor, hence module-finite over $`L`. Being also flat, it is
+free, and its fiber over the residue field is trivial: it is the residue field of `q`,
+a finite separable extension of the separably closed residue field of $`L`. Nakayama's
+lemma applied twice gives bijectivity. A compatible retraction inverts the complement
+of `q`, so it factors uniquely through $`B_q \cong L`; conversely the localization map
+composed with this isomorphism is a compatible retraction.
+:::
+
+:::theorem "thm:fiber-sections-henselian" (parent := "proper-base-change") (uses := "lemma:etale-section-split, lemma:finite-split-henselian, thm:strict-localization-henselian") (lean := "AlgebraicGeometry.Scheme.Etale.isStrictlyHenselianLocalRing_localization_atPrime_fiberSections")
+Let $`f \colon Y \to X` be a finite morphism and $`\bar{x}` a geometric point of
+$`X`. The localization of the ring of sections of the fiber of $`f` over the strict
+localization at every maximal ideal is a strictly henselian local ring (Stacks 04GH).
+:::
+
+:::proof "thm:fiber-sections-henselian"
+The fiber sections are module-finite over the strict localization
+({bpref "thm:strict-localization-henselian"}[]), so each localization at a maximal
+ideal is a direct factor, hence again module-finite; its finite algebras are then
+module-finite over the strict localization and split by
+{bpref "lemma:finite-split-henselian"}[], and its residue field is a finite, hence
+algebraic, extension of the separably closed residue field of the strict
+localization, hence separably closed. Now apply {bpref "lemma:etale-section-split"}[].
+:::
+
+:::lemma_ "lemma:pbc-finite" (parent := "proper-base-change") (uses := "def:etale-pushforward, lemma:finite-split-henselian, thm:fiber-sections-henselian")
 For a finite morphism $`f`, one has $`R^q f_* F = 0` for $`q > 0`, and the base
 change transformation is an isomorphism for every abelian sheaf $`F`.
 :::
