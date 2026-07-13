@@ -37,6 +37,8 @@ import Proetale.Etale.DevissageComparisonB
 import Proetale.Etale.DevissageHomological
 import Proetale.Etale.FiberSectionsHenselian
 import Proetale.Etale.Finiteness
+import Proetale.Etale.FinitePushforwardBaseChange
+import Proetale.Etale.FinitePushforwardBaseChangeStalk
 import Proetale.Etale.FinitePushforwardCofinality
 import Proetale.Etale.FinitePushforwardExact
 import Proetale.Etale.FinitePushforwardLifts

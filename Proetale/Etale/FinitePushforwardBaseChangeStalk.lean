@@ -231,14 +231,13 @@ lemma geometricPointPullbackFiberIso_hom_app_fiber_map_pullbackFiberLift
     rw [h1, pullbackFiberLift_val_snd, Category.assoc, Category.assoc, hcond,
       ← Category.assoc θ.left, hw, ← Category.assoc, pullbackFiberLift_val_snd]
 
-variable (F : Sheaf Y.smallEtaleTopology Ab.{u + 1})
-
 /-- **The leg lemma**: the base change map on the stalk at a geometric point `z` of `X'`,
 followed by the comparison to the stalk of `g'^* F` at a lift `y'` of `z` to `Y'` and the
 identification of that stalk with the stalk of `F` at `y' ≫ g'`, is the canonical
 comparison map from the stalk of `f_* F` at `z ≫ g` to the stalk of `F` at `y' ≫ g'`. -/
 theorem pushforwardStalkToStalk_etaleBaseChangeNatTrans
-    (y' : Spec (CommRingCat.of Ω') ⟶ Y') (hy' : y' ≫ f' = ε ≫ z) :
+    (y' : Spec (CommRingCat.of Ω') ⟶ Y') (hy' : y' ≫ f' = ε ≫ z)
+    (F : Sheaf Y.smallEtaleTopology Ab.{u + 1}) :
     (etalePullbackSheafFiberIso g z).inv.app ((etalePushforward f).obj F) ≫
         (geometricPoint z).sheafFiber.map ((etaleBaseChangeNatTrans f g f' g' hc.w).app F) ≫
         pushforwardStalkToStalk f' z ε y' hy' ((etalePullback g').obj F) ≫
@@ -278,7 +277,12 @@ theorem pushforwardStalkToStalk_etaleBaseChangeNatTrans
         ((etalePullback g').obj F).obj :=
     toPushforwardStalk_pushforwardStalkToStalk f' z ε y' hy' ((etalePullback g').obj F) V v
   -- the key sections level identity
-  have h4 := unit_comp_pushforwardSquareIso_hom_app f g f' g' hc.w F U
+  have h4 : ((smallPullbackPushforwardAdj g' @Etale Ab.{u + 1}).unit.app F).hom.app (op W) ≫
+        ((etalePullback g').obj F).obj.map θ.op =
+      ((smallPullbackPushforwardAdj g @Etale Ab.{u + 1}).unit.app
+          ((etalePushforward f).obj F)).hom.app (op U) ≫
+        ((etaleBaseChangeNatTrans f g f' g' hc.w).app F).hom.app (op V) :=
+    unit_comp_pushforwardSquareIso_hom_app f g f' g' hc.w F U
   -- restriction along the canonical isomorphism of the two base changes
   have h5 : ((etalePullback g').obj F).obj.map θ.op ≫
       (geometricPoint y').toPresheafFiber ((Over.pullback @Etale ⊤ f').obj V) p
@@ -289,17 +293,18 @@ theorem pushforwardStalkToStalk_etaleBaseChangeNatTrans
   -- the leg of the stalk of `g'^* F` at `y'`, transported to the stalk of `F` at `y' ≫ g'`
   have h6 := unit_toPresheafFiber_etalePullbackSheafFiberIso_hom_app g' y' F W
     ((geometricPoint y').fiber.map θ p)
-  rw [reassoc_of% h1, reassoc_of% h2, reassoc_of% h3, ← reassoc_of% h4, reassoc_of% h5, h6,
+  rw [reassoc_of% h1, reassoc_of% h2, reassoc_of% h3, ← reassoc_of% h4, reassoc_of% h5,
     toPushforwardStalk_pushforwardStalkToStalk]
-  exact congrArg (fun t ↦ (geometricPoint (y' ≫ g')).toPresheafFiber W t F.obj)
-    (geometricPointPullbackFiberIso_hom_app_fiber_map_pullbackFiberLift f g f' g' hc z ε y'
-      hy' U u)
+  refine h6.trans (congrArg (fun t ↦ (geometricPoint (y' ≫ g')).toPresheafFiber W t F.obj) ?_)
+  exact geometricPointPullbackFiberIso_hom_app_fiber_map_pullbackFiberLift f g f' g' hc z ε y'
+    hy' U u
 
 /-- **The pointwise criterion**: if the comparison maps from the stalks of the two
 pushforwards into the finite products of the stalks at a finite family of lifts of `z` are
 isomorphisms, then the base change transformation is an isomorphism on the stalk at `z`. -/
 theorem isIso_sheafFiber_map_etaleBaseChangeNatTrans_app {ι : Type u} [Finite ι]
     (y' : ι → (Spec (CommRingCat.of Ω') ⟶ Y')) (hy' : ∀ i, y' i ≫ f' = ε ≫ z)
+    (F : Sheaf Y.smallEtaleTopology Ab.{u + 1})
     (h1 : IsIso (pushforwardStalkToPiStalk f' z ε y' hy' ((etalePullback g').obj F)))
     (h2 : IsIso (pushforwardStalkToPiStalk f (z ≫ g) ε (fun i ↦ y' i ≫ g')
       (fun i ↦ comp_lift_over f g f' g' hc (hy' i)) F)) :
@@ -323,7 +328,7 @@ theorem isIso_sheafFiber_map_etaleBaseChangeNatTrans_app {ι : Type u} [Finite �
     refine Limits.Pi.hom_ext _ _ fun i ↦ ?_
     rw [Category.assoc, Category.assoc, Category.assoc, hπ, Limits.Pi.map_π,
       pushforwardStalkToPiStalk_π_assoc, pushforwardStalkToPiStalk_π]
-    exact pushforwardStalkToStalk_etaleBaseChangeNatTrans f g f' g' hc z ε F (y' i) (hy' i)
+    exact pushforwardStalkToStalk_etaleBaseChangeNatTrans f g f' g' hc z ε (y' i) (hy' i) F
   -- solve for the base change map on stalks
   have hsolve : (geometricPoint z).sheafFiber.map
       ((etaleBaseChangeNatTrans f g f' g' hc.w).app F) =
@@ -363,6 +368,6 @@ theorem isIso_etaleBaseChangeNatTrans_app_of_forall
   rw [isIso_iff_sheafFiber_geometricPoint' ((etaleBaseChangeNatTrans f g f' g' hc.w).app F)]
   intro p
   obtain ⟨ι, hι, y', hy', h1, h2⟩ := h p
-  exact isIso_sheafFiber_map_etaleBaseChangeNatTrans_app f g f' g' hc _ _ F y' hy' h1 h2
+  exact isIso_sheafFiber_map_etaleBaseChangeNatTrans_app f g f' g' hc _ _ y' hy' F h1 h2
 
 end AlgebraicGeometry.Scheme.Etale
