@@ -66,7 +66,6 @@ theorem of_filteredColimit_lmul'
         have hRSi : CommRingCat.ofHom (algebraMap R S) =
             CommRingCat.ofHom (algebraMap R (P.diag.obj i)) ≫ Q.ι.app i := by
           ext r
-          change (algebraMap R S) r = (Q.ι.app i).hom ((algebraMap R (P.diag.obj i)) r)
           exact ((P.ι.app i).hom.commutes r).symm
         have hcond : Q.ι.app i ≫ pushout.inl (Q.ι.app i) (Q.ι.app i) =
             Q.ι.app i ≫ pushout.inr (Q.ι.app i) (Q.ι.app i) := pushout.condition
@@ -112,10 +111,8 @@ theorem of_filteredColimit_lmul'
         _ = 𝟙 SR := pushout.inl_desc _ _ _
         _ = CommRingCat.ofHom Algebra.TensorProduct.includeLeftRingHom ≫ lmulMap := by
             ext a
-            change a = (Algebra.TensorProduct.lmul' R)
-              (Algebra.TensorProduct.includeLeftRingHom a)
-            rw [Algebra.TensorProduct.includeLeftRingHom_apply,
-              Algebra.TensorProduct.lmul'_apply_tmul, mul_one]
+            exact ((Algebra.TensorProduct.lmul'_apply_tmul (R := R) (S := S) a 1).trans
+              (mul_one a)).symm
     · have hinr : CommRingCat.ofHom (Algebra.TensorProduct.includeRight
             (R := R) (A := S) (B := S)).toRingHom ≫ isoSS.inv =
           pushout.inr (CommRingCat.ofHom (algebraMap R S))
@@ -131,10 +128,8 @@ theorem of_filteredColimit_lmul'
         _ = CommRingCat.ofHom (Algebra.TensorProduct.includeRight
               (R := R) (A := S) (B := S)).toRingHom ≫ lmulMap := by
             ext a
-            change a = (Algebra.TensorProduct.lmul' R)
-              (Algebra.TensorProduct.includeRight (A := S) a)
-            rw [Algebra.TensorProduct.includeRight_apply,
-              Algebra.TensorProduct.lmul'_apply_tmul, one_mul]
+            exact ((Algebra.TensorProduct.lmul'_apply_tmul (R := R) (S := S) 1 a).trans
+              (one_mul a)).symm
   -- Flatness of t.app i: comes from lift_includeLeft_includeRight applied to h i.
   have htflat : ∀ i, (t.app i).hom.Flat := by
     intro i
@@ -171,10 +166,7 @@ theorem of_filteredColimit_lmul'
             CommRingCat.ofHom (Algebra.TensorProduct.includeLeftRingHom
               (R := P.diag.obj i) (A := S) (B := S)) := by
           ext a
-          change α (Algebra.TensorProduct.includeLeftRingHom a) =
-            Algebra.TensorProduct.includeLeftRingHom a
-          simp [α, Algebra.TensorProduct.includeLeftRingHom_apply,
-            Algebra.TensorProduct.lift_tmul]
+          simp [α]
         have hγ_inl : CommRingCat.ofHom (Algebra.TensorProduct.includeLeftRingHom
               (R := P.diag.obj i) (A := S) (B := S)) ≫ γ.hom =
             pushout.inl (CommRingCat.ofHom (algebraMap (P.diag.obj i) S))
@@ -198,10 +190,7 @@ theorem of_filteredColimit_lmul'
             CommRingCat.ofHom (Algebra.TensorProduct.includeRight
               (R := P.diag.obj i) (A := S) (B := S)).toRingHom := by
           ext a
-          change α (Algebra.TensorProduct.includeRight a) =
-            Algebra.TensorProduct.includeRight a
-          simp [α, Algebra.TensorProduct.includeRight_apply,
-            Algebra.TensorProduct.lift_tmul]
+          simp [α]
         have hγ_inr : CommRingCat.ofHom (Algebra.TensorProduct.includeRight
               (R := P.diag.obj i) (A := S) (B := S)).toRingHom ≫ γ.hom =
             pushout.inr (CommRingCat.ofHom (algebraMap (P.diag.obj i) S))
