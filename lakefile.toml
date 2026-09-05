@@ -1,7 +1,7 @@
 name = "proetale"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["Proetale"]
+defaultTargets = ["Proetale", "Challenge", "Solution"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -19,13 +19,25 @@ scope = "leanprover-community"
 rev = "9a568f0b75d28670664e6d6862d6e01c4625e380"
 
 [[require]]
-name = "checkdecls"
-git = "https://github.com/PatrickMassot/checkdecls.git"
-
-[[require]]
 name = "upstreamer"
 git = "https://github.com/chrisflav/upstreamer"
 rev = "main"
 
 [[lean_lib]]
 name = "Proetale"
+
+# Comparator (leanprover/comparator) challenge/solution pair for the comparison of
+# ell-adic and etale cohomology, see Comparator/config.json.
+# ell-adic and etale cohomology, see Comparator/config.json. The `Definitions`
+# library contains the mathlib-only definitions shared by challenge and solution.
+[[lean_lib]]
+name = "Definitions"
+srcDir = "Comparator"
+
+[[lean_lib]]
+name = "Challenge"
+srcDir = "Comparator"
+
+[[lean_lib]]
+name = "Solution"
+srcDir = "Comparator"

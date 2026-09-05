@@ -1,0 +1,12 @@
+{
+    "challenge_module": "Challenge",
+    "solution_module": "Solution",
+    "theorem_names": [
+        "EllAdicEtaleComparison.bijective_etaleToProetaleCohomology",
+        "EllAdicEtaleComparison.bijective_ellAdicCohomologyToLimit_of_finite",
+        "EllAdicEtaleComparison.existsUnique_ellAdicCohomology_addEquiv_limit_of_finite"
+    ],
+    "definition_names": [],
+    "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+    "enable_nanoda": false
+}
