@@ -4,9 +4,7 @@ if ! [ -z "$(git status --porcelain)" ]; then
   exit 1
 fi
 
-# Verify all .lean files are imported. Only check the `Proetale` library: the
-# `Challenge`/`Solution` comparator libs (`srcDir = "Comparator"`) would otherwise make
-# `mk_all` demand bogus empty root-level `Challenge.lean`/`Solution.lean` umbrellas.
+# Verify all .lean files are imported.
 lake exe mk_all --lib Proetale --git --check || exit 1
 
 # Fetch build cache

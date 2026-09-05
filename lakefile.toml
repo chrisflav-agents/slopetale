@@ -28,6 +28,12 @@ name = "Proetale"
 
 # Comparator (leanprover/comparator) challenge/solution pair for the comparison of
 # ell-adic and etale cohomology, see Comparator/config.json.
+# ell-adic and etale cohomology, see Comparator/config.json. The `Definitions`
+# library contains the mathlib-only definitions shared by challenge and solution.
+[[lean_lib]]
+name = "Definitions"
+srcDir = "Comparator"
+
 [[lean_lib]]
 name = "Challenge"
 srcDir = "Comparator"
@@ -35,13 +41,3 @@ srcDir = "Comparator"
 [[lean_lib]]
 name = "Solution"
 srcDir = "Comparator"
-
-# Local replacement for PatrickMassot/checkdecls, run by the blueprint CI step as
-# `lake exe checkdecls blueprint/lean_decls`. The upstream version imports every
-# lean_lib into one environment, which fails because Challenge and Solution
-# intentionally declare the same names. See CheckDecls.lean.
-[[lean_exe]]
-name = "checkdecls"
-root = "CheckDecls"
-supportInterpreter = true
-weakLinkArgs = ["-lLake"]
