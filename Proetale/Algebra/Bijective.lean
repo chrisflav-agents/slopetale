@@ -22,7 +22,7 @@ lemma bijective_comap_lmul'_of_bijective_of_bijective
   set ι₂ : S →+* S ⊗[R] S :=
     (Algebra.TensorProduct.includeRight : S →ₐ[R] S ⊗[R] S).toRingHom with hι₂def
   have hμsurj : Function.Surjective μ := fun s ↦ ⟨ι₁ s, by simp [hμdef, hι₁def]⟩
-  have hcommfun : ∀ r : R, ι₁ (algebraMap R S r) = ι₂ (algebraMap R S r) := fun r ↦
+  have hcommfun (r : R) : ι₁ (algebraMap R S r) = ι₂ (algebraMap R S r) :=
     ((Algebra.TensorProduct.includeLeft : S →ₐ[R] S ⊗[R] S).commutes r).trans
       ((Algebra.TensorProduct.includeRight : S →ₐ[R] S ⊗[R] S).commutes r).symm
   have hcomm : ι₁.comp (algebraMap R S) = ι₂.comp (algebraMap R S) :=
@@ -53,24 +53,20 @@ lemma bijective_comap_lmul'_of_bijective_of_bijective
     apply IsLocalization.ringHom_ext (nonZeroDivisors (R ⧸ p))
     rw [← RingHom.cancel_right (Ideal.Quotient.mk_surjective (I := p))]
     ext r
-    simp only [RingHom.coe_comp, Function.comp_apply,
-      Ideal.algebraMap_quotient_residueField_mk, Ideal.ResidueField.map_algebraMap]
-    rw [hcommfun r]
+    simp [hcommfun r]
   have hψ : Ideal.ResidueField.map q P.asIdeal ι₁ hq₁ =
       Ideal.ResidueField.map q P.asIdeal ι₂ hq₂ := by
     refine RingHom.ext fun x ↦ ?_
     obtain ⟨y, rfl⟩ := hρ.surjective x
     exact congr($hcomp y)
-  have hkey : ∀ s : S, algebraMap (S ⊗[R] S) P.asIdeal.ResidueField (ι₁ s) =
+  have hkey (s : S) : algebraMap (S ⊗[R] S) P.asIdeal.ResidueField (ι₁ s) =
       algebraMap (S ⊗[R] S) P.asIdeal.ResidueField (ι₂ s) := by
-    intro s
     rw [← Ideal.ResidueField.map_algebraMap q P.asIdeal ι₁ hq₁ s,
       ← Ideal.ResidueField.map_algebraMap q P.asIdeal ι₂ hq₂ s, hψ]
   -- Hence every element of `S ⊗[R] S` has the same image in `κ(P)` as the image of its
   -- product under `includeLeft`.
-  have hχ : ∀ x : S ⊗[R] S, algebraMap (S ⊗[R] S) P.asIdeal.ResidueField x =
+  have hχ (x : S ⊗[R] S) : algebraMap (S ⊗[R] S) P.asIdeal.ResidueField x =
       algebraMap (S ⊗[R] S) P.asIdeal.ResidueField (ι₁ (μ x)) := by
-    intro x
     induction x with
     | zero => simp
     | tmul s t =>
@@ -156,7 +152,7 @@ lemma WeaklyEtale.bijective_algebraMap_of_bijective_residueFieldMap
     have := bijective_of_bijective_of_flat (R := S ⊗[R] S) (S := S) hbij hsurj
     rwa [halg] at this
   -- Hence `includeLeft : S → S ⊗[R] S` is bijective, being a section of `lmul'`.
-  have hone : ∀ s : S, TensorProduct.lmul' (S := S) R (s ⊗ₜ[R] 1) = s := fun s ↦ by
+  have hone (s : S) : TensorProduct.lmul' (S := S) R (s ⊗ₜ[R] 1) = s := by
     rw [TensorProduct.lmul'_apply_tmul, mul_one]
   have hinc : Function.Bijective fun s : S ↦ (s ⊗ₜ[R] 1 : S ⊗[R] S) :=
     Function.bijective_of_leftInverse_of_bijective hone hμ
